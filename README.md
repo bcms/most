@@ -1,1 +1,1 @@
-# cms-ssgf
+# Becomes CMS - Static Site Generator Framework
