@@ -6,9 +6,12 @@ export class Arg {
     const args = arg(
       {
         '--pull-media': Boolean,
+        '--process-media': String,
         '--pull-content': Boolean,
-        '--parse-content': Boolean,
-        '--framework': String,
+        '--page-parser': Boolean,
+        '--api-key': String,
+        '--api-secret': String,
+        '--api-origin': String,
       },
       {
         argv: rawArgs.slice(2),
@@ -16,8 +19,12 @@ export class Arg {
     );
     const options: Options = {
       pullContent: args['--pull-content'] || false,
-      parseContent: args['--parse-content'] || false,
       pullMedia: args['--pull-media'] || false,
+      processMedia: args['--pull-media'] || undefined,
+      pageParser: args['--page-parser'] || false,
+      apiKey: args['--api-key'] || undefined,
+      apiSecret: args['--api-secret'] || undefined,
+      apiOrigin: args['--api-origin'] || undefined,
     };
     return options;
   }

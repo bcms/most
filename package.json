@@ -7,11 +7,12 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -p .",
-    "link": "cd dist && npm link",
-    "unlink": "cd dist && npm uplink",
-    "tt": "ts-node test.ts",
+    "bundle": "node tools.js --bundle",
+    "link": "node tools.js --link",
+    "unlink": "node tools.js --unlink",
+    "publish": "node tools.js --publish",
     "test": "mocha ./test --recursive --exit",
-    "test-dev": "env-cmd mocha ./test --recursive --exit"
+    "test-dev": "env-cmd npm run test"
   },
   "dependencies": {
     "@becomes/cms-client": "^1.0.4",
@@ -26,6 +27,7 @@
     "@types/sharp": "^0.25.0",
     "chai": "^4.2.0",
     "env-cmd": "^10.0.1",
+    "listr": "^0.14.3",
     "mocha": "^7.2.0",
     "ts-node": "^8.10.2",
     "tsconfig-paths": "^3.9.0",

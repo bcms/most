@@ -1,13 +1,7 @@
 # compiled output
 /dist
 /node_modules
-public/bundle.*
-
-# Sapper
-/src/frontend/node_modules/@sapper/
-/src/frontend-sapper/node_modules/@sapper/
-/cypress/screenshots/
-/__sapper__/
+bcms.config.js
 
 # Logs
 logs

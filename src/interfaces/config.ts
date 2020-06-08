@@ -30,7 +30,7 @@ export interface Config {
   }>;
   media: {
     process?: boolean;
-    sizeMap: MediaSizeMap[];
+    sizeMap?: MediaSizeMap[];
     failOnError?: boolean;
     output: string;
   };
