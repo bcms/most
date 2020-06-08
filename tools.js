@@ -52,12 +52,12 @@ const parseArgs = (rawArgs) => {
 
 const bundle = async () => {
   const tasks = new Listr([
-    {
-      title: 'Remove old bundle.',
-      task: async () => {
-        await fse.remove(path.join(__dirname, 'dist'));
-      },
-    },
+    // {
+    //   title: 'Remove old bundle.',
+    //   task: async () => {
+    //     await fse.remove(path.join(__dirname, 'dist'));
+    //   },
+    // },
     {
       title: 'Compile Typescript.',
       task: async () => {
@@ -129,7 +129,7 @@ async function main() {
   } else if (options.link === true) {
     await exec('cd dist && npm i && sudo npm link');
   } else if (options.unlink === true) {
-    await exec('cd dist && sudo npm unlink');
+    await exec('cd dist && rm -R node_modules && sudo npm unlink');
   } else if (options.publish === true) {
     await publish();
   }

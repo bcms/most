@@ -35,6 +35,12 @@
     "typedoc": "^0.15.8",
     "typescript": "^3.9.3"
   },
+  "bin": {
+    "bcms-ssgf": "bin/bcms-ssgf.js"
+  },
+  "keywords": [
+    "bcms-ssgf"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/becomesco/cms-client.git"

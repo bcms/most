@@ -12,7 +12,7 @@ export class BCMS {
   private bcms: any = {};
 
   constructor(
-    private api: {
+    private readonly api?: {
       origin: string;
       key: string;
       secret: string;
@@ -67,7 +67,8 @@ export class BCMS {
     this.bcms = await this.cache();
     const startTime = Date.now();
     const client = await this.client();
-    const bcmsConfig: Config = await import(`${process.cwd()}/bcms.config.js`);
+    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`))
+      .default;
     if (typeof bcmsConfig === 'object' && bcmsConfig.entries instanceof Array) {
       for (const i in bcmsConfig.entries) {
         const config = bcmsConfig.entries[i];
@@ -107,6 +108,7 @@ export class BCMS {
         );
       }
     } else {
+      Logger.error(bcmsConfig);
       throw ErrorHandler.throw(
         `Invalid configuration of "${process.cwd()}/bcms.config.js" file.`,
       );
@@ -114,12 +116,6 @@ export class BCMS {
     await FS.save(JSON.stringify(this.bcms, null, '  '), '/bcms.cache.json');
     Logger.info(
       `Pull content completed in: ${(Date.now() - startTime) / 1000}s`,
-    );
-    // await this.pageParser(bcmsConfig);
-    Logger.info(
-      `Total time for pulling content and parsing pages: ${
-        (Date.now() - startTime) / 1000
-      }s`,
     );
   }
 
@@ -265,12 +261,17 @@ export class BCMS {
     - BCMS PULL MEDIA -
     -------------------
     `);
-    if (!ppc) {
-      ppc = 1;
-    }
     const startTime = Date.now();
     const client = await this.client();
-    const bcmsConfig: Config = await import(`${process.cwd()}/bcms.config.js`);
+    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`))
+      .default;
+    if (!ppc) {
+      if (bcmsConfig.media && bcmsConfig.media.ppc) {
+        ppc = bcmsConfig.media.ppc;
+      } else {
+        ppc = 1;
+      }
+    }
     if (typeof bcmsConfig.media !== 'object') {
       throw ErrorHandler.throw(
         `Missing "media" configuration in ${process.cwd()}/bcms.config.js`,
@@ -285,8 +286,11 @@ export class BCMS {
     const media = (await client.media.all()).filter(
       (e) => e.file.type !== 'DIR',
     );
-
     let pullMedia = true;
+    let mediaCache: {
+      timestamp?: number;
+      hash?: string;
+    } = {};
     {
       const hash = crypto
         .createHash('sha256')
@@ -300,10 +304,6 @@ export class BCMS {
           ).toString('base64'),
         )
         .digest('hex');
-      let mediaCache: {
-        timestamp?: number;
-        hash?: string;
-      } = {};
       if ((await FS.exist('/bcms-media.cache.json')) === true) {
         mediaCache = JSON.parse(
           (await FS.read('/bcms-media.cache.json')).toString(),
@@ -314,13 +314,51 @@ export class BCMS {
       } else {
         mediaCache.timestamp = Date.now();
         mediaCache.hash = hash;
-        await FS.save(
-          JSON.stringify(mediaCache, null, '  '),
-          '/bcms-media.cache.json',
-        );
       }
     }
     if (pullMedia === true) {
+      if (bcmsConfig.media.process === true) {
+        if (!bcmsConfig.media.sizeMap) {
+          bcmsConfig.media.sizeMap = [
+            {
+              width: 350,
+            },
+            {
+              width: 600,
+            },
+            {
+              width: 1200,
+            },
+            {
+              width: 1920,
+            },
+          ];
+        } else {
+          General.compareWithSchema(
+            { data: bcmsConfig.media.sizeMap },
+            {
+              data: {
+                __type: 'array',
+                __required: true,
+                __child: {
+                  __type: 'object',
+                  __content: {
+                    width: {
+                      __type: 'number',
+                      __required: true,
+                    },
+                    quality: {
+                      __type: 'number',
+                      __required: false,
+                    },
+                  },
+                },
+              },
+            },
+            'config.media.sizeMap',
+          );
+        }
+      }
       let pointer = 0;
       while (pointer < media.length) {
         try {
@@ -335,6 +373,10 @@ export class BCMS {
         }
       }
     }
+    await FS.save(
+      JSON.stringify(mediaCache, null, '  '),
+      '/bcms-media.cache.json',
+    );
     Logger.info(`Pull media completed in: ${(Date.now() - startTime) / 1000}s`);
   }
 
@@ -358,42 +400,9 @@ export class BCMS {
     if (pointerTo >= media.length) {
       pointerTo = media.length;
     }
-    if (config.media.process === true) {
-      if (!config.media.sizeMap) {
-        config.media.sizeMap = [
-          {
-            width: 350,
-          },
-          {
-            width: 600,
-          },
-          {
-            width: 1200,
-          },
-          {
-            width: 1920,
-          },
-        ];
-      } else {
-        General.compareWithSchema(
-          config.media.sizeMap,
-          {
-            width: {
-              __type: 'number',
-              __required: true,
-            },
-            quality: {
-              __type: 'number',
-              __required: false,
-            },
-          },
-          'config.media.sizeMap',
-        );
-      }
-    }
     const done = [];
     return new Promise((resolve, reject) => {
-      for (let i = pointer; i < pointerTo; i = i + i) {
+      for (let i = pointer; i < pointerTo; i = i + 1) {
         if (i < media.length) {
           Logger.info(
             `[${i}] ` +
@@ -411,7 +420,10 @@ export class BCMS {
                   mimetype: media[i].file.mimetype,
                   sizeMap: config.media.sizeMap,
                 }),
-              )}`,
+              ).toString('base64')}`,
+              (type, data) => {
+                process.stdout.write(data);
+              },
             )
               .then(() => {
                 done.push(true);
@@ -442,6 +454,13 @@ export class BCMS {
                     media[i].file.name,
                   ),
                 );
+                Logger.info(
+                  `[${i}] Saved at: ${process.cwd()}/${path.join(
+                    config.media.output,
+                    media[i].file.path,
+                    media[i].file.name,
+                  )}`,
+                );
                 done.push(true);
                 if (done.length === pointerTo - pointer) {
                   resolve(pointerTo);
@@ -462,5 +481,52 @@ export class BCMS {
         }
       }
     });
+  }
+
+  /**
+   * Will call functions from the configuration file and
+   * place responses in `bcms.cache.json` file.
+   */
+  public async callFunctions() {
+    Logger.info(`
+    -----------------------
+    - BCMS CALL FUNCTIONS -
+    -----------------------
+    `);
+    this.bcms = await this.cache();
+    this.bcms.__functions = {};
+    const startTime = Date.now();
+    const client = await this.client();
+    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`))
+      .default;
+    if (
+      typeof bcmsConfig === 'object' &&
+      bcmsConfig.functions instanceof Array
+    ) {
+      for (const i in bcmsConfig.functions) {
+        const timeOffset = Date.now();
+        const func = bcmsConfig.functions[i];
+        const name = func.name.replace(/-/g, '_');
+        Logger.info(`[${i}] Calling function "${func.name}"`);
+        this.bcms.__functions[name] = await client.fn(
+          func.name,
+          func.payload ? func.payload : undefined,
+        );
+        if (typeof func.modify === 'function') {
+          this.bcms.__functions[name] = await func.modify(
+            this.bcms.__functions[name],
+          );
+        }
+        Logger.info(
+          `--- Function call completed in ${(Date.now() - timeOffset) / 1000}s`,
+        );
+      }
+    } else {
+      throw ErrorHandler.throw('Invalid configuration for "functions".');
+    }
+    await FS.save(JSON.stringify(this.bcms, null, '  '), '/bcms.cache.json');
+    Logger.info(
+      `Call functions completed in: ${(Date.now() - startTime) / 1000}s`,
+    );
   }
 }

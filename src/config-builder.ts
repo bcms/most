@@ -32,32 +32,52 @@ export class ConfigBuilder {
           },
         },
         media: {
-          output: {
-            __type: 'string',
-            __required: true,
-          },
-          process: {
-            __type: 'boolean',
-            __required: false,
-          },
-          failOnError: {
-            __type: 'boolean',
-            __required: false,
-          },
-          sizeMap: {
-            __type: 'array',
-            __required: false,
-            __child: {
-              __type: 'object',
-              __content: {
-                width: {
-                  __type: 'number',
-                  __required: true,
+          __type: 'object',
+          __child: {
+            output: {
+              __type: 'string',
+              __required: true,
+            },
+            process: {
+              __type: 'boolean',
+              __required: false,
+            },
+            failOnError: {
+              __type: 'boolean',
+              __required: false,
+            },
+            sizeMap: {
+              __type: 'array',
+              __required: false,
+              __child: {
+                __type: 'object',
+                __content: {
+                  width: {
+                    __type: 'number',
+                    __required: true,
+                  },
+                  quality: {
+                    __type: 'number',
+                    __required: false,
+                  },
                 },
-                quality: {
-                  __type: 'number',
-                  __required: false,
-                },
+              },
+            },
+          },
+        },
+        functions: {
+          __type: 'array',
+          __required: false,
+          __child: {
+            __type: 'object',
+            __content: {
+              name: {
+                __type: 'string',
+                __required: true,
+              },
+              modify: {
+                __type: 'function',
+                __required: false,
               },
             },
           },

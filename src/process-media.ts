@@ -4,6 +4,7 @@ import Axios from 'axios';
 import { General } from './util/general';
 import { FS } from './util/fs';
 import { MediaSizeMap } from './interfaces/config';
+import { Logger } from './util/logger';
 
 export class ProcessMedia {
   private static Security = {
@@ -85,16 +86,17 @@ export class ProcessMedia {
       },
       'media',
     );
+    Logger.info(`Processing file "${media.path}/${media.name}"`);
     const signature = this.Security.sign({
       key: {
-        id: process.env.API_KEY,
-        secret: process.env.API_SECRET,
+        id: process.env.BCMS_API_KEY,
+        secret: process.env.BCMS_API_SECRET,
       },
       payload: {},
     });
     const response = await Axios({
       url:
-        `${process.env.API_ORIGIN}/media/file?path=${media.path}/${media.name}` +
+        `${process.env.BCMS_API_ORIGIN}/media/file?path=${media.path}/${media.name}` +
         `&key=${signature.key}&nonce=${signature.nonce}` +
         `&timestamp=${signature.timestamp}&signature=${signature.signature}`,
       method: 'GET',

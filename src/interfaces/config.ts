@@ -28,7 +28,13 @@ export interface Config {
     templateId: string;
     modify: (entries: any) => Promise<any>;
   }>;
+  functions?: Array<{
+    name: string;
+    payload?: any;
+    modify?: (response: any) => Promise<any>;
+  }>;
   media: {
+    ppc?: number;
     process?: boolean;
     sizeMap?: MediaSizeMap[];
     failOnError?: boolean;

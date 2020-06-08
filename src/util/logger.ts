@@ -47,6 +47,11 @@ export class Logger {
 
   public static error(message: any) {
     if (typeof message === 'object') {
+      if (message instanceof Error) {
+        // tslint:disable-next-line: no-console
+        console.error(ConsoleColors.FgRed, message, ConsoleColors.Reset);
+        return;
+      }
       try {
         // tslint:disable-next-line: no-console
         console.error(
