@@ -124,19 +124,27 @@ export class BCMS {
    */
   public async pageParser(createPage?: any, config?: Config): Promise<void> {
     if (!config) {
-      config = await import(`${process.cwd()}/bcms.config.js`);
+      config = (await import(`${process.cwd()}/bcms.config.js`)).default;
     }
+    const startTime = Date.now();
+    Logger.info(`
+    ---------------------
+    - BCMS PAGE PARSING -
+    ---------------------
+    `);
     const bcms = await this.cache();
     if (typeof config.pageParser === 'object') {
       if (config.pageParser.nuxt instanceof Array) {
         let output: PageParserNuxtOutput[] = [];
         for (const i in config.pageParser.nuxt) {
+          const timeOffset = Date.now();
           const pageParserConfig = config.pageParser.nuxt[i];
           if (!bcms[pageParserConfig.entries]) {
             throw ErrorHandler.throw(
               `Entries for "${pageParserConfig.entries}" do not exist.`,
             );
           }
+          Logger.info(`Parsing pages for: ${pageParserConfig.entries}`);
           if (pageParserConfig.type === 'single') {
             for (const j in bcms[pageParserConfig.entries]) {
               const o = await pageParserConfig.handler(
@@ -194,6 +202,7 @@ export class BCMS {
               }
             }
           }
+          Logger.info(`--- Finished in ${(Date.now() - timeOffset) / 1000}s`);
         }
         for (const i in output) {
           if (typeof output[i].data === 'object') {
@@ -219,8 +228,13 @@ export class BCMS {
           );
           await config.pageParser.gatsby[i].handler(createPage, template, bcms);
         }
+      } else {
+        throw ErrorHandler.throw(`No known framework.`);
       }
+    } else {
+      throw ErrorHandler.throw('Invalid configuration.');
     }
+    Logger.info(`--- Time to parse pages: ${(Date.now() - startTime) / 1000}s`);
   }
 
   /**
