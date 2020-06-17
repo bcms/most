@@ -67,8 +67,7 @@ export class BCMS {
     this.bcms = await this.cache();
     const startTime = Date.now();
     const client = await this.client();
-    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`))
-      .default;
+    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`));
     if (typeof bcmsConfig === 'object' && bcmsConfig.entries instanceof Array) {
       for (const i in bcmsConfig.entries) {
         const config = bcmsConfig.entries[i];
@@ -124,7 +123,7 @@ export class BCMS {
    */
   public async pageParser(createPage?: any, config?: Config): Promise<void> {
     if (!config) {
-      config = (await import(`${process.cwd()}/bcms.config.js`)).default;
+      config = (await import(`${process.cwd()}/bcms.config.js`));
     }
     const startTime = Date.now();
     Logger.info(`
@@ -277,8 +276,7 @@ export class BCMS {
     `);
     const startTime = Date.now();
     const client = await this.client();
-    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`))
-      .default;
+    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`));
     if (!ppc) {
       if (bcmsConfig.media && bcmsConfig.media.ppc) {
         ppc = bcmsConfig.media.ppc;
@@ -511,8 +509,7 @@ export class BCMS {
     this.bcms.__functions = {};
     const startTime = Date.now();
     const client = await this.client();
-    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`))
-      .default;
+    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`));
     if (
       typeof bcmsConfig === 'object' &&
       bcmsConfig.functions instanceof Array
