@@ -8,6 +8,7 @@ export interface PageParserNuxt {
   type: 'many' | 'single';
   handler: (
     items: any[] | any,
+    allItems?: any[],
   ) => Promise<PageParserNuxtOutput | PageParserNuxtOutput[] | void>;
 }
 

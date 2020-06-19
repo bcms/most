@@ -143,11 +143,12 @@ export class BCMS {
               `Entries for "${pageParserConfig.entries}" do not exist.`,
             );
           }
-          Logger.info(`Parsing pages for: ${pageParserConfig.entries}`);
+          Logger.info(`Parsing pages for: ${pageParserConfig.entries} - ${pageParserConfig.type}`);
           if (pageParserConfig.type === 'single') {
             for (const j in bcms[pageParserConfig.entries]) {
               const o = await pageParserConfig.handler(
                 bcms[pageParserConfig.entries][j],
+                bcms[pageParserConfig.entries],
               );
               if (o) {
                 if (o instanceof Array) {
