@@ -1,3 +1,4 @@
+import * as os from 'os';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { BCMSClient, BCMSMedia } from '@becomes/cms-client';
@@ -6,6 +7,19 @@ import { Logger } from './util/logger';
 import { FS } from './util/fs';
 import { General } from './util/general';
 import { Config, PageParserNuxtOutput } from './interfaces/config';
+
+interface MediaQueue {
+  process: Array<{
+    id: string;
+    status: 'running' | 'done';
+  }>;
+  next: () =>
+    | {
+        file: BCMSMedia;
+        bin: () => Promise<Buffer>;
+      }
+    | undefined;
+}
 
 export class BCMS {
   private Client: BCMSClient;
@@ -67,7 +81,7 @@ export class BCMS {
     this.bcms = await this.cache();
     const startTime = Date.now();
     const client = await this.client();
-    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`));
+    const bcmsConfig: Config = await import(`${process.cwd()}/bcms.config.js`);
     if (typeof bcmsConfig === 'object' && bcmsConfig.entries instanceof Array) {
       for (const i in bcmsConfig.entries) {
         const config = bcmsConfig.entries[i];
@@ -123,7 +137,7 @@ export class BCMS {
    */
   public async pageParser(createPage?: any, config?: Config): Promise<void> {
     if (!config) {
-      config = (await import(`${process.cwd()}/bcms.config.js`));
+      config = await import(`${process.cwd()}/bcms.config.js`);
     }
     const startTime = Date.now();
     Logger.info(`
@@ -143,7 +157,9 @@ export class BCMS {
               `Entries for "${pageParserConfig.entries}" do not exist.`,
             );
           }
-          Logger.info(`Parsing pages for: ${pageParserConfig.entries} - ${pageParserConfig.type}`);
+          Logger.info(
+            `Parsing pages for: ${pageParserConfig.entries} - ${pageParserConfig.type}`,
+          );
           if (pageParserConfig.type === 'single') {
             for (const j in bcms[pageParserConfig.entries]) {
               const o = await pageParserConfig.handler(
@@ -277,12 +293,12 @@ export class BCMS {
     `);
     const startTime = Date.now();
     const client = await this.client();
-    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`));
+    const bcmsConfig: Config = await import(`${process.cwd()}/bcms.config.js`);
     if (!ppc) {
       if (bcmsConfig.media && bcmsConfig.media.ppc) {
         ppc = bcmsConfig.media.ppc;
       } else {
-        ppc = 1;
+        ppc = os.cpus().length;
       }
     }
     if (typeof bcmsConfig.media !== 'object') {
@@ -372,25 +388,152 @@ export class BCMS {
           );
         }
       }
-      let pointer = 0;
-      while (pointer < media.length) {
-        try {
-          pointer = await this.parseMedia(bcmsConfig, pointer, media, ppc);
-        } catch (error) {
-          if (bcmsConfig.media.failOnError === true) {
-            throw ErrorHandler.throw(error);
-          } else {
-            Logger.error(error);
-            pointer = pointer + ppc;
-          }
+      // const queue: MediaQueue[] = [];
+      // const queueElementSize = parseInt(`${media.length / ppc}`, 10);
+      // for (let i = 0; i < ppc; i = i + 1) {
+      //   if (i === ppc - 1) {
+      //     queue.push({
+      //       id: crypto.randomBytes(16).toString('hex'),
+      //       at: 0,
+      //       startAt: queueElementSize * i,
+      //       endAt: media.length,
+      //       done: false,
+      //     });
+      //   } else {
+      //     queue.push({
+      //       id: crypto.randomBytes(16).toString('hex'),
+      //       at: 0,
+      //       startAt: queueElementSize * i,
+      //       endAt: queueElementSize * (i + 1),
+      //       done: false,
+      //     });
+      //   }
+      // }
+      const queue: MediaQueue = {
+        process: [],
+        next: () => {
+          return media.length > 0 ? media.pop() : undefined;
+        },
+      };
+      await new Promise((resolve, reject) => {
+        for (let i = 0; i < ppc; i = i + 1) {
+          const id = crypto.randomBytes(16).toString('hex');
+          queue.process.push({
+            id,
+            status: 'running',
+          });
+          this.processMedia(bcmsConfig, queue)
+            .then(() => {
+              queue.process[i].status = 'done';
+              if (!queue.process.find((e) => e.status === 'running')) {
+                resolve();
+              }
+            })
+            .catch((error) => {
+              reject(error);
+            });
         }
-      }
+      });
+
+      // for (let i = 0; i < ppc; i = i + 1) {
+      //   queue.push(true);
+      //   this.processMedia(media)
+      //     .then()
+      //     .catch((error) => {
+      //       if (bcmsConfig.media.failOnError === true) {
+      //         throw error;
+      //       } else {
+      //         Logger.error(`[${i}] ${error}`);
+      //         queue.pop();
+
+      //         if (done.length === pointerTo - pointer) {
+      //           resolve(pointerTo);
+      //         }
+      //       }
+      //     });
+      // }
+
+      // while (pointer < media.length) {
+      //   try {
+      //     pointer = await this.parseMedia(bcmsConfig, pointer, media, ppc);
+      //   } catch (error) {
+      //     if (bcmsConfig.media.failOnError === true) {
+      //       throw ErrorHandler.throw(error);
+      //     } else {
+      //       Logger.error(error);
+      //       pointer = pointer + ppc;
+      //     }
+      //   }
+      // }
     }
     await FS.save(
       JSON.stringify(mediaCache, null, '  '),
       '/bcms-media.cache.json',
     );
     Logger.info(`Pull media completed in: ${(Date.now() - startTime) / 1000}s`);
+  }
+
+  private async processMedia(
+    config: Config,
+    queue: MediaQueue,
+  ) {
+    while (true) {
+      const media = queue.next();
+      if (!media) {
+        break;
+      }
+      Logger.info(
+        `[${media.file.path}/${media.file.name}] ` + 'Pulling and saving',
+      );
+      if (config.media.process === true) {
+        try {
+          await General.exec(
+            `bcms-ssgf --process-media ${Buffer.from(
+              JSON.stringify({
+                output: config.media.output,
+                name: media.file.name,
+                type: media.file.type,
+                path: media.file.path,
+                mimetype: media.file.mimetype,
+                sizeMap: config.media.sizeMap,
+              }),
+            ).toString('base64')}`,
+            (type, data) => {
+              process.stdout.write(data);
+            },
+          );
+        } catch (error) {
+          if (config.media.failOnError === true) {
+            throw error;
+          } else {
+            Logger.error(`[${media.file.path}/${media.file.name}] ${error}`);
+          }
+        }
+      } else {
+        try {
+          const data = await media.bin();
+          await FS.save(
+            data,
+            path.join(config.media.output, media.file.path, media.file.name),
+          );
+          Logger.info(
+            `[${media.file.path}/${
+              media.file.name
+            }] Saved at: ${process.cwd()}/${path.join(
+              config.media.output,
+              media.file.path,
+              media.file.name,
+            )}`,
+          );
+        } catch (error) {
+          if (config.media.failOnError === true) {
+            throw error;
+          } else {
+            Logger.error(`[${media.file.path}/${media.file.name}] ${error}`);
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -510,7 +653,7 @@ export class BCMS {
     this.bcms.__functions = {};
     const startTime = Date.now();
     const client = await this.client();
-    const bcmsConfig: Config = (await import(`${process.cwd()}/bcms.config.js`));
+    const bcmsConfig: Config = await import(`${process.cwd()}/bcms.config.js`);
     if (
       typeof bcmsConfig === 'object' &&
       bcmsConfig.functions instanceof Array
