@@ -2,11 +2,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { BCMSClient, BCMSMedia } from '@becomes/cms-client';
-import { ErrorHandler } from './util/error';
-import { Logger } from './util/logger';
-import { FS } from './util/fs';
-import { General } from './util/general';
-import { Config, PageParserNuxtOutput } from './interfaces/config';
+import { Config, PageParserNuxtOutput, MediaCache } from './interfaces';
+import { Logger, FS, General, ErrorHandler } from './util';
 
 interface MediaQueue {
   process: Array<{
@@ -316,10 +313,11 @@ export class BCMS {
       (e) => e.file.type !== 'DIR',
     );
     let pullMedia = true;
-    let mediaCache: {
-      timestamp?: number;
-      hash?: string;
-    } = {};
+    let mediaCache: MediaCache;
+    const mediaToDownloadAndProcess: Array<{
+      file: BCMSMedia;
+      bin: () => Promise<Buffer>;
+    }> = [];
     {
       const hash = crypto
         .createHash('sha256')
@@ -343,6 +341,18 @@ export class BCMS {
       } else {
         mediaCache.timestamp = Date.now();
         mediaCache.hash = hash;
+        if (!mediaCache.media) {
+          mediaCache.media = [];
+        }
+        media.forEach((e) => {
+          const m = mediaCache.media.find((t) => t._id === e.file._id);
+          if (!m) {
+            mediaToDownloadAndProcess.push(e);
+          }
+        });
+        mediaCache.media = media.map((e) => {
+          return e.file;
+        });
       }
     }
     if (pullMedia === true) {
@@ -388,31 +398,12 @@ export class BCMS {
           );
         }
       }
-      // const queue: MediaQueue[] = [];
-      // const queueElementSize = parseInt(`${media.length / ppc}`, 10);
-      // for (let i = 0; i < ppc; i = i + 1) {
-      //   if (i === ppc - 1) {
-      //     queue.push({
-      //       id: crypto.randomBytes(16).toString('hex'),
-      //       at: 0,
-      //       startAt: queueElementSize * i,
-      //       endAt: media.length,
-      //       done: false,
-      //     });
-      //   } else {
-      //     queue.push({
-      //       id: crypto.randomBytes(16).toString('hex'),
-      //       at: 0,
-      //       startAt: queueElementSize * i,
-      //       endAt: queueElementSize * (i + 1),
-      //       done: false,
-      //     });
-      //   }
-      // }
       const queue: MediaQueue = {
         process: [],
         next: () => {
-          return media.length > 0 ? media.pop() : undefined;
+          return mediaToDownloadAndProcess.length > 0
+            ? mediaToDownloadAndProcess.pop()
+            : undefined;
         },
       };
       await new Promise((resolve, reject) => {
@@ -434,37 +425,6 @@ export class BCMS {
             });
         }
       });
-
-      // for (let i = 0; i < ppc; i = i + 1) {
-      //   queue.push(true);
-      //   this.processMedia(media)
-      //     .then()
-      //     .catch((error) => {
-      //       if (bcmsConfig.media.failOnError === true) {
-      //         throw error;
-      //       } else {
-      //         Logger.error(`[${i}] ${error}`);
-      //         queue.pop();
-
-      //         if (done.length === pointerTo - pointer) {
-      //           resolve(pointerTo);
-      //         }
-      //       }
-      //     });
-      // }
-
-      // while (pointer < media.length) {
-      //   try {
-      //     pointer = await this.parseMedia(bcmsConfig, pointer, media, ppc);
-      //   } catch (error) {
-      //     if (bcmsConfig.media.failOnError === true) {
-      //       throw ErrorHandler.throw(error);
-      //     } else {
-      //       Logger.error(error);
-      //       pointer = pointer + ppc;
-      //     }
-      //   }
-      // }
     }
     await FS.save(
       JSON.stringify(mediaCache, null, '  '),
@@ -473,10 +433,7 @@ export class BCMS {
     Logger.info(`Pull media completed in: ${(Date.now() - startTime) / 1000}s`);
   }
 
-  private async processMedia(
-    config: Config,
-    queue: MediaQueue,
-  ) {
+  private async processMedia(config: Config, queue: MediaQueue) {
     while (true) {
       const media = queue.next();
       if (!media) {
