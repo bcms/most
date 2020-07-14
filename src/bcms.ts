@@ -315,7 +315,11 @@ export class BCMS {
       (e) => e.file.type !== 'DIR',
     );
     let pullMedia = true;
-    let mediaCache: MediaCache;
+    let mediaCache: MediaCache = {
+      hash: '',
+      media: [],
+      timestamp: 0,
+    };
     const mediaToDownloadAndProcess: Array<{
       file: BCMSMedia;
       bin: () => Promise<Buffer>;
