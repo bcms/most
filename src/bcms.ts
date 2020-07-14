@@ -101,7 +101,7 @@ export class BCMS {
         Logger.info(`[${i}] ${config.name} ...`);
         const timeOffset = Date.now();
         if (config.parse === true) {
-          const entries = await client
+          this.bcms[config.name] = await client
             .template(config.templateId)
             .entry()
             .getAllParsed();
