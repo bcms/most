@@ -76,6 +76,7 @@ export class BCMS {
     ---------------------
     `);
     this.bcms = await this.cache();
+    const contentChanges = {};
     const startTime = Date.now();
     const client = await this.client();
     const bcmsConfig: Config = await import(`${process.cwd()}/bcms.config.js`);
@@ -100,10 +101,11 @@ export class BCMS {
         Logger.info(`[${i}] ${config.name} ...`);
         const timeOffset = Date.now();
         if (config.parse === true) {
-          this.bcms[config.name] = await client
+          const entries = await client
             .template(config.templateId)
             .entry()
             .getAllParsed();
+            if (this.bcms.)
         } else {
           this.bcms[config.name] = await client
             .template(config.templateId)

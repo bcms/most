@@ -52,12 +52,12 @@ const parseArgs = (rawArgs) => {
 
 const bundle = async () => {
   const tasks = new Listr([
-    // {
-    //   title: 'Remove old bundle.',
-    //   task: async () => {
-    //     await fse.remove(path.join(__dirname, 'dist'));
-    //   },
-    // },
+    {
+      title: 'Remove old bundle.',
+      task: async () => {
+        await fse.remove(path.join(__dirname, 'dist'));
+      },
+    },
     {
       title: 'Compile Typescript.',
       task: async () => {

@@ -15,15 +15,15 @@
     "test-dev": "env-cmd npm run test"
   },
   "dependencies": {
-    "@becomes/cms-client": "^1.0.4",
+    "@becomes/cms-client": "^1.0.8",
     "arg": "^4.1.2",
     "axios": "^0.19.2",
     "esm": "^3.2.25",
-    "sharp": "^0.25.3"
+    "sharp": "^0.25.4"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
-    "@types/node": "^12.12.43",
+    "@types/node": "^12.12.50",
     "@types/sharp": "^0.25.0",
     "chai": "^4.2.0",
     "env-cmd": "^10.0.1",
@@ -33,7 +33,7 @@
     "tsconfig-paths": "^3.9.0",
     "tslint": "^5.20.1",
     "typedoc": "^0.15.8",
-    "typescript": "^3.9.3"
+    "typescript": "^3.9.6"
   },
   "bin": {
     "bcms-ssgf": "bin/bcms-ssgf.js"
