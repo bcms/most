@@ -17,9 +17,9 @@ export class ProcessMedia {
       };
       let payloadAsString = '';
       if (typeof config.payload === 'object') {
-        payloadAsString = Buffer.from(JSON.stringify(config.payload)).toString(
-          'base64',
-        );
+        payloadAsString = Buffer.from(
+          encodeURIComponent(JSON.stringify(config.payload)),
+        ).toString('base64');
       } else {
         payloadAsString = '' + config.payload;
       }
