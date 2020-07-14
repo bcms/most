@@ -105,7 +105,6 @@ export class BCMS {
             .template(config.templateId)
             .entry()
             .getAllParsed();
-            if (this.bcms.)
         } else {
           this.bcms[config.name] = await client
             .template(config.templateId)
