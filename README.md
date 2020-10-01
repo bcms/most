@@ -4,7 +4,7 @@ This is a tool that will abstract communication with Becomes CMS API and will al
 
 ## Getting started
 
-Install tool as a development dependency by running `npm i -D @becomes/cms-ssgf`.
+Install tool as a development dependency by running `npm i -D @becomes/cms-most`.
 After this go to `package.json` and add scripts:
 
 ```json
@@ -12,9 +12,9 @@ After this go to `package.json` and add scripts:
   // ...
   "scripts": {
     // ...
-    "bcms:pull-content": "bcms-ssgf --pull-content",
-    "bcms:page-parser": "bcms-ssgf --page-parser",
-    "bcms:pull-media": "bcms-ssgf --pull-media"
+    "bcms:pull-content": "bcms-most --pull-content",
+    "bcms:page-parser": "bcms-most --page-parser",
+    "bcms:pull-media": "bcms-most --pull-media"
   }
 }
 ```
@@ -22,7 +22,7 @@ After this go to `package.json` and add scripts:
 Now you will need to create a configuration file called `bcms.config.js` in the root of the project (where `package.json` is). Inside of it, export configuration object. You can use configuration builder class to have autocomplete.
 
 ```js
-import { ConfigBuilder } from '@becomes/cms-ssgf';
+import { BCMSMostConfigBuilder } from '@becomes/cms-most';
 
 export default ConfigBuilder.build({
   // >>> Your configuration <<<

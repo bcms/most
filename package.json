@@ -1,52 +1,61 @@
 {
-  "name": "@becomes/cms-ssgf",
-  "version": "1.0.9",
+  "name": "@becomes/cms-most",
+  "version": "1.0.0",
   "description": "Utility for Becomes CMS used for client framework applications like Nuxt and Gatsby.",
   "author": "becomes.co",
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p .",
+    "build:ts": "tsc -p .",
     "bundle": "node tools.js --bundle",
+    "publish": "node tools.js --publish",
     "link": "node tools.js --link",
     "unlink": "node tools.js --unlink",
-    "publish": "node tools.js --publish",
-    "test": "mocha ./test --recursive --exit",
-    "test-dev": "env-cmd npm run test"
+    "typedoc-generate": "typedoc",
+    "bcms:pull-content": "ts-node src/bin/bcms-most --pull-content",
+    "bcms:pull-media": "ts-node src/bin/bcms-most --pull-media",
+    "bcms:process-media": "ts-node src/bin/bcms-most --process-media",
+    "bcms:call-functions": "ts-node src/bin/bcms-most --call-functions",
+    "test": "mocha -r ts-node/register test/integration/*.test.ts --recursive --exit",
+    "test:active": "mocha -r ts-node/register test/integration/*.active.test.ts --recursive --exit",
+    "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
+    "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
+    "do": "ts-node src/media-processor.ts --media 7b225f6964223a22356637313939353762373735613733393464616366393636222c22637265617465644174223a313630313238303334333037312c22757064617465644174223a313630313238303334333037312c22757365724964223a22356636636162306236393336646239666663376337383331222c2274797065223a22494d47222c226d696d6574797065223a22696d6167652f6a706567222c2273697a65223a313039323034342c226e616d65223a226675747572652d7468652d736b792d6d6f756e7461696e732d7269766572732d74726565732d736369656e63652d66696374696f6e2d66616e746173792d7370616365736869702d667574757269737469632d3435303078323230372e6a7067222c2270617468223a222f222c226973496e526f6f74223a747275652c226861734368696c6472656e223a66616c73652c22706172656e744964223a22227d --configMedia 7b226f7574707574223a222f7075626c6963222c2273697a654d6170223a5b7b227769647468223a3335307d5d2c22707063223a31367d"
   },
   "dependencies": {
-    "@becomes/cms-client": "^1.0.8",
-    "arg": "^4.1.2",
+    "arg": "^4.1.3",
     "axios": "^0.19.2",
-    "esm": "^3.2.25",
+    "fs-extra": "^9.0.1",
     "sharp": "^0.25.4"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
-    "@types/node": "^12.12.50",
-    "@types/sharp": "^0.25.0",
+    "@types/chai": "^4.2.12",
+    "@types/fs-extra": "^9.0.1",
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^12.12.62",
+    "@types/sharp": "^0.25.1",
     "chai": "^4.2.0",
     "env-cmd": "^10.0.1",
-    "listr": "^0.14.3",
     "mocha": "^7.2.0",
     "ts-node": "^8.10.2",
     "tsconfig-paths": "^3.9.0",
     "tslint": "^5.20.1",
     "typedoc": "^0.15.8",
-    "typescript": "^3.9.6"
+    "typescript": "^3.9.7"
   },
   "bin": {
-    "bcms-ssgf": "bin/bcms-ssgf.js"
+    "bcms-most": "bin/bcms-most.js"
   },
   "keywords": [
-    "bcms-ssgf"
+    "bcms-most"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/becomesco/cms-client.git"
+    "url": "git+https://github.com/becomesco/cms-ssgf.git"
   },
   "bugs": {
-    "url": "https://github.com/becomesco/cms-client/issues"
+    "url": "https://github.com/becomesco/cms-ssgf/issues"
   },
-  "homepage": "https://github.com/becomesco/cms-client#readme"
+  "homepage": "https://github.com/becomesco/cms-ssgf#readme"
 }

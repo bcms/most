@@ -2,6 +2,8 @@
 /dist
 /node_modules
 bcms.config.js
+/bcms
+/public
 
 # Logs
 logs
