@@ -1,6 +1,8 @@
 import * as os from 'os';
+import * as path from 'path';
 import * as crypto from 'crypto';
 import {
+  BCMSClient,
   BCMSClientPrototype,
   MediaResponse,
   MediaType,
@@ -13,6 +15,7 @@ export interface BCMSMostPrototype {
     get: {
       content(): Promise<any>;
       media(): Promise<MediaCache>;
+      function(): Promise<any>;
     };
   };
   content: {
@@ -25,14 +28,27 @@ export interface BCMSMostPrototype {
   function: {
     call(): Promise<void>;
   };
-  parser(): Promise<void>;
+  parser: {
+    nuxt(): Promise<void>;
+    gatsby(createPage: any, failOnError?: boolean): Promise<void>;
+  };
 }
 
 function bcmsMost(
-  config: Config,
-  client: BCMSClientPrototype,
+  config?: Config,
+  client?: BCMSClientPrototype,
 ): BCMSMostPrototype {
+  if (!config) {
+    config = require(`${process.cwd()}/bcms.config.js`);
+  }
+  if (!client) {
+    client = BCMSClient({
+      cmsOrigin: config.cms.origin,
+      key: config.cms.key,
+    });
+  }
   let contentCache: any;
+  let functionCache: any;
   let mediaCache: MediaCache;
   const self: BCMSMostPrototype = {
     cache: {
@@ -63,6 +79,18 @@ function bcmsMost(
             };
           }
           return mediaCache;
+        },
+        async function() {
+          if (functionCache) {
+            return functionCache;
+          } else if (await FS.exist(['function.cache.json'])) {
+            functionCache = JSON.parse(
+              (await FS.read(['function.cache.json'])).toString(),
+            );
+          } else {
+            functionCache = {};
+          }
+          return functionCache;
         },
       },
     },
@@ -210,9 +238,9 @@ function bcmsMost(
             let error = '';
             try {
               await General.exec(
-                `ts-node src/media-processor.ts --media ${Buffer.from(
+                `bcms-most --media-processor --media ${Buffer.from(
                   JSON.stringify(data),
-                ).toString('hex')} --configMedia ${Buffer.from(
+                ).toString('hex')} --media-config ${Buffer.from(
                   JSON.stringify(config.media),
                 ).toString('hex')}`,
                 (type, chunk) => {
@@ -232,7 +260,12 @@ function bcmsMost(
                 error,
               });
             } else {
-              cnsl.info(chunkId, output);
+              cnsl.info(
+                chunkId,
+                `Done: ${
+                  data.isInRoot ? data.name : data.path + '/' + data.name
+                }`,
+              );
             }
           },
         );
@@ -241,10 +274,98 @@ function bcmsMost(
       },
     },
     function: {
-      async call() {},
+      async call() {
+        const cnsl = Console('pullContent');
+        cnsl.info('started', '');
+        const startTime = Date.now();
+        if (!functionCache) {
+          await self.cache.get.function();
+        }
+        if (config.functions) {
+          for (let i = 0; i < config.functions.length; i = i + 1) {
+            const fnConfig = config.functions[i];
+            const stage = `[ ${i + 1}/${config.functions.length} ] ${
+              fnConfig.name
+            }`;
+            cnsl.info(stage, 'calling ...');
+            const callFunctionTimeOffset = Date.now();
+            const result = await client.function.call(
+              fnConfig.name,
+              fnConfig.payload,
+            );
+            if (result.success === false) {
+              cnsl.error(stage, result.result);
+            } else {
+              functionCache[fnConfig.name] = result.result;
+              cnsl.info(
+                stage,
+                `Done in: ${(Date.now() - callFunctionTimeOffset) / 1000}s`,
+              );
+            }
+          }
+        }
+        await FS.save(JSON.stringify(functionCache, null, '  '), [
+          'function.cache.json',
+        ]);
+        cnsl.info('done', `${(Date.now() - startTime) / 1000}s`);
+      },
     },
-    async parser() {
-      throw Error('Not yet implemented.');
+    parser: {
+      async gatsby(createPage, failOnError) {
+        if (config.parser && config.parser.gatsby) {
+          if (createPage) {
+            const cnsl = Console('Parser-Gatsby');
+            cnsl.info('start', '');
+            const startTime = Date.now();
+            if (!contentCache) {
+              await self.cache.get.content();
+            }
+            // tslint:disable-next-line: prefer-for-of
+            for (let i = 0; i < config.parser.gatsby.length; i = i + 1) {
+              const getEntriesTimeOffset = Date.now();
+              const gatsbyConfig = config.parser.gatsby[i];
+              const stage = `[${i + 1}/${config.parser.gatsby.length}] ${
+                gatsbyConfig.page
+              }`;
+              cnsl.info(stage, 'Creating pages ...');
+              const templateComponentPath = path.join(
+                process.cwd(),
+                'src',
+                gatsbyConfig.page,
+              );
+              try {
+                await gatsbyConfig.handler(
+                  createPage,
+                  templateComponentPath,
+                  contentCache,
+                );
+              } catch (error) {
+                if (failOnError) {
+                  throw Error(error);
+                }
+                cnsl.error(stage, error);
+              }
+              cnsl.info(
+                stage,
+                `Done in: ${(Date.now() - getEntriesTimeOffset) / 1000}s`,
+              );
+            }
+            cnsl.info('done', `${(Date.now() - startTime) / 1000}s`);
+          } else {
+            throw Error(
+              'Please provide "createPage" gatsby hook to the function.',
+            );
+          }
+        } else {
+          throw Error('Missing "gatsby" parser in configuration file.');
+        }
+      },
+      async nuxt() {
+        if (config.parser && config.parser.nuxt) {
+        } else {
+          throw Error('Missing "nuxt" parser in configuration file.');
+        }
+      },
     },
   };
   return self;

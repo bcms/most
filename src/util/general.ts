@@ -8,6 +8,7 @@ export interface GeneralPrototype {
   exec(
     cmd: string,
     output: (type: 'stdout' | 'stderr', chunk: string) => void,
+    timeout?: number,
   ): Promise<void>;
 }
 
@@ -87,22 +88,35 @@ function generalUtil(): GeneralPrototype {
         }
       },
     },
-    async exec(cmd, output) {
+    async exec(cmd, output, timeout) {
       return await new Promise((resolve, reject) => {
-        const proc = childProcess.exec(cmd);
-        proc.stdout.on('data', (chunk) => {
-          output('stdout', chunk);
-        });
-        proc.stderr.on('data', (chunk) => {
-          output('stderr', chunk);
-        });
-        proc.on('close', (code) => {
-          if (code !== 0) {
-            reject();
-          } else {
-            resolve();
+        let timeoutTimer: NodeJS.Timeout;
+        try {
+          const proc = childProcess.exec(cmd);
+          if (timeout) {
+            timeoutTimer = setTimeout(() => {
+              proc.kill();
+              reject(Error('Execution killed because of timeout.'));
+            }, timeout);
           }
-        });
+          proc.stdout.on('data', (chunk) => {
+            output('stdout', chunk);
+          });
+          proc.stderr.on('data', (chunk) => {
+            output('stderr', chunk);
+          });
+          proc.on('close', (code) => {
+            clearTimeout(timeoutTimer);
+            if (code !== 0) {
+              reject();
+            } else {
+              resolve();
+            }
+          });
+        } catch (error) {
+          clearTimeout(timeoutTimer);
+          reject(error);
+        }
       });
     },
   };

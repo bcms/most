@@ -1,10 +1,12 @@
 export interface Options {
+  all?: boolean;
   pullMedia?: boolean;
   pullContent?: boolean;
   processMedia?: boolean;
+  mediaProcessor?: boolean;
   media?: string;
-  configMedia?: string;
-  pageParser?: boolean;
+  mediaConfig?: string;
+  parse?: string;
   callFunctions?: boolean;
   apiKey?: string;
   apiSecret?: string;

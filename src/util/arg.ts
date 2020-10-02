@@ -10,13 +10,15 @@ function argUtil(): ArgPrototype {
     parse(rawArgs) {
       const args = arg(
         {
+          '--all': Boolean,
           '--pull-media': Boolean,
           '--process-media': Boolean,
           '--pull-content': Boolean,
-          '--page-parser': Boolean,
+          '--parse': String,
           '--call-functions': Boolean,
           '--media': String,
-          '--configMedia': String,
+          '--media-config': String,
+          '--media-processor': Boolean,
           '--api-key': String,
           '--api-secret': String,
           '--api-origin': String,
@@ -26,12 +28,14 @@ function argUtil(): ArgPrototype {
         },
       );
       const options: Options = {
+        all: args['--all'] || false,
         pullContent: args['--pull-content'] || false,
         pullMedia: args['--pull-media'] || false,
         processMedia: args['--process-media'] || undefined,
         media: args['--media'] || undefined,
-        configMedia: args['--configMedia'] || undefined,
-        pageParser: args['--page-parser'] || false,
+        mediaConfig: args['--media-config'] || undefined,
+        parse: args['--parse'] || undefined,
+        mediaProcessor: args['--media-processor'] || false,
         callFunctions: args['--call-functions'] || false,
         apiKey: args['--api-key'] || undefined,
         apiSecret: args['--api-secret'] || undefined,

@@ -18,7 +18,11 @@ export interface ConfigPageParserNuxt {
 
 export interface ConfigPageParserGatsby {
   page: string;
-  handler: (createPage: any, component: any, bcms: any) => Promise<void>;
+  handler: (
+    createPage: any,
+    component: any,
+    contentCache: any,
+  ) => Promise<void>;
 }
 
 export interface ConfigMediaSizeMap {
@@ -56,7 +60,7 @@ export interface Config {
     modify?: (response: any) => Promise<any>;
   }>;
   media: ConfigMedia;
-  pageParser?: {
+  parser?: {
     nuxt?: ConfigPageParserNuxt[];
     gatsby?: ConfigPageParserGatsby[];
   };
@@ -207,7 +211,7 @@ export const ConfigSchema: ObjectSchema = {
       },
     },
   },
-  pageParser: {
+  parser: {
     __type: 'object',
     __required: false,
     __child: {
