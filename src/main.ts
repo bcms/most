@@ -199,16 +199,25 @@ function bcmsMost(
                   data.data.isInRoot ? '' : '/'
                 }${data.data.name}`,
               );
-              const buffer = await data.bin();
-              const mediaPath = data.data.isInRoot
-                ? [data.data.name]
-                : (data.data.path + '/' + data.data.name).split('/').slice(1);
-              const path = [
-                '..',
-                ...config.media.output.split('/').slice(1),
-                ...mediaPath,
-              ];
-              await FS.save(Buffer.from(buffer), path);
+              let buffer: Buffer | ArrayBuffer;
+              try {
+                buffer = await data.bin();
+                const mediaPath = data.data.isInRoot
+                  ? [data.data.name]
+                  : (data.data.path + '/' + data.data.name).split('/').slice(1);
+                const path = [
+                  '..',
+                  ...config.media.output.split('/').slice(1),
+                  ...mediaPath,
+                ];
+                await FS.save(Buffer.from(buffer), path);
+              } catch (error) {
+                if (config.media.failOnError === true) {
+                  throw error;
+                }
+                // tslint:disable-next-line: no-console
+                console.error(error);
+              }
             },
           );
         }
@@ -275,7 +284,6 @@ function bcmsMost(
             }
           },
         );
-
         cnsl.info('done', `${(Date.now() - startTime) / 1000}s`);
       },
     },
