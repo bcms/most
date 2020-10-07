@@ -122,6 +122,12 @@ function bcmsMost(
             entryConfig.templateId,
             entryConfig.parse,
           );
+          if (typeof entryConfig.modify === 'function') {
+            contentCache[entryConfig.name] = await entryConfig.modify(
+              JSON.parse(JSON.stringify(contentCache[entryConfig.name])),
+              contentCache,
+            );
+          }
           cnsl.info(
             `[ ${i + 1}/${config.entries.length} ] ${entryConfig.name}`,
             `Done in: ${(Date.now() - getEntriesTimeOffset) / 1000}s`,

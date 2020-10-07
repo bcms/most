@@ -52,7 +52,7 @@ export interface Config {
     templateId: string;
     aggregate?: boolean;
     parse?: boolean;
-    modify?: (entries: any) => Promise<any>;
+    modify?: (entries: any, bcms: any) => Promise<any>;
   }>;
   functions?: Array<{
     name: string;
