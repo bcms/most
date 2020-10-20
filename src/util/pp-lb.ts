@@ -29,7 +29,7 @@ function pplb(): PPLBPrototype {
           };
         });
         const queueable = Queueable<number>('next');
-        let dataPointer = 0 + ppc;
+        let dataPointer = ppc - 1;
         async function next() {
           return await queueable.exec('next', 'free_one_by_one', async () => {
             dataPointer = dataPointer + 1;
