@@ -22,6 +22,7 @@ export interface ConfigPageParserGatsby {
     createPage: any,
     component: any,
     contentCache: any,
+    functionCache: any,
   ) => Promise<void>;
 }
 

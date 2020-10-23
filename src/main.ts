@@ -310,7 +310,11 @@ function bcmsMost(
             if (result.success === false) {
               cnsl.error(stage, result.result);
             } else {
-              functionCache[fnConfig.name] = result.result;
+              if (fnConfig.modify) {
+                functionCache[fnConfig.name] = fnConfig.modify(result.result);
+              } else {
+                functionCache[fnConfig.name] = result.result;
+              }
               cnsl.info(
                 stage,
                 `Done in: ${(Date.now() - callFunctionTimeOffset) / 1000}s`,
@@ -334,6 +338,9 @@ function bcmsMost(
             if (!contentCache) {
               await self.cache.get.content();
             }
+            if (!functionCache) {
+              await self.cache.get.function();
+            }
             // tslint:disable-next-line: prefer-for-of
             for (let i = 0; i < config.parser.gatsby.length; i = i + 1) {
               const getEntriesTimeOffset = Date.now();
@@ -352,6 +359,7 @@ function bcmsMost(
                   createPage,
                   templateComponentPath,
                   contentCache,
+                  functionCache,
                 );
               } catch (error) {
                 if (failOnError) {
