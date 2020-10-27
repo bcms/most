@@ -311,9 +311,9 @@ function bcmsMost(
               cnsl.error(stage, result.result);
             } else {
               if (fnConfig.modify) {
-                functionCache[fnConfig.name] = fnConfig.modify(result.result);
+                functionCache[fnConfig.name.replace(/-/g, '_')] = await fnConfig.modify(result.result);
               } else {
-                functionCache[fnConfig.name] = result.result;
+                functionCache[fnConfig.name.replace(/-/g, '_')] = result.result;
               }
               cnsl.info(
                 stage,
