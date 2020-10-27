@@ -15,6 +15,7 @@ export interface BCMSMostPrototype {
     get: {
       content(): Promise<any>;
       media(): Promise<MediaCache>;
+      processMedia(): Promise<Media[]>;
       function(): Promise<any>;
     };
   };
@@ -50,6 +51,7 @@ function bcmsMost(
   let contentCache: any;
   let functionCache: any;
   let mediaCache: MediaCache;
+  let processMediaCache: Media[];
   const self: BCMSMostPrototype = {
     cache: {
       get: {
@@ -79,6 +81,18 @@ function bcmsMost(
             };
           }
           return mediaCache;
+        },
+        async processMedia() {
+          if (processMediaCache) {
+            return processMediaCache;
+          } else if (await FS.exist(['process-media.cache.json'])) {
+            processMediaCache = JSON.parse(
+              (await FS.read(['process-media.cache.json'])).toString(),
+            );
+          } else {
+            processMediaCache = [];
+          }
+          return processMediaCache;
         },
         async function() {
           if (functionCache) {
@@ -147,6 +161,9 @@ function bcmsMost(
         if (!mediaCache) {
           await self.cache.get.media();
         }
+        if (!processMediaCache) {
+          await self.cache.get.processMedia();
+        }
         if (!config.media.ppc) {
           config.media.ppc = os.cpus().length;
         }
@@ -182,6 +199,12 @@ function bcmsMost(
               );
               if (!mediaFoundInCache) {
                 mediaCache.media.push(mia.data);
+                if (
+                  mia.data.type === MediaType.IMG &&
+                  !processMediaCache.find((e) => e._id === mia.data._id)
+                ) {
+                  processMediaCache.push(mia.data);
+                }
                 mediaToDownload.push(mia);
               }
             });
@@ -205,12 +228,12 @@ function bcmsMost(
                 const mediaPath = data.data.isInRoot
                   ? [data.data.name]
                   : (data.data.path + '/' + data.data.name).split('/').slice(1);
-                const path = [
+                const filePath = [
                   '..',
                   ...config.media.output.split('/').slice(1),
                   ...mediaPath,
                 ];
-                await FS.save(Buffer.from(buffer), path);
+                await FS.save(Buffer.from(buffer), filePath);
               } catch (error) {
                 if (config.media.failOnError === true) {
                   throw error;
@@ -227,63 +250,71 @@ function bcmsMost(
         await FS.save(JSON.stringify(mediaCache, null, '  '), [
           'media.cache.json',
         ]);
+        await FS.save(JSON.stringify(processMediaCache, null, '  '), [
+          'process-media.cache.json',
+        ]);
         cnsl.info('done', `${(Date.now() - startTime) / 1000}s`);
       },
       async process() {
         const cnsl = Console('processMedia');
         cnsl.info('started', '...');
         const startTime = Date.now();
-        if (!mediaCache) {
-          await self.cache.get.media();
+        if (!processMediaCache) {
+          await self.cache.get.processMedia();
         }
         if (!config.media.ppc) {
           config.media.ppc = os.cpus().length;
         }
-        await PPLB.manage<Media>(
-          config.media.ppc,
-          mediaCache.media.filter((e) => e.type !== MediaType.DIR),
-          async (data, chunkId) => {
-            cnsl.info(
-              chunkId,
-              `Processing: ${
-                data.isInRoot ? data.name : data.path + '/' + data.name
-              }`,
-            );
-            let output = '';
-            let error = '';
-            try {
-              await General.exec(
-                `bcms-most --media-processor --media ${Buffer.from(
-                  JSON.stringify(data),
-                ).toString('hex')} --media-config ${Buffer.from(
-                  JSON.stringify(config.media),
-                ).toString('hex')}`,
-                (type, chunk) => {
-                  if (type === 'stderr') {
-                    error += chunk;
-                  } else {
-                    output += chunk;
-                  }
-                },
-              );
-            } catch (e) {
-              error = e ? e.message : 'Process failed with no message.';
-            }
-            if (error !== '') {
-              cnsl.error(chunkId, {
-                output,
-                error,
-              });
-            } else {
+        if (processMediaCache.length > 0) {
+          await PPLB.manage<Media>(
+            config.media.ppc,
+            processMediaCache,
+            async (data, chunkId) => {
               cnsl.info(
                 chunkId,
-                `Done: ${
+                `Processing: ${
                   data.isInRoot ? data.name : data.path + '/' + data.name
                 }`,
               );
-            }
-          },
-        );
+              let output = '';
+              let error = '';
+              try {
+                await General.exec(
+                  `bcms-most --media-processor --media ${Buffer.from(
+                    JSON.stringify(data),
+                  ).toString('hex')} --media-config ${Buffer.from(
+                    JSON.stringify(config.media),
+                  ).toString('hex')}`,
+                  (type, chunk) => {
+                    if (type === 'stderr') {
+                      error += chunk;
+                    } else {
+                      output += chunk;
+                    }
+                  },
+                );
+              } catch (e) {
+                error = e ? e.message : 'Process failed with no message.';
+              }
+              if (error !== '') {
+                cnsl.error(chunkId, {
+                  output,
+                  error,
+                });
+              } else {
+                cnsl.info(
+                  chunkId,
+                  `Done: ${
+                    data.isInRoot ? data.name : data.path + '/' + data.name
+                  }`,
+                );
+              }
+            },
+          );
+          await FS.save(JSON.stringify([], null, '  '), [
+            'process-media.cache.json',
+          ]);
+        }
         cnsl.info('done', `${(Date.now() - startTime) / 1000}s`);
       },
     },
@@ -311,7 +342,9 @@ function bcmsMost(
               cnsl.error(stage, result.result);
             } else {
               if (fnConfig.modify) {
-                functionCache[fnConfig.name.replace(/-/g, '_')] = await fnConfig.modify(result.result);
+                functionCache[
+                  fnConfig.name.replace(/-/g, '_')
+                ] = await fnConfig.modify(result.result);
               } else {
                 functionCache[fnConfig.name.replace(/-/g, '_')] = result.result;
               }
