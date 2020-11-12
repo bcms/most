@@ -1,6 +1,5 @@
 import * as os from 'os';
 import * as path from 'path';
-import * as crypto from 'crypto';
 import {
   BCMSClient,
   BCMSClientPrototype,
@@ -8,14 +7,16 @@ import {
   MediaType,
 } from '@becomes/cms-client';
 import { Config, Media, MediaCache } from './types';
-import { Console, ErrorHandler, FS, General, PPLB } from './util';
+import { Console, FS, General, PPLB } from './util';
 
 export interface BCMSMostPrototype {
   cache: {
     get: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       content(): Promise<any>;
       media(): Promise<MediaCache>;
       processMedia(): Promise<Media[]>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       function(): Promise<any>;
     };
   };
@@ -31,6 +32,7 @@ export interface BCMSMostPrototype {
   };
   parser: {
     nuxt(): Promise<void>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     gatsby(createPage: any, failOnError?: boolean): Promise<void>;
   };
 }
@@ -48,7 +50,9 @@ function bcmsMost(
       key: config.cms.key,
     });
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let contentCache: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let functionCache: any;
   let mediaCache: MediaCache;
   let processMediaCache: Media[];
@@ -167,49 +171,57 @@ function bcmsMost(
         if (!config.media.ppc) {
           config.media.ppc = os.cpus().length;
         }
-        const media = await client.media.getAll();
+        const media = (await client.media.getAll()).filter(
+          (e) => e.data.type !== MediaType.DIR,
+        );
         media.sort((a, b) => b.data.createdAt - a.data.createdAt);
         const mediaToDownload: MediaResponse[] = [];
-        const mediaHash = crypto
-          .createHash('sha512')
-          .update(
-            Buffer.from(
-              media.map((e) => {
-                return (
-                  e.data.path +
-                  e.data.name +
-                  e.data.size +
-                  e.data.createdAt +
-                  e.data.updatedAt
-                );
-              }),
-            ).toString('base64'),
-          )
-          .digest('hex');
-        if (mediaCache.hash !== mediaHash) {
-          mediaCache.hash = mediaHash;
-          media
-            .filter((mia) => mia.data.type !== MediaType.DIR)
-            .forEach((mia) => {
-              const mediaFoundInCache = mediaCache.media.find(
-                (e) =>
-                  e._id === mia.data._id &&
-                  e.createdAt === mia.data.createdAt &&
-                  e.updatedAt === mia.data.updatedAt,
-              );
-              if (!mediaFoundInCache) {
-                mediaCache.media.push(mia.data);
-                if (
-                  mia.data.type === MediaType.IMG &&
-                  !processMediaCache.find((e) => e._id === mia.data._id)
-                ) {
-                  processMediaCache.push(mia.data);
-                }
-                mediaToDownload.push(mia);
-              }
+        const mediaToRemove: MediaResponse[] = [];
+        const newMediaCache: MediaCache = {
+          hash: '',
+          media: [],
+        };
+        mediaCache.media.forEach((mc) => {
+          const mia = media.find((e) => e.data._id === mc._id);
+          if (!mia || mia.data.updatedAt !== mc.updatedAt) {
+            mediaToRemove.push({
+              bin: undefined,
+              data: mc,
             });
-        } else {
-          cnsl.info('nothing to do', '');
+          }
+        });
+        media.forEach((m) => {
+          const mia = mediaCache.media.find((e) => e._id === m.data._id);
+          if (!mia || mia.updatedAt !== m.data.updatedAt) {
+            mediaToDownload.push(m);
+            processMediaCache.push(m.data);
+          }
+          newMediaCache.media.push(m.data);
+        });
+        if (mediaToRemove.length > 0) {
+          await PPLB.manage<MediaResponse>(
+            config.media.ppc,
+            mediaToRemove,
+            async (data, chunkId) => {
+              cnsl.info(
+                chunkId,
+                `Removing file: ${data.data.path}${
+                  data.data.isInRoot ? '' : '/'
+                }${data.data.name}`,
+              );
+              const mediaPath = data.data.isInRoot
+                ? [data.data.name]
+                : (data.data.path + '/' + data.data.name).split('/').slice(1);
+              const filePath = [
+                '..',
+                ...config.media.output.split('/').slice(1),
+                ...mediaPath,
+              ];
+              if (await FS.exist(filePath)) {
+                await FS.deleteFile(filePath);
+              }
+            },
+          );
         }
         if (mediaToDownload.length > 0) {
           await PPLB.manage<MediaResponse>(
@@ -244,10 +256,7 @@ function bcmsMost(
             },
           );
         }
-        mediaCache.media = media.map((e) => {
-          return e.data;
-        });
-        await FS.save(JSON.stringify(mediaCache, null, '  '), [
+        await FS.save(JSON.stringify(newMediaCache, null, '  '), [
           'media.cache.json',
         ]);
         await FS.save(JSON.stringify(processMediaCache, null, '  '), [
