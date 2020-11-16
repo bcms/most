@@ -1,5 +1,5 @@
 export interface Worker {
   id: string;
   busy: boolean;
-  exec: (...args: any[]) => Promise<void>;
+  exec: (...args: string[]) => Promise<void>;
 }

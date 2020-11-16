@@ -30,15 +30,15 @@ export enum ConsoleColors {
 }
 
 export interface ConsolePrototype {
-  info(place: string, message: any): void;
-  warn(place: string, message: any): void;
-  error(place: string, message: any): void;
+  info<T>(place: string, message: T): void;
+  warn<T>(place: string, message: T): void;
+  error<T>(place: string, message: T): void;
 }
 
 function consoleUtil(component: string): ConsolePrototype {
   return {
     info(place, message) {
-      let print: string = '';
+      let print = '';
       if (typeof message === 'object') {
         print = `\r\n${ConsoleColors.FgWhite}${JSON.stringify(
           message,
@@ -46,7 +46,7 @@ function consoleUtil(component: string): ConsolePrototype {
           2,
         )}${ConsoleColors.Reset}`;
       } else {
-        print = message;
+        print = `${message}`;
       }
       const output: string[] = [
         `${ConsoleColors.BgWhite}${ConsoleColors.FgBlack}[INFO]${ConsoleColors.Reset}`,
@@ -62,7 +62,7 @@ function consoleUtil(component: string): ConsolePrototype {
       console.log(output.join(' '));
     },
     warn(place, message) {
-      let print: string = '';
+      let print = '';
       if (typeof message === 'object') {
         print = `\r\n${ConsoleColors.FgYellow}${JSON.stringify(
           message,
@@ -70,7 +70,7 @@ function consoleUtil(component: string): ConsolePrototype {
           2,
         )}${ConsoleColors.Reset}`;
       } else {
-        print = message;
+        print = `${message}`;
       }
       const output: string[] = [
         `${ConsoleColors.BgYellow}${ConsoleColors.FgBlack}[WARN]${ConsoleColors.Reset}`,
@@ -86,10 +86,10 @@ function consoleUtil(component: string): ConsolePrototype {
       console.log(output.join(' '));
     },
     error(place, message) {
-      let print: string = '';
+      let print = '';
       if (typeof message === 'object') {
         let stack: string | undefined;
-        if (message.stack) {
+        if (message instanceof Error && message.stack) {
           stack = message.stack;
           delete message.stack;
         }
@@ -101,7 +101,7 @@ function consoleUtil(component: string): ConsolePrototype {
             print + `\r\n${ConsoleColors.FgRed}${stack}${ConsoleColors.Reset}`;
         }
       } else {
-        print = message;
+        print = `${message}`;
       }
       const output: string[] = [
         `${ConsoleColors.BgRed}${ConsoleColors.FgBlack}[ERROR]${ConsoleColors.Reset}`,

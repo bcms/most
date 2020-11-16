@@ -1,3 +1,5 @@
+import { Entry, EntryParsed } from './cms';
+import { GatsbyCreatePage } from './gatsby';
 import { ObjectSchema } from './object-schema';
 
 export interface ConfigPageParserNuxtOutput {
@@ -18,10 +20,12 @@ export interface ConfigPageParserNuxt {
 
 export interface ConfigPageParserGatsby {
   page: string;
-  handler: (
-    createPage: any,
-    component: any,
+  handler: <T>(
+    createPage: GatsbyCreatePage<T>,
+    component: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     contentCache: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     functionCache: any,
   ) => Promise<void>;
 }
@@ -53,12 +57,14 @@ export interface Config {
     templateId: string;
     aggregate?: boolean;
     parse?: boolean;
-    modify?: (entries: any, bcms: any) => Promise<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    modify?: <T, K>(entries: Array<EntryParsed | Entry>, bcms: K) => Promise<T>;
   }>;
   functions?: Array<{
     name: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload?: any;
-    modify?: (response: any) => Promise<any>;
+    modify?: <T, K>(response: T) => Promise<K>;
   }>;
   media: ConfigMedia;
   parser?: {

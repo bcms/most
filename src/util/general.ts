@@ -3,7 +3,7 @@ import { ObjectSchema } from '../types';
 
 export interface GeneralPrototype {
   object: {
-    compareWithSchema(object: any, schema: ObjectSchema, level?: string): void;
+    compareWithSchema<T>(object: T, schema: ObjectSchema, level?: string): void;
   };
   exec(
     cmd: string,

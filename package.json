@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "build:ts": "tsc -p .",
+    "build:ts": "npm run lint && tsc -p .",
     "bundle": "node tools.js --bundle",
     "publish": "node tools.js --publish",
     "link": "node tools.js --link",
@@ -20,7 +20,8 @@
     "test": "mocha -r ts-node/register test/integration/*.test.ts --recursive --exit",
     "test:active": "mocha -r ts-node/register test/integration/*.active.test.ts --recursive --exit",
     "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
-    "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit"
+    "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
+    "lint": "eslint src/**/*"
   },
   "dependencies": {
     "@becomes/cms-client": "^2.0.0",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@types/axios": "^0.14.0",
     "@types/chai": "^4.2.12",
+    "@types/express": "^4.17.9",
     "@types/fs-extra": "^9.0.1",
     "@types/mocha": "^8.0.3",
     "@types/node": "^12.12.62",
@@ -41,6 +43,7 @@
     "chai": "^4.2.0",
     "env-cmd": "^10.0.1",
     "eslint": "^7.13.0",
+    "express": "^4.17.1",
     "mocha": "^7.2.0",
     "ts-node": "^8.10.2",
     "tsconfig-paths": "^3.9.0",
