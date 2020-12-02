@@ -1,5 +1,5 @@
-export interface Worker {
+export interface Worker<T> {
   id: string;
   busy: boolean;
-  exec: (...args: string[]) => Promise<void>;
+  exec: (data: T, chunkId: string) => Promise<void>;
 }

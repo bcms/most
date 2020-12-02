@@ -37,6 +37,8 @@ export interface BCMSMostPrototype {
   };
 }
 
+const MAX_PPC = 16;
+
 function bcmsMost(
   config?: Config,
   client?: BCMSClientPrototype,
@@ -170,6 +172,9 @@ function bcmsMost(
         }
         if (!config.media.ppc) {
           config.media.ppc = os.cpus().length;
+          if (config.media.ppc > MAX_PPC) {
+            config.media.ppc = MAX_PPC;
+          }
         }
         const media = (await client.media.getAll()).filter(
           (e) => e.data.type !== MediaType.DIR,
@@ -203,22 +208,24 @@ function bcmsMost(
             config.media.ppc,
             mediaToRemove,
             async (data, chunkId) => {
-              cnsl.info(
-                chunkId,
-                `Removing file: ${data.data.path}${
-                  data.data.isInRoot ? '' : '/'
-                }${data.data.name}`,
-              );
-              const mediaPath = data.data.isInRoot
-                ? [data.data.name]
-                : (data.data.path + '/' + data.data.name).split('/').slice(1);
-              const filePath = [
-                '..',
-                ...config.media.output.split('/').slice(1),
-                ...mediaPath,
-              ];
-              if (await FS.exist(filePath)) {
-                await FS.deleteFile(filePath);
+              if (data.data.type !== MediaType.DIR) {
+                cnsl.info(
+                  chunkId,
+                  `Removing file: ${data.data.path}${
+                    data.data.isInRoot ? '' : '/'
+                  }${data.data.name}`,
+                );
+                const mediaPath = data.data.isInRoot
+                  ? [data.data.name]
+                  : (data.data.path + '/' + data.data.name).split('/').slice(1);
+                const filePath = [
+                  '..',
+                  ...config.media.output.split('/').slice(1),
+                  ...mediaPath,
+                ];
+                if (await FS.exist(filePath)) {
+                  await FS.deleteFile(filePath);
+                }
               }
             },
           );
@@ -273,6 +280,9 @@ function bcmsMost(
         }
         if (!config.media.ppc) {
           config.media.ppc = os.cpus().length;
+          if (config.media.ppc > MAX_PPC) {
+            config.media.ppc = MAX_PPC;
+          }
         }
         if (processMediaCache.length > 0) {
           await PPLB.manage<Media>(

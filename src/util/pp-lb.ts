@@ -21,13 +21,14 @@ function pplb(): PPLBPrototype {
       failOnError?: boolean,
     ): Promise<void> {
       return await new Promise((resolve, reject) => {
-        const workers: Worker[] = Array.from(Array(ppc).keys()).map((e, i) => {
-          return {
+        const workers: Array<Worker<T>> = [];
+        for (let i = 0; i < ppc; i++) {
+          workers.push({
             id: '' + i,
             busy: false,
             exec,
-          };
-        });
+          });
+        }
         const queueable = Queueable<number>('next');
         let dataPointer = ppc - 1;
         async function next() {
@@ -44,7 +45,7 @@ function pplb(): PPLBPrototype {
           });
           const pointer = await next();
           if (pointer < data.length) {
-            let worker: Worker;
+            let worker: Worker<T>;
             for (const i in workers) {
               if (workers[i].busy === false) {
                 workers[i].busy = true;
