@@ -5,39 +5,38 @@ export interface EntryMeta {
   props: Prop[];
 }
 
-export interface EntryContent {
+export interface BCMSEntryContent {
   lng: string;
   props: Prop[];
 }
 
-export interface Entry {
+export interface BCMSEntry {
   _id: string;
   createdAt: number;
   updatedAt: number;
   templateId: string;
   userId: string;
   meta: EntryMeta[];
-  content: EntryContent[];
+  content: BCMSEntryContent[];
 }
 
-export interface EntryParsed {
+export interface BCMSEntryParsed<T> {
   _id: string;
   createdAt: number;
   updatedAt: number;
   templateId: string;
   userId: string;
   meta: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [lng: string]: any;
+    [lng: string]: T;
   };
   content: {
-    [lng: string]: EntryContentParsed;
+    [lng: string]: BCMSEntryContentParsed;
   };
 }
 
-export type EntryContentParsed = EntryContentParsedItem[];
+export type BCMSEntryContentParsed = BCMSEntryContentParsedItem[];
 
-export type EntryContentParsedItem = {
+export type BCMSEntryContentParsedItem = {
   type: PropType;
   value: PropParsed;
   name: string;

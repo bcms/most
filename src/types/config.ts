@@ -1,6 +1,11 @@
-import { Entry, EntryParsed } from './cms';
+import { BCMSEntry, BCMSEntryParsed } from './cms';
 import { GatsbyCreatePage } from './gatsby';
 import { ObjectSchema } from './object-schema';
+
+export type BCMSEntriesModifyFunction<T, K, R> = (
+  entries: Array<BCMSEntryParsed<T> | BCMSEntry>,
+  cache: K,
+) => Promise<R>;
 
 export interface ConfigPageParserNuxtOutput {
   output: string;
@@ -58,7 +63,7 @@ export interface Config {
     aggregate?: boolean;
     parse?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    modify?: <T, K>(entries: Array<EntryParsed | Entry>, bcms: K) => Promise<T>;
+    modify?: BCMSEntriesModifyFunction<any, any, any>;
   }>;
   functions?: Array<{
     name: string;

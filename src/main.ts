@@ -10,6 +10,7 @@ import { Config, Media, MediaCache } from './types';
 import { Console, FS, General, PPLB } from './util';
 
 export interface BCMSMostPrototype {
+  client: BCMSClientPrototype,
   cache: {
     get: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,6 +60,7 @@ function bcmsMost(
   let mediaCache: MediaCache;
   let processMediaCache: Media[];
   const self: BCMSMostPrototype = {
+    client,
     cache: {
       get: {
         async content() {
