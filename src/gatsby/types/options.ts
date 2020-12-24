@@ -55,7 +55,7 @@ export const BCMSMostGatsbyOptionsSchema: ObjectSchema = {
   },
   entries: {
     __type: 'array',
-    __required: true,
+    __required: false,
     __child: {
       __type: 'object',
       __content: {

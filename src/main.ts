@@ -10,7 +10,7 @@ import { Config, Media, MediaCache } from './types';
 import { Console, FS, General, PPLB } from './util';
 
 export interface BCMSMostPrototype {
-  client: BCMSClientPrototype,
+  client: BCMSClientPrototype;
   cache: {
     get: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,7 +125,22 @@ function bcmsMost(
         if (!contentCache) {
           await self.cache.get.content();
         }
-
+        if (!config.entries) {
+          config.entries = [];
+          const access = await client.keyAccess();
+          for (const i in access.templates) {
+            const templateAccess = access.templates[i];
+            if (templateAccess.get) {
+              const template = await client.template.get(templateAccess._id);
+              config.entries.push({
+                name: template.name,
+                templateId: template._id,
+                parse: true,
+              });
+            }
+          }
+        }
+        console.log(config.entries);
         for (let i = 0; i < config.entries.length; i = i + 1) {
           const entryConfig = config.entries[i];
           if (/[0-9a-z_-_]+/g.test(entryConfig.name) === false) {

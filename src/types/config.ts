@@ -57,7 +57,7 @@ export interface Config {
       secret: string;
     };
   };
-  entries: Array<{
+  entries?: Array<{
     name: string;
     templateId: string;
     aggregate?: boolean;
@@ -149,7 +149,7 @@ export const ConfigSchema: ObjectSchema = {
   },
   entries: {
     __type: 'array',
-    __required: true,
+    __required: false,
     __child: {
       __type: 'object',
       __content: {
