@@ -10,8 +10,6 @@ export interface BCMSGatsbyOptions {
   };
   entries: Array<{
     name: string;
-    templateId: string;
-    aggregate?: boolean;
     parse?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     modify?: BCMSEntriesModifyFunction<any, any, any>;
@@ -62,14 +60,6 @@ export const BCMSMostGatsbyOptionsSchema: ObjectSchema = {
         name: {
           __type: 'string',
           __required: true,
-        },
-        templateId: {
-          __type: 'string',
-          __required: true,
-        },
-        aggregate: {
-          __type: 'boolean',
-          __required: false,
         },
         parse: {
           __type: 'boolean',

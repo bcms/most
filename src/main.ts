@@ -20,6 +20,10 @@ export interface BCMSMostPrototype {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       function(): Promise<any>;
     };
+    update: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      content(data: any): Promise<void>;
+    };
   };
   content: {
     pull(): Promise<void>;
@@ -113,6 +117,14 @@ function bcmsMost(
             functionCache = {};
           }
           return functionCache;
+        },
+      },
+      update: {
+        async content(data) {
+          contentCache = data;
+          await FS.save(JSON.stringify(contentCache, null, '  '), [
+            'content.cache.json',
+          ]);
         },
       },
     },
