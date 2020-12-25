@@ -19,7 +19,27 @@ function getBCMSMost() {
       cms: options.cms,
       functions: options.functions,
       media: {
-        output: '',
+        output: 'static/media',
+        sizeMap: [
+          {
+            width: 350,
+          },
+          {
+            width: 600,
+          },
+          {
+            width: 900,
+          },
+          {
+            width: 1200,
+          },
+          {
+            width: 1400,
+          },
+          {
+            width: 1920,
+          },
+        ],
       },
     });
   }
@@ -74,8 +94,8 @@ export async function onPreInit<T>(
     options = {
       cms: ops.cms,
       entries: ops.entries,
-      parsers: ops.parsers,
       functions: ops.functions,
+      media: ops.media,
     };
     General.object.compareWithSchema(
       options,
@@ -85,6 +105,8 @@ export async function onPreInit<T>(
     // options.entries =
     const bcmsMost = getBCMSMost();
     await bcmsMost.content.pull();
+    await bcmsMost.media.pull();
+    await bcmsMost.media.process();
     await bcmsMost.client.socket.connect({
       url: ops.cms.origin,
       path: '/api/socket/server/',
@@ -183,7 +205,6 @@ exports.createResolvers = async ({ createResolvers }) => {
             const output = (cache[type] as Array<{ _id: string }>).find(
               (e) => e._id === targetEntryId,
             );
-            console.log(output);
             return output;
           },
         },

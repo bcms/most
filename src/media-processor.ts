@@ -1,17 +1,17 @@
 import * as sharp from 'sharp';
 import { Media, MediaType } from '@becomes/cms-client';
 import { ConfigMedia } from './types';
-import { Arg, FS } from './util';
+import { FS } from './util';
 
 export async function MediaProcessor(media: Media, config: ConfigMedia) {
   if (config.sizeMap) {
     if (media.type === MediaType.IMG) {
       const path: string[] = media.isInRoot
-        ? ['..', ...config.output.split('/').slice(1)]
+        ? ['..', ...config.output.split('/').filter((e) => !!e)]
         : [
             '..',
-            ...config.output.split('/').slice(1),
-            ...media.path.split('/').slice(1),
+            ...config.output.split('/').filter((e) => !!e),
+            ...media.path.split('/').filter((e) => !!e),
           ];
       const nameParts = {
         name: media.name.split('.')[0],

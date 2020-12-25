@@ -1,4 +1,9 @@
-import { BCMSEntriesModifyFunction, ObjectSchema } from '../../types';
+import {
+  BCMSEntriesModifyFunction,
+  ConfigMedia,
+  ConfigMediaSchema,
+  ObjectSchema,
+} from '../../types';
 
 export interface BCMSGatsbyOptions {
   cms: {
@@ -20,10 +25,7 @@ export interface BCMSGatsbyOptions {
     payload?: any;
     modify?: <T, K>(response: T) => Promise<K>;
   }>;
-  parsers: Array<{
-    uri: string[];
-    handler<T, K>(cache: T): Promise<K>;
-  }>;
+  media?: ConfigMedia;
 }
 
 export const BCMSMostGatsbyOptionsSchema: ObjectSchema = {
@@ -89,24 +91,9 @@ export const BCMSMostGatsbyOptionsSchema: ObjectSchema = {
       },
     },
   },
-  parsers: {
-    __type: 'array',
+  media: {
+    __type: 'object',
     __required: false,
-    __child: {
-      __type: 'object',
-      __content: {
-        uri: {
-          __type: 'array',
-          __required: true,
-          __child: {
-            __type: 'string',
-          },
-        },
-        handler: {
-          __type: 'function',
-          __required: true,
-        },
-      },
-    },
+    __child: ConfigMediaSchema,
   },
 };

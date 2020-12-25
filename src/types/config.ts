@@ -11,6 +11,12 @@ export interface ConfigPageParserNuxtOutput {
   output: string;
   data: any | any[];
 }
+export const ConfigPageParserNuxtOutputSchema: ObjectSchema = {
+  output: {
+    __type: 'string',
+    __required: true,
+  },
+};
 
 export interface ConfigPageParserNuxt {
   entries: string;
@@ -22,6 +28,20 @@ export interface ConfigPageParserNuxt {
     ConfigPageParserNuxtOutput | ConfigPageParserNuxtOutput[] | void
   >;
 }
+export const ConfigPageParserNuxtSchema: ObjectSchema = {
+  entries: {
+    __type: 'string',
+    __required: true,
+  },
+  type: {
+    __type: 'string',
+    __required: true,
+  },
+  handler: {
+    __type: 'function',
+    __required: true,
+  },
+};
 
 export interface ConfigPageParserGatsby {
   page: string;
@@ -34,12 +54,32 @@ export interface ConfigPageParserGatsby {
     functionCache: any,
   ) => Promise<void>;
 }
+export const ConfigPageParserGatsbySchema: ObjectSchema = {
+  page: {
+    __type: 'string',
+    __required: true,
+  },
+  handler: {
+    __type: 'function',
+    __required: true,
+  },
+};
 
 export interface ConfigMediaSizeMap {
   width: number;
   /** Default is 50 */
   quality?: number;
 }
+export const ConfigMediaSizeMapSchema: ObjectSchema = {
+  width: {
+    __type: 'number',
+    __required: true,
+  },
+  quality: {
+    __type: 'number',
+    __required: false,
+  },
+};
 
 export interface ConfigMedia {
   output: string;
@@ -48,6 +88,32 @@ export interface ConfigMedia {
   sizeMap?: ConfigMediaSizeMap[];
   failOnError?: boolean;
 }
+export const ConfigMediaSchema: ObjectSchema = {
+  output: {
+    __type: 'string',
+    __required: true,
+  },
+  pcc: {
+    __type: 'number',
+    __required: false,
+  },
+  process: {
+    __type: 'boolean',
+    __required: false,
+  },
+  sizeMap: {
+    __type: 'array',
+    __required: false,
+    __child: {
+      __type: 'object',
+      __content: ConfigMediaSizeMapSchema,
+    },
+  },
+  failOnError: {
+    __type: 'boolean',
+    __required: false,
+  },
+};
 
 export interface Config {
   cms: {
@@ -77,51 +143,6 @@ export interface Config {
     gatsby?: ConfigPageParserGatsby[];
   };
 }
-
-export const ConfigMediaSizeMapSchema: ObjectSchema = {
-  width: {
-    __type: 'number',
-    __required: true,
-  },
-  quality: {
-    __type: 'number',
-    __required: false,
-  },
-};
-
-export const ConfigPageParserNuxtOutputSchema: ObjectSchema = {
-  output: {
-    __type: 'string',
-    __required: true,
-  },
-};
-
-export const ConfigPageParserNuxtSchema: ObjectSchema = {
-  entries: {
-    __type: 'string',
-    __required: true,
-  },
-  type: {
-    __type: 'string',
-    __required: true,
-  },
-  handler: {
-    __type: 'function',
-    __required: true,
-  },
-};
-
-export const ConfigPageParserGatsbySchema: ObjectSchema = {
-  page: {
-    __type: 'string',
-    __required: true,
-  },
-  handler: {
-    __type: 'function',
-    __required: true,
-  },
-};
-
 export const ConfigSchema: ObjectSchema = {
   cms: {
     __type: 'object',
@@ -196,32 +217,7 @@ export const ConfigSchema: ObjectSchema = {
   media: {
     __type: 'object',
     __required: true,
-    __child: {
-      output: {
-        __type: 'string',
-        __required: true,
-      },
-      pcc: {
-        __type: 'number',
-        __required: false,
-      },
-      process: {
-        __type: 'boolean',
-        __required: false,
-      },
-      sizeMap: {
-        __type: 'array',
-        __required: false,
-        __child: {
-          __type: 'object',
-          __content: ConfigMediaSizeMapSchema,
-        },
-      },
-      failOnError: {
-        __type: 'boolean',
-        __required: false,
-      },
-    },
+    __child: ConfigMediaSchema,
   },
   parser: {
     __type: 'object',

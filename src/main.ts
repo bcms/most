@@ -152,7 +152,6 @@ function bcmsMost(
             }
           }
         }
-        console.log(config.entries);
         for (let i = 0; i < config.entries.length; i = i + 1) {
           const entryConfig = config.entries[i];
           if (/[0-9a-z_-_]+/g.test(entryConfig.name) === false) {
@@ -278,7 +277,7 @@ function bcmsMost(
                   : (data.data.path + '/' + data.data.name).split('/').slice(1);
                 const filePath = [
                   '..',
-                  ...config.media.output.split('/').slice(1),
+                  ...config.media.output.split('/').filter((e) => !!e),
                   ...mediaPath,
                 ];
                 await FS.save(Buffer.from(buffer), filePath);
@@ -342,7 +341,9 @@ function bcmsMost(
                   },
                 );
               } catch (e) {
-                error = e ? e.message : 'Process failed with no message.';
+                error = e
+                  ? e.message
+                  : 'Process failed with no message. Output: ' + output;
               }
               if (error !== '') {
                 cnsl.error(chunkId, {
