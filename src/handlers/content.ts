@@ -1,9 +1,6 @@
 import { BCMSClientPrototype } from '@becomes/cms-client';
-import {
-  BCMSMostCacheContent,
-  BCMSMostConfig,
-} from '../types';
-import { Console } from '../util';
+import { BCMSMostCacheContent, BCMSMostConfig } from '../types';
+import { Console, ErrorHandler } from '../util';
 import { BCMSMostCacheHandlerPrototype } from './cache';
 
 export interface BCMSMostContentHandlerPrototype {
@@ -15,10 +12,10 @@ export function BCMSMostContentHandler(
   client: BCMSClientPrototype,
   cache: BCMSMostCacheHandlerPrototype,
 ) {
+  const cnsl = Console('BCMSMostContentHandler');
   const self: BCMSMostContentHandlerPrototype = {
     async pull() {
-      const cnsl = Console('pullContent');
-      cnsl.info('started', '');
+      cnsl.info('pull', 'Started...');
       const contentCache = await cache.get.content<BCMSMostCacheContent>();
       if (JSON.stringify(contentCache) !== '{}') {
         return;
@@ -74,11 +71,19 @@ export function BCMSMostContentHandler(
               JSON.parse(JSON.stringify(entry)),
               contentCache,
             );
-            output._id = entry._id;
-            output.createdAt = entry.createdAt;
-            output.updatedAt = entry.updatedAt;
-            output.templateId = entry.templateId;
-            contentCache[name][i] = output;
+            if (typeof output === 'object') {
+              output._id = entry._id;
+              output.createdAt = entry.createdAt;
+              output.updatedAt = entry.updatedAt;
+              output.templateId = entry.templateId;
+              contentCache[name][i] = output;
+            } else {
+              throw ErrorHandler.get(
+                `Error in "modify" function for entries in template "${
+                  entryConfig.templateId
+                }". Expected output to be "object" but got "${typeof output}"`,
+              );
+            }
           }
         }
         cnsl.info(
@@ -87,7 +92,7 @@ export function BCMSMostContentHandler(
         );
       }
       await cache.update.content(contentCache);
-      cnsl.info('done', `${(Date.now() - startTime) / 1000}s`);
+      cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`);
     },
   };
   return self;
