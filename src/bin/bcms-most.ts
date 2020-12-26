@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
 import { BCMSClient } from '@becomes/cms-client';
-import { BCMSMostConfig, BCMSMostConfigMedia, BCMSMostConfigSchema, Media } from '../types';
+import {
+  BCMSMostConfig,
+  BCMSMostConfigMedia,
+  BCMSMostConfigSchema,
+  Media,
+} from '../types';
 import { Arg, Console, General } from '../util';
 import { BCMSMost } from '../most';
 import { MediaProcessor } from '../_media-processor';
@@ -17,11 +22,38 @@ async function main() {
     );
     await MediaProcessor(media, mediaConfig);
   } else {
-    const config: BCMSMostConfig = await import(`${process.cwd()}/bcms.config.js`);
+    const config: BCMSMostConfig = await import(
+      `${process.cwd()}/bcms.config.js`
+    );
     try {
       General.object.compareWithSchema(config, BCMSMostConfigSchema, 'config');
     } catch (error) {
       throw Error(`Error in the configuration file: ${error.message}`);
+    }
+    if (!config.media) {
+      config.media = {
+        output: 'static/media',
+        sizeMap: [
+          {
+            width: 350,
+          },
+          {
+            width: 600,
+          },
+          {
+            width: 900,
+          },
+          {
+            width: 1200,
+          },
+          {
+            width: 1400,
+          },
+          {
+            width: 1920,
+          },
+        ],
+      };
     }
     const client = BCMSClient({
       cmsOrigin: config.cms.origin,
