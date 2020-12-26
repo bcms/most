@@ -1,16 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SocketEventName } from '@becomes/cms-client';
+import { Media, SocketEventName } from '@becomes/cms-client';
 import * as crypto from 'crypto';
 import Axios from 'axios';
-import { BCMSGatsbyOptions } from './gatsby';
-import { BCMSMostGatsbyOptionsSchema } from './gatsby/types';
-import { BCMSMost, BCMSMostPrototype } from './main';
+import { BCMSMost, BCMSMostPrototype } from './most';
 import { General } from './util';
+import {
+  BCMSMostCacheContentItem,
+  BCMSMostConfig,
+  BCMSMostConfigEntryModifyFunction,
+  BCMSMostConfigSchema,
+} from './types';
 
 const nameMapping: {
-  [name: string]: string[];
+  [name: string]: {
+    entryIds: string[];
+    modify?: BCMSMostConfigEntryModifyFunction<any, any, any>;
+  };
 } = {};
-let options: BCMSGatsbyOptions;
+let options: BCMSMostConfig;
 let BcmsMost: BCMSMostPrototype;
 
 function getBCMSMost() {
@@ -18,29 +25,8 @@ function getBCMSMost() {
     BcmsMost = BCMSMost({
       cms: options.cms,
       functions: options.functions,
-      media: {
-        output: 'static/media',
-        sizeMap: [
-          {
-            width: 350,
-          },
-          {
-            width: 600,
-          },
-          {
-            width: 900,
-          },
-          {
-            width: 1200,
-          },
-          {
-            width: 1400,
-          },
-          {
-            width: 1920,
-          },
-        ],
-      },
+      entries: options.entries,
+      media: options.media,
     });
   }
   return BcmsMost;
@@ -56,7 +42,7 @@ function toCamelCase(s: string): string {
 }
 function createSource(
   name: string,
-  _data: any,
+  _data: BCMSMostCacheContentItem | Media[],
   createNodeId: any,
   createContentDigest: any,
   createNode: any,
@@ -65,11 +51,16 @@ function createSource(
     const data = { data: _data };
     const nodeContent = JSON.stringify(data);
     const nodeMeta = {
-      id: createNodeId(
-        `${name}-${
-          data.data._id ? data.data._id : crypto.randomBytes(24).toString('hex')
-        }`,
-      ),
+      id:
+        data.data instanceof Array
+          ? crypto.randomBytes(24).toString('hex')
+          : createNodeId(
+              `${name}-${
+                data.data._id
+                  ? data.data._id
+                  : crypto.randomBytes(24).toString('hex')
+              }`,
+            ),
       parent: null,
       internal: {
         type: 'Bcms' + toCamelCase(name),
@@ -88,21 +79,40 @@ function createSource(
 
 export async function onPreInit<T>(
   data: T,
-  ops: BCMSGatsbyOptions,
+  ops: BCMSMostConfig,
 ): Promise<void> {
   try {
     options = {
       cms: ops.cms,
-      entries: ops.entries,
-      functions: ops.functions,
-      media: ops.media,
+      entries: ops.entries ? ops.entries : [],
+      functions: ops.functions ? ops.functions : [],
+      media: ops.media
+        ? ops.media
+        : {
+            output: 'static/media',
+            sizeMap: [
+              {
+                width: 350,
+              },
+              {
+                width: 600,
+              },
+              {
+                width: 900,
+              },
+              {
+                width: 1200,
+              },
+              {
+                width: 1400,
+              },
+              {
+                width: 1920,
+              },
+            ],
+          },
     };
-    General.object.compareWithSchema(
-      options,
-      BCMSMostGatsbyOptionsSchema,
-      'options',
-    );
-    // options.entries =
+    General.object.compareWithSchema(options, BCMSMostConfigSchema, 'options');
     const bcmsMost = getBCMSMost();
     await bcmsMost.content.pull();
     await bcmsMost.media.pull();
@@ -113,14 +123,22 @@ export async function onPreInit<T>(
     });
     bcmsMost.client.socket.subscribe(async (name, data) => {
       if (name === SocketEventName.ENTRY) {
-        const entry = await bcmsMost.client.entry.get({
+        let entry = await bcmsMost.client.entry.get({
           entryId: data.entry._id,
           templateId: data.entry.additional.templateId,
           parse: true,
         });
         const cache = await bcmsMost.cache.get.content();
         for (const key in nameMapping) {
-          if (nameMapping[key].includes(entry._id)) {
+          if (nameMapping[key].entryIds.includes(entry._id)) {
+            if (nameMapping[key].modify) {
+              const temp = JSON.parse(JSON.stringify(entry));
+              entry = await nameMapping[key].modify(entry as any, cache);
+              entry._id = temp._id;
+              entry.createdAt = temp.createdAt;
+              entry.updatedAt = temp.updatedAt;
+              entry.templateId = temp.templateId;
+            }
             cache[key] = cache[key].map((e) => {
               if (e._id === entry._id) {
                 e = entry;
@@ -153,29 +171,31 @@ export async function sourceNodes({
     const { createNode } = actions;
     for (const key in cache) {
       if (!nameMapping[key]) {
-        nameMapping[key] = [];
+        nameMapping[key] = {
+          entryIds: [],
+        };
       }
       const cacheData = cache[key];
-      if (cacheData instanceof Array) {
-        cacheData.forEach((data) => {
-          nameMapping[key].push(data._id);
-          createSource(
-            key,
-            data,
-            createNodeId,
-            createContentDigest,
-            createNode,
-          );
-        });
-      } else {
-        createSource(
-          key,
-          cacheData,
-          createNodeId,
-          createContentDigest,
-          createNode,
-        );
+      const modifyFn = options.entries.find(
+        (e) => e.templateId === cacheData[0].templateId,
+      );
+      if (modifyFn && modifyFn.modify) {
+        nameMapping[key].modify = modifyFn.modify;
       }
+      cacheData.forEach((data) => {
+        nameMapping[key].entryIds.push(data._id);
+        createSource(key, data, createNodeId, createContentDigest, createNode);
+      });
+    }
+    const mediaCache = await bcmsMost.cache.get.media();
+    if (mediaCache.length > 0) {
+      createSource(
+        'media',
+        mediaCache,
+        createNodeId,
+        createContentDigest,
+        createNode,
+      );
     }
   } catch (error) {
     console.error(error);
@@ -201,10 +221,8 @@ exports.createResolvers = async ({ createResolvers }) => {
               .split(/(?=[A-Z])/)
               .map((e) => e.toLowerCase())
               .join('');
-            const targetEntryId = JSON.parse(source.internal.content).data._id;
-            const output = (cache[type] as Array<{ _id: string }>).find(
-              (e) => e._id === targetEntryId,
-            );
+            const target = JSON.parse(source.internal.content).data;
+            const output = cache[type].find((e) => e._id === target._id);
             return output;
           },
         },

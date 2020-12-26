@@ -34,7 +34,6 @@ function argUtil(): ArgPrototype {
         processMedia: args['--process-media'] || undefined,
         media: args['--media'] || undefined,
         mediaConfig: args['--media-config'] || undefined,
-        parse: args['--parse'] || undefined,
         mediaProcessor: args['--media-processor'] || false,
         callFunctions: args['--call-functions'] || false,
         apiKey: args['--api-key'] || undefined,

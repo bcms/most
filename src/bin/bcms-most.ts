@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import { BCMSClient } from '@becomes/cms-client';
-import { Config, ConfigMedia, ConfigSchema, Media } from '../types';
+import { BCMSMostConfig, BCMSMostConfigMedia, BCMSMostConfigSchema, Media } from '../types';
 import { Arg, Console, General } from '../util';
-import { BCMSMost } from '../main';
-import { MediaProcessor } from '../media-processor';
+import { BCMSMost } from '../most';
+import { MediaProcessor } from '../_media-processor';
 
 async function main() {
   const options = Arg.parse(process.argv);
@@ -12,14 +12,14 @@ async function main() {
     const media: Media = JSON.parse(
       Buffer.from(options.media, 'hex').toString(),
     );
-    const mediaConfig: ConfigMedia = JSON.parse(
+    const mediaConfig: BCMSMostConfigMedia = JSON.parse(
       Buffer.from(options.mediaConfig, 'hex').toString(),
     );
     await MediaProcessor(media, mediaConfig);
   } else {
-    const config: Config = await import(`${process.cwd()}/bcms.config.js`);
+    const config: BCMSMostConfig = await import(`${process.cwd()}/bcms.config.js`);
     try {
-      General.object.compareWithSchema(config, ConfigSchema, 'config');
+      General.object.compareWithSchema(config, BCMSMostConfigSchema, 'config');
     } catch (error) {
       throw Error(`Error in the configuration file: ${error.message}`);
     }
@@ -39,10 +39,6 @@ async function main() {
       await bcms.media.pull();
     } else if (options.processMedia) {
       await bcms.media.process();
-    } else if (typeof options.parse === 'string') {
-      if (options.parse === 'nuxt') {
-        await bcms.parser.nuxt();
-      }
     } else if (options.callFunctions === true) {
       await bcms.function.call();
     }

@@ -1,7 +1,14 @@
-import { BCMSEntriesModifyFunction } from '../types';
+import {
+  BCMSMostCacheContentItem,
+  BCMSMostConfigEntryModifyFunction,
+} from '../types';
 
-export function BCMSModifyEntryFunctionBuilder<T, K, R>(
-  handler: BCMSEntriesModifyFunction<T, K, R>,
-): BCMSEntriesModifyFunction<T, K, R> {
+export function BCMSModifyEntryFunctionBuilder<
+  T,
+  K,
+  R extends BCMSMostCacheContentItem
+>(
+  handler: BCMSMostConfigEntryModifyFunction<T, K, R>,
+): BCMSMostConfigEntryModifyFunction<T, K, R> {
   return handler;
 }

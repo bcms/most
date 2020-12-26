@@ -1,9 +1,12 @@
 import * as sharp from 'sharp';
 import { Media, MediaType } from '@becomes/cms-client';
-import { ConfigMedia } from './types';
-import { FS } from './util';
+import { BCMSMostConfigMedia } from '../types';
+import { FS } from '../util';
 
-export async function MediaProcessor(media: Media, config: ConfigMedia) {
+export async function BCMSMostMediaProcessor(
+  media: Media,
+  config: BCMSMostConfigMedia,
+) {
   if (config.sizeMap) {
     if (media.type === MediaType.IMG) {
       const path: string[] = media.isInRoot

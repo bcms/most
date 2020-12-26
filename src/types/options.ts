@@ -6,7 +6,6 @@ export interface Options {
   mediaProcessor?: boolean;
   media?: string;
   mediaConfig?: string;
-  parse?: string;
   callFunctions?: boolean;
   apiKey?: string;
   apiSecret?: string;
