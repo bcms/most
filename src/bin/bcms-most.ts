@@ -10,6 +10,7 @@ import {
 import { Arg, Console, General } from '../util';
 import { BCMSMost } from '../most';
 import { MediaProcessor } from '../_media-processor';
+import { BCMSMostImageHandler } from '../handlers';
 
 async function main() {
   const options = Arg.parse(process.argv);

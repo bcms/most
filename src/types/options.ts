@@ -11,6 +11,8 @@ export interface Options {
   apiSecret?: string;
   apiOrigin?: string;
   gatsbyBundle?: boolean;
-  mediaPure: string;
-  mediaPureOptions: string;
+  mediaPure?: string;
+  mediaPureOptions?: string;
+  imageServer?: boolean;
+  config?: string;
 }

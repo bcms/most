@@ -155,6 +155,16 @@ export async function onPreInit<T>(
         });
       }
     });
+    // General.exec(
+    //   `bcms-most --image-server --config ${Buffer.from(
+    //     JSON.stringify(ops),
+    //   ).toString('hex')}`,
+    //   (type, chunk) => {
+    //     process[type].write(chunk);
+    //   },
+    // ).catch((e) => {
+    //   console.error(e);
+    // });
     bcmsMost.image.startServer();
   } catch (error) {
     console.error(error);

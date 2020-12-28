@@ -22,6 +22,8 @@ function argUtil(): ArgPrototype {
           '--api-key': String,
           '--api-secret': String,
           '--api-origin': String,
+          '--image-server': Boolean,
+          '--config': String,
         },
         {
           argv: rawArgs.slice(2),
@@ -39,6 +41,8 @@ function argUtil(): ArgPrototype {
         apiKey: args['--api-key'] || undefined,
         apiSecret: args['--api-secret'] || undefined,
         apiOrigin: args['--api-origin'] || undefined,
+        imageServer: args['--image-server'] || false,
+        config: args['--config'] || undefined,
       };
       return options;
     },
