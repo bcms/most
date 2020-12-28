@@ -6,6 +6,8 @@ import {
   BCMSMostContentHandlerPrototype,
   BCMSMostFunctionHandler,
   BCMSMostFunctionHandlerPrototype,
+  BCMSMostImageHandler,
+  BCMSMostImageHandlerPrototype,
   BCMSMostMediaHandler,
   BCMSMostMediaHandlerPrototype,
 } from './handlers';
@@ -18,6 +20,7 @@ export interface BCMSMostPrototype {
   content: BCMSMostContentHandlerPrototype;
   media: BCMSMostMediaHandlerPrototype;
   function: BCMSMostFunctionHandlerPrototype;
+  image: BCMSMostImageHandlerPrototype;
 }
 
 const MAX_PPC = 16;
@@ -39,6 +42,7 @@ export function BCMSMost(
   const content = BCMSMostContentHandler(config, client, cache);
   const media = BCMSMostMediaHandler(config, client, cache, MAX_PPC);
   const fn = BCMSMostFunctionHandler(config, client, cache);
+  const image = BCMSMostImageHandler(config);
   const self: BCMSMostPrototype = {
     updateConfig(conf) {
       config = conf;
@@ -48,6 +52,7 @@ export function BCMSMost(
     content,
     media,
     function: fn,
+    image,
   };
   return self;
 }

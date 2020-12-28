@@ -155,6 +155,7 @@ export async function onPreInit<T>(
         });
       }
     });
+    bcmsMost.image.startServer();
   } catch (error) {
     console.error(error);
     process.exit(1);

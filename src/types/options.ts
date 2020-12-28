@@ -10,4 +10,7 @@ export interface Options {
   apiKey?: string;
   apiSecret?: string;
   apiOrigin?: string;
+  gatsbyBundle?: boolean;
+  mediaPure: string;
+  mediaPureOptions: string;
 }

@@ -17,9 +17,9 @@ export function BCMSMostContentHandler(
     async pull() {
       cnsl.info('pull', 'Started...');
       const contentCache = await cache.get.content<BCMSMostCacheContent>();
-      if (JSON.stringify(contentCache) !== '{}') {
-        return;
-      }
+      // if (JSON.stringify(contentCache) !== '{}') {
+      //   return;
+      // }
       const startTime = Date.now();
       const templateNameMap: {
         [templateId: string]: string;
