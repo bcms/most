@@ -9,13 +9,16 @@ import {
 } from '../types';
 import { Arg, Console, General } from '../util';
 import { BCMSMost } from '../most';
-import { MediaImageProcessor, MediaProcessor } from '../_media-processor';
+import {
+  BCMSMostMediaProcessor,
+  BCMSMostMediaImageProcessor,
+} from '../handlers';
 
 async function main() {
   const options = Arg.parse(process.argv);
   if (options.mediaProcessor) {
     if (options.mediaImage) {
-      await MediaImageProcessor(
+      await BCMSMostMediaImageProcessor(
         JSON.parse(Buffer.from(options.mediaImage, 'hex').toString()),
       );
     } else {
@@ -25,7 +28,7 @@ async function main() {
       const mediaConfig: BCMSMostConfigMedia = JSON.parse(
         Buffer.from(options.mediaConfig, 'hex').toString(),
       );
-      await MediaProcessor(media, mediaConfig);
+      await BCMSMostMediaProcessor(media, mediaConfig);
     }
   } else {
     const config: BCMSMostConfig = await import(

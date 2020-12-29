@@ -1,8 +1,10 @@
 import * as sharp from 'sharp';
 import { Media, MediaType } from '@becomes/cms-client';
 import { BCMSMostConfigMedia } from '../types';
-import { FS } from '../util';
-import { BCMSMostImageHandlerOptions } from './image';
+import { BCMSMostRequestItem } from '../handlers';
+import { Console, FS } from '../util';
+
+const autoSizes = [350, 600, 900, 1200, 1400, 1920];
 
 export async function BCMSMostMediaProcessor(
   media: Media,
@@ -71,42 +73,76 @@ export async function BCMSMostMediaProcessor(
   }
 }
 
-// export async function BCMSMostMediaProcessorPure(
-//   filePath: string,
-//   optionsRaw: string,
-//   options: BCMSMostImageHandlerOptions,
-//   config: BCMSMostConfigMedia,
-// ) {
-//   const inputPath: string[] = [
-//     '..',
-//     ...config.output.split('/').filter((e) => !!e),
-//     ...filePath.split('/').filter((e) => !!e),
-//   ];
-//   const outputPath: string[] = [
-//     '..',
-//     ...config.output.split('/').filter((e) => !!e),
-//     optionsRaw,
-//     ...filePath.split('/').filter((e) => !!e),
-//   ];
-//   if (!(await FS.exist(outputPath))) {
-//     const filePathParts = filePath.split('/');
-//     const nameParts = {
-//       name: filePathParts[filePathParts.length - 1].split('.')[0],
-//       ext: filePathParts[filePathParts.length - 1].split('.')[1].toLowerCase(),
-//     };
-//     const original = await FS.read(inputPath);
-//     if (nameParts.ext === 'png') {
-//       let output = await sharp(original)
-//         .resize({
-//           width: configOption.width,
-//           withoutEnlargement: true,
-//         })
-//         .png({
-//           quality: configOption.quality ? configOption.quality : 50,
-//         })
-//         .toBuffer();
-//       await FS.save(output, [...path, fileName]);
-//     } else if (nameParts.ext === 'jpg' || nameParts.ext === 'jpeg') {
-//     }
-//   }
-// }
+export async function BCMSMostMediaImageProcessor(
+  data: BCMSMostRequestItem,
+): Promise<void> {
+  const cnsl = Console('MediaImageProcessor');
+  const inputPathParts = data.inputPath.split('/');
+  const outputPathParts = data.outputPath.split('/');
+  if (!(await FS.exist(inputPathParts))) {
+    if (!data.inputPath.endsWith('.webp')) {
+      cnsl.error('', `File does not exist: ${data.inputPath}`);
+    }
+    return;
+  }
+  const inputFile = await FS.read(inputPathParts);
+  const inputFileName = inputPathParts[inputPathParts.length - 1];
+  const inputFileNameInfo = {
+    name: inputFileName.split('.')[0],
+    ext: inputFileName.split('.')[1].toLowerCase(),
+  };
+  const resizeOptions: sharp.ResizeOptions = {
+    withoutEnlargement: true,
+  };
+  if (!data.options.sizes) {
+    resizeOptions.width = autoSizes[data.options.sizeIndex];
+  } else {
+    const target = data.options.sizes[data.options.sizeIndex];
+    if (!target) {
+      cnsl.error(
+        '',
+        `Size for index "${data.options.sizeIndex}" does not exist.`,
+      );
+      return;
+    }
+    resizeOptions.width = target.width;
+    resizeOptions.height = target.height;
+    resizeOptions.fit = 'cover';
+  }
+  let outputFile: Buffer;
+  let createWebP = false;
+  if (inputFileNameInfo.ext === 'png') {
+    createWebP = true;
+    outputFile = await sharp(inputFile)
+      .resize(resizeOptions)
+      .png({
+        quality: data.options.quality ? data.options.quality : 70,
+      })
+      .toBuffer();
+  } else if (
+    inputFileNameInfo.ext === 'jpg' ||
+    inputFileNameInfo.ext === 'jpeg'
+  ) {
+    createWebP = true;
+    outputFile = await sharp(inputFile)
+      .resize(resizeOptions)
+      .jpeg({
+        quality: data.options.quality ? data.options.quality : 70,
+      })
+      .toBuffer();
+  }
+  if (createWebP) {
+    await FS.save(outputFile, outputPathParts);
+    outputFile = await sharp(inputFile)
+      .resize(resizeOptions)
+      .webp({
+        quality: data.options.quality ? data.options.quality : 70,
+      })
+      .toBuffer();
+    const op = data.outputPath
+      .replace('.png', '.webp')
+      .replace('.jpg', '.webp')
+      .replace('.jpeg', '.webp');
+    await FS.save(outputFile, op.split('/'));
+  }
+}

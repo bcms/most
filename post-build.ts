@@ -1,10 +1,9 @@
 import * as path from 'path';
 import {
-  FS,
-  General,
   BCMSMostImageHandlerOptions,
   BCMSMostImageHandlerParseOptions,
-} from './src/util';
+} from './src/handlers';
+import { FS, General } from './src/util';
 
 interface ImageMap {
   [src: string]: Array<{
@@ -21,6 +20,7 @@ async function main(relativePath: string) {
     e.replace(basePath, '').substring(1),
   );
   const imageMap: ImageMap = {};
+  console.log(pages);
   for (const i in pages) {
     const page = (
       await FS.read([...relativePath.split('/'), ...pages[i].split('/')])
@@ -30,12 +30,14 @@ async function main(relativePath: string) {
       '<div class="bcms-img"',
       '</div>',
     );
+    console.log(pictures);
     for (const j in pictures) {
       const source = General.string.getTextBetween(
         pictures[j],
         'srcSet="',
         '"',
       );
+      console.log(source);
       const original = General.string.getTextBetween(pictures[j], 'src="', '"');
       const optionsRaw = source.split('/')[1];
       const srcParts = source.split('.');
@@ -62,8 +64,8 @@ async function main(relativePath: string) {
         }
       }
     }
-    console.log(imageMap);
   }
+  console.log(imageMap);
 }
 main('../../starters/bcms-gatsby-starter-blog/public').catch((error) => {
   console.error(error);
