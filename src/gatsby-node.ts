@@ -3,7 +3,7 @@ import { Media, SocketEventName } from '@becomes/cms-client';
 import * as crypto from 'crypto';
 import Axios from 'axios';
 import { BCMSMost, BCMSMostPrototype } from './most';
-import { General } from './util';
+import { FS, General } from './util';
 import {
   BCMSMostCacheContentItem,
   BCMSMostConfig,
@@ -155,16 +155,6 @@ export async function onPreInit<T>(
         });
       }
     });
-    // General.exec(
-    //   `bcms-most --image-server --config ${Buffer.from(
-    //     JSON.stringify(ops),
-    //   ).toString('hex')}`,
-    //   (type, chunk) => {
-    //     process[type].write(chunk);
-    //   },
-    // ).catch((e) => {
-    //   console.error(e);
-    // });
     bcmsMost.image.startServer();
   } catch (error) {
     console.error(error);
@@ -244,4 +234,9 @@ exports.createResolvers = async ({ createResolvers }) => {
     console.error(error);
     process.exit(1);
   }
+};
+
+exports.onPostBuild = async () => {
+  const pages = await FS.getHtmlFiles('../../starters/bcms-gatsby-starter-blog/public');
+  console.log(pages);
 };

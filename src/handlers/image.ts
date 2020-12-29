@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as cors from 'cors';
 import * as express from 'express';
@@ -26,60 +26,61 @@ export interface BCMSMostRequestItem {
   options: BCMSMostImageHandlerOptions;
 }
 
+export function BCMSMostImageHandlerParseOptions(
+  optionsRaw: string,
+  sizeIndex: number,
+): BCMSMostImageHandlerOptions {
+  const options: BCMSMostImageHandlerOptions = {
+    sizeIndex,
+  };
+  if (optionsRaw === 'auto') {
+    return options;
+  }
+  options.step = parseInt(
+    General.string.getTextBetween(optionsRaw, '_st', '_ps'),
+  );
+  if (isNaN(options.step)) {
+    options.step = undefined;
+  }
+  options.position = General.string.getTextBetween(optionsRaw, '_ps', '_ql');
+  options.quality = parseInt(
+    General.string.getTextBetween(optionsRaw, '_ql', '_sz'),
+  );
+  if (isNaN(options.quality)) {
+    options.quality = undefined;
+  }
+  const sizesRaw = General.string.getTextBetween(optionsRaw, '_sz');
+  if (sizesRaw !== 'a') {
+    options.sizes = [];
+    sizesRaw.split('-').forEach((sizeRaw) => {
+      const w = parseInt(General.string.getTextBetween(sizeRaw, 'w', 'h'));
+      if (!isNaN(w)) {
+        const h = parseInt(General.string.getTextBetween(sizeRaw, 'h'));
+        if (!isNaN(h)) {
+          options.sizes.push({
+            width: w,
+            height: h,
+          });
+        } else {
+          options.sizes.push({
+            width: w,
+          });
+        }
+      }
+    });
+  }
+  return options;
+}
 export function BCMSMostImageHandler(config: BCMSMostConfig) {
   const autoSizes = [350, 600, 900, 1200, 1400, 1920];
   const cnsl = Console('BCMSMostImageHandler');
+  const processedRequests: string[] = [];
   const requestBuffer: BCMSMostRequestItem[] = [];
   const responseBuffer: BCMSMostRequestItem[] = [];
   let app: express.Application;
   let processing = false;
   let watch: NodeJS.Timeout;
 
-  function parseOptions(
-    optionsRaw: string,
-    sizeIndex: number,
-  ): BCMSMostImageHandlerOptions {
-    const options: BCMSMostImageHandlerOptions = {
-      sizeIndex,
-    };
-    if (optionsRaw === 'auto') {
-      return options;
-    }
-    options.step = parseInt(
-      General.string.getTextBetween(optionsRaw, '_st', '_ps'),
-    );
-    if (isNaN(options.step)) {
-      options.step = undefined;
-    }
-    options.position = General.string.getTextBetween(optionsRaw, '_ps', '_ql');
-    options.quality = parseInt(
-      General.string.getTextBetween(optionsRaw, '_ql', '_sz'),
-    );
-    if (isNaN(options.quality)) {
-      options.quality = undefined;
-    }
-    const sizesRaw = General.string.getTextBetween(optionsRaw, '_sz');
-    if (sizesRaw !== 'a') {
-      options.sizes = [];
-      sizesRaw.split('-').forEach((sizeRaw) => {
-        const w = parseInt(General.string.getTextBetween(sizeRaw, 'w', 'h'));
-        if (!isNaN(w)) {
-          const h = parseInt(General.string.getTextBetween(sizeRaw, 'h'));
-          if (!isNaN(h)) {
-            options.sizes.push({
-              width: w,
-              height: h,
-            });
-          } else {
-            options.sizes.push({
-              width: w,
-            });
-          }
-        }
-      });
-    }
-    return options;
-  }
   function startWatch() {
     clearInterval(watch);
     watch = setInterval(async () => {
@@ -151,6 +152,7 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
                 //   }
                 // }
               }
+              processedRequests.push(data.outputPath);
             },
           );
         }
@@ -162,6 +164,7 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
           }
         }
       }
+      console.log('!!');
     }, 1000);
   }
 
@@ -178,11 +181,19 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
           '..',
           config.media.output,
           req.params.options,
-          req.path.replace('/media', ''),
+          req.path,
         ]
           .join('/')
           .replace(/\/\//g, '/');
+        if (req.method === 'GET') {
+          res.sendFile(path.join(process.cwd(), pathToFile.slice(1)));
+          return;
+        }
         if (await FS.exist(pathToFile.split('/'))) {
+          if (req.method === 'POST') {
+            res.send('Success.');
+            return;
+          }
           res.sendFile(path.join(process.cwd(), pathToFile.slice(1)));
           return;
         } else {
@@ -199,30 +210,72 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
           }
           const srcPathToFile =
             `../${config.media.output}` +
-            firstPartSplit
-              .slice(0, firstPartSplit.length - 1)
-              .join('-')
-              .replace('/media', '') +
+            firstPartSplit.slice(0, firstPartSplit.length - 1).join('-') +
             '.' +
             lastPart;
-          const options = parseOptions(req.params.options, sizeIndex);
+          const options = BCMSMostImageHandlerParseOptions(req.params.options, sizeIndex);
           const item: BCMSMostRequestItem = {
             outputPath: pathToFile,
             inputPath: srcPathToFile,
             options,
             optionsRaw: req.params.options,
-            callback() {
-              setTimeout(() => {
-                console.log(path.join(process.cwd(), 'bcms', srcPathToFile))
-                if (req.method === 'POST') {
-                  res.send('Success.');
-                  return;
-                }
-                res.sendFile(path.join(process.cwd(), 'bcms', srcPathToFile));
-              }, 1000);
+            async callback() {
+              if (req.method === 'POST') {
+                res.send('Success.');
+                return;
+              }
+              if (await FS.exist(pathToFile.split('/'))) {
+                res.sendFile(path.join(process.cwd(), 'bcms', pathToFile));
+              } else {
+                res.status(404);
+                res.end();
+              }
             },
           };
-          if (requestBuffer.find((e) => e.outputPath === pathToFile)) {
+          if (!options.sizes) {
+            const injectablePath = pathToFile.replace(
+              `-${sizeIndex}.`,
+              `-@sizeIndex.`,
+            );
+            const ops: BCMSMostImageHandlerOptions = JSON.parse(
+              JSON.stringify(options),
+            );
+            const done: number[] = [];
+            autoSizes.forEach((size, i) => {
+              if (i !== sizeIndex) {
+                ops.sizeIndex = i;
+                item.callback = () => {
+                  {
+                    done.push(1);
+                    if (done.length === autoSizes.length) {
+                      res.sendFile(
+                        path.join(process.cwd(), 'bcms', pathToFile),
+                      );
+                    }
+                  }
+                };
+                requestBuffer.push({
+                  outputPath: injectablePath.replace('@sizeIndex', '' + i),
+                  inputPath: srcPathToFile,
+                  options: ops,
+                  optionsRaw: req.params.options,
+                  callback() {
+                    done.push(1);
+                    console.log(done);
+                    if (done.length === autoSizes.length) {
+                      res.send('Success.');
+                    }
+                  },
+                });
+              }
+            });
+          }
+          if (
+            req.path.endsWith('.webp') ||
+            processedRequests.find((e) => e === item.outputPath)
+          ) {
+            responseBuffer.push(item);
+          } else if (requestBuffer.find((e) => e.outputPath === pathToFile)) {
             responseBuffer.push(item);
           } else {
             requestBuffer.push(item);

@@ -13,11 +13,12 @@ export interface FSPrototype {
   deleteDir(root: string[]): Promise<void>;
   readdir(root: string[]): Promise<string[]>;
   rename(oldRoot: string[], newRoot: string[]): Promise<void>;
+  getHtmlFiles(location: string): Promise<string[]>;
 }
 
 function fsUtil(basePathParts: string[]): FSPrototype {
   const queueable = Queueable<void>('save');
-  return {
+  const self: FSPrototype = {
     async save(data, root) {
       return await queueable.exec('save', 'free_one_by_one', async () => {
         const parts = [...basePathParts, ...root];
@@ -89,7 +90,34 @@ function fsUtil(basePathParts: string[]): FSPrototype {
         path.join(process.cwd(), ...newRoot),
       );
     },
+    async getHtmlFiles(location) {
+      const files = await self.readdir(location.split('/'));
+      const output: string[] = [];
+      for (const i in files) {
+        // if (files[i].endsWith('.html')) {
+        //   output.push(
+        //     path.join(process.cwd(), ...basePathParts, location, files[i]),
+        //   );
+        // } else {
+        const file = await util.promisify(fs.lstat)(
+          path.join(process.cwd(), ...basePathParts, location, files[i]),
+        );
+        if (file.isDirectory()) {
+          const children = await self.getHtmlFiles(location + '/' + files[i]);
+          children.forEach((e) => {
+            output.push(e);
+          });
+        } else if (files[i].endsWith('.html')) {
+          output.push(
+            path.join(process.cwd(), ...basePathParts, location, files[i]),
+          );
+        }
+        // }
+      }
+      return output;
+    },
   };
+  return self;
 }
 
 export const FS = fsUtil(['bcms']);
