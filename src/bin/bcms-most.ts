@@ -9,19 +9,24 @@ import {
 } from '../types';
 import { Arg, Console, General } from '../util';
 import { BCMSMost } from '../most';
-import { MediaProcessor } from '../_media-processor';
-import { BCMSMostImageHandler } from '../handlers';
+import { MediaImageProcessor, MediaProcessor } from '../_media-processor';
 
 async function main() {
   const options = Arg.parse(process.argv);
   if (options.mediaProcessor) {
-    const media: Media = JSON.parse(
-      Buffer.from(options.media, 'hex').toString(),
-    );
-    const mediaConfig: BCMSMostConfigMedia = JSON.parse(
-      Buffer.from(options.mediaConfig, 'hex').toString(),
-    );
-    await MediaProcessor(media, mediaConfig);
+    if (options.mediaImage) {
+      await MediaImageProcessor(
+        JSON.parse(Buffer.from(options.mediaImage, 'hex').toString()),
+      );
+    } else {
+      const media: Media = JSON.parse(
+        Buffer.from(options.media, 'hex').toString(),
+      );
+      const mediaConfig: BCMSMostConfigMedia = JSON.parse(
+        Buffer.from(options.mediaConfig, 'hex').toString(),
+      );
+      await MediaProcessor(media, mediaConfig);
+    }
   } else {
     const config: BCMSMostConfig = await import(
       `${process.cwd()}/bcms.config.js`

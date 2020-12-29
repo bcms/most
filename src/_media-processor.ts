@@ -1,9 +1,15 @@
 import * as sharp from 'sharp';
 import { Media, MediaType } from '@becomes/cms-client';
 import { BCMSMostConfigMedia } from './types';
-import { FS } from './util';
+import { BCMSMostRequestItem } from './handlers';
+import { Console, FS } from './util';
 
-export async function MediaProcessor(media: Media, config: BCMSMostConfigMedia) {
+const autoSizes = [350, 600, 900, 1200, 1400, 1920];
+
+export async function MediaProcessor(
+  media: Media,
+  config: BCMSMostConfigMedia,
+) {
   if (config.sizeMap) {
     if (media.type === MediaType.IMG) {
       const path: string[] = media.isInRoot
@@ -64,5 +70,79 @@ export async function MediaProcessor(media: Media, config: BCMSMostConfigMedia) 
         }
       }
     }
+  }
+}
+
+export async function MediaImageProcessor(
+  data: BCMSMostRequestItem,
+): Promise<void> {
+  const cnsl = Console('MediaImageProcessor');
+  const inputPathParts = data.inputPath.split('/');
+  const outputPathParts = data.outputPath.split('/');
+  if (!(await FS.exist(inputPathParts))) {
+    if (!data.inputPath.endsWith('.webp')) {
+      cnsl.error('', `File does not exist: ${data.inputPath}`);
+    }
+    return;
+  }
+  const inputFile = await FS.read(inputPathParts);
+  const inputFileName = inputPathParts[inputPathParts.length - 1];
+  const inputFileNameInfo = {
+    name: inputFileName.split('.')[0],
+    ext: inputFileName.split('.')[1].toLowerCase(),
+  };
+  const resizeOptions: sharp.ResizeOptions = {
+    withoutEnlargement: true,
+  };
+  if (!data.options.sizes) {
+    resizeOptions.width = autoSizes[data.options.sizeIndex];
+  } else {
+    const target = data.options.sizes[data.options.sizeIndex];
+    if (!target) {
+      cnsl.error(
+        '',
+        `Size for index "${data.options.sizeIndex}" does not exist.`,
+      );
+      return;
+    }
+    resizeOptions.width = target.width;
+    resizeOptions.height = target.height;
+    resizeOptions.fit = 'cover';
+  }
+  let outputFile: Buffer;
+  let createWebP = false;
+  if (inputFileNameInfo.ext === 'png') {
+    createWebP = true;
+    outputFile = await sharp(inputFile)
+      .resize(resizeOptions)
+      .png({
+        quality: data.options.quality ? data.options.quality : 70,
+      })
+      .toBuffer();
+  } else if (
+    inputFileNameInfo.ext === 'jpg' ||
+    inputFileNameInfo.ext === 'jpeg'
+  ) {
+    createWebP = true;
+    outputFile = await sharp(inputFile)
+      .resize(resizeOptions)
+      .jpeg({
+        quality: data.options.quality ? data.options.quality : 70,
+      })
+      .toBuffer();
+  }
+  if (createWebP) {
+    await FS.save(outputFile, outputPathParts);
+    outputFile = await sharp(inputFile)
+      .resize(resizeOptions)
+      .webp({
+        quality: data.options.quality ? data.options.quality : 70,
+      })
+      .toBuffer();
+    const op = data.outputPath
+      .replace('.png', '.webp')
+      .replace('.jpg', '.webp')
+      .replace('.jpeg', '.webp');
+    await FS.save(outputFile, op.split('/'));
   }
 }

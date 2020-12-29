@@ -116,7 +116,7 @@ export async function onPreInit<T>(
     const bcmsMost = getBCMSMost();
     await bcmsMost.content.pull();
     await bcmsMost.media.pull();
-    await bcmsMost.media.process();
+    // await bcmsMost.media.process();
     await bcmsMost.client.socket.connect({
       url: ops.cms.origin,
       path: '/api/socket/server/',
