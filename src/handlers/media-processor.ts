@@ -110,7 +110,6 @@ export async function BCMSMostMediaImageProcessor(
   }
   let outputFile: Buffer;
   let createWebP = false;
-  console.log(resizeOptions);
   if (inputFileNameInfo.ext === 'png') {
     createWebP = true;
     outputFile = await sharp(inputFile)
