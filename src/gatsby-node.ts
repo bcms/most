@@ -1,15 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Media, SocketEventName } from '@becomes/cms-client';
-import * as crypto from 'crypto';
 import Axios from 'axios';
+import * as fse from 'fs-extra';
+import * as path from 'path';
+import * as crypto from 'crypto';
 import { BCMSMost, BCMSMostPrototype } from './most';
-import { FS, General } from './util';
+import { Console, FS, General } from './util';
 import {
   BCMSMostCacheContentItem,
   BCMSMostConfig,
   BCMSMostConfigEntryModifyFunction,
   BCMSMostConfigSchema,
 } from './types';
+import { BCMSMostImageHandler } from './handlers';
 
 const nameMapping: {
   [name: string]: {
@@ -236,7 +239,83 @@ exports.createResolvers = async ({ createResolvers }) => {
   }
 };
 
+async function postBuild(relativePath: string) {
+  const imageHandle = BCMSMostImageHandler(options);
+  imageHandle.startWatch();
+  const cnsl = Console('BCMSMostGatsbyPostBuild');
+  cnsl.info('', 'Processing images...');
+  const basePath = path.join(process.cwd(), 'bcms', relativePath);
+  const pages = (await FS.getHtmlFiles(relativePath)).map((e) =>
+    e.replace(basePath, '').substring(1),
+  );
+  const sources: string[] = [];
+  const done: boolean[] = [];
+  for (const i in pages) {
+    const page = (
+      await FS.read([...relativePath.split('/'), ...pages[i].split('/')])
+    ).toString();
+    const pictures = General.string.getAllTextBetween(
+      page,
+      'class="bcms-img',
+      '</div>',
+    );
+    for (const j in pictures) {
+      const source = General.string.getAllTextBetween(
+        pictures[j],
+        'srcSet="',
+        '"/>',
+      )[1];
+      if (source) {
+        sources.push(source);
+      } else {
+        cnsl.warn(pages[i], 'No source.');
+      }
+    }
+  }
+  await new Promise<void>((resolve) => {
+    console.log(sources);
+    for (const i in sources) {
+      const src = sources[i];
+      imageHandle
+        .resolver(
+          {
+            method: 'POST',
+            options: src.split('/')[2],
+            originalPath: src,
+            path: '/' + src.split('/').slice(3).join('/'),
+          },
+          undefined,
+          () => {
+            done.push(true);
+            if (done.length === sources.length) {
+              resolve();
+            }
+          },
+        )
+        .then((output) => {
+          if (output) {
+            console.log(output);
+            done.push(true);
+            if (done.length === sources.length) {
+              resolve();
+            }
+          }
+        })
+        .catch((error) => {
+          cnsl.error(src, error);
+          done.push(true);
+          if (done.length === sources.length) {
+            resolve();
+          }
+        });
+    }
+  });
+  await fse.copy(
+    path.join(process.cwd(), 'static', 'media'),
+    path.join(process.cwd(), 'public', 'media'),
+  );
+}
+
 exports.onPostBuild = async () => {
-  const pages = await FS.getHtmlFiles('../../starters/bcms-gatsby-starter-blog/public');
-  console.log(pages);
+  await postBuild('../public');
 };
