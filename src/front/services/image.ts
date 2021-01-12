@@ -99,12 +99,16 @@ function imageService(): BCMSImageServicePrototype {
       return src;
     },
     getSizeIndex(element, autoMaxWidth, options) {
-      if (!element.parentElement) {
+      if (
+        !element ||
+        !element.parentElement ||
+        !element.parentElement.parentElement
+      ) {
         console.log('No element');
         return 0;
       }
       const wid = self.closest(
-        element.parentElement.offsetWidth,
+        element.parentElement.parentElement.offsetWidth,
         options && options.sizes
           ? options.sizes.map((e) => e.width)
           : undefined,
