@@ -6,6 +6,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "es5",
+    "jsx": "react",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -13,7 +14,8 @@
   },
   "typedocOptions": {
     "mode": "file",
-    "out": "typedoc"
+    "out": "doc"
   },
-  "exclude": ["node_modules", "dist", "public", "lib"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "public", "lib", "src/front/gatsby"]
 }

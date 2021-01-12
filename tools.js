@@ -78,6 +78,7 @@ const bundle = async () => {
       title: 'Remove old bundle.',
       task: async () => {
         await fse.remove(path.join(__dirname, 'dist'));
+        await fse.remove(path.join(__dirname, 'gatsby-dist'));
         await fse.remove(path.join(__dirname, 'doc'));
       },
     },
@@ -85,6 +86,12 @@ const bundle = async () => {
       title: 'Compile Typescript.',
       task: async () => {
         await exec('npm run build:ts');
+        // await exec('npm run build:gatsby');
+        // await fse.remove(path.join(__dirname, 'dist', 'front', 'gatsby'));
+        // await fse.copy(
+        //   path.join(__dirname, 'src', 'front', 'gatsby'),
+        //   path.join(__dirname, 'dist', 'front', 'gatsby'),
+        // );
       },
     },
     {
@@ -139,6 +146,12 @@ const build = async () => {
       title: 'Compile Typescript.',
       task: async () => {
         await exec('npm run build:ts');
+        // await exec('npm run build:gatsby');
+        // await fse.remove(path.join(__dirname, 'dist', 'front', 'gatsby'));
+        // await fse.copy(
+        //   path.join(__dirname, 'src', 'front', 'gatsby'),
+        //   path.join(__dirname, 'dist', 'front', 'gatsby'),
+        // );
       },
     },
   ]);

@@ -51,7 +51,17 @@ function createSource(
   createNode: any,
 ) {
   try {
-    const data = { data: _data };
+    const data = { data: _data as any };
+    for (const lng in data.data.content) {
+      data.data.content[lng] = data.data.content[lng].map((e) => {
+        if (typeof e.value !== 'string') {
+          e.value = Buffer.from(
+            encodeURIComponent(JSON.stringify(e.value)),
+          ).toString('base64');
+        }
+        return e;
+      });
+    }
     const nodeContent = JSON.stringify(data);
     const nodeMeta = {
       id:
@@ -226,7 +236,15 @@ exports.createResolvers = async ({ createResolvers }) => {
               .map((e) => e.toLowerCase())
               .join('');
             const target = JSON.parse(source.internal.content).data;
-            const output = cache[type].find((e) => e._id === target._id);
+            const output = cache[type].find((e) => e._id === target._id) as any;
+            for (const lng in output.content) {
+              output.content[lng] = output.content[lng].map((e) => {
+                if (typeof e.value !== 'string') {
+                  e.value = JSON.stringify(e.value);
+                }
+                return e;
+              });
+            }
             return output;
           },
         },
