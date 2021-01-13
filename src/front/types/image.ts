@@ -13,7 +13,8 @@ export interface BCMSImageDeconstructedSrc {
 }
 export interface BCMSGatsbyImageProps {
   className?: string;
-  style?: React.CSSProperties;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  style?: any;
   src: string;
   alt: string;
   onClick?: () => void;
