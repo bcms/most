@@ -5,6 +5,8 @@ bcms.config.js
 /bcms
 /public
 /typedoc
+/doc
+/gatsby-dist
 
 # Logs
 logs

@@ -1,6 +1,6 @@
-# Becomes CMS - Static Site Generator Framework
+# Becomes CMS - Static Site Generator Framework Tool Set
 
-This is a tool that will abstract communication with Becomes CMS API and will allow easier integration in the framework like Gatsby and Nuxt. Have in mind that this is abstraction tool and all of its functionality can be achieved using [Becomes CMS Client](https://github.com/becomesco/cms-client) library.
+This is a tool set that will abstract communication with Becomes CMS API and will allow easier integration in the frameworks like Gatsby and Nuxt. Have in mind that this is an abstraction tool and all of its functionality can be achieved using [Becomes CMS Client](https://github.com/becomesco/cms-client) library.
 
 ## Getting started
 

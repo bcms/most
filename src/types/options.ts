@@ -6,9 +6,12 @@ export interface Options {
   mediaProcessor?: boolean;
   media?: string;
   mediaConfig?: string;
-  parse?: string;
+  mediaImage?: string;
   callFunctions?: boolean;
   apiKey?: string;
   apiSecret?: string;
   apiOrigin?: string;
+  gatsbyBundle?: boolean;
+  imageServer?: boolean;
+  config?: string;
 }

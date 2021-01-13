@@ -1,12 +1,14 @@
 {
   "name": "@becomes/cms-most",
-  "version": "1.0.8",
+  "version": "1.0.10",
   "description": "Utility for Becomes CMS used for client framework applications like Nuxt and Gatsby.",
   "author": "becomes.co",
   "license": "MIT",
   "main": "index.js",
   "scripts": {
+    "build": "node tools.js --build",
     "build:ts": "npm run lint && tsc -p .",
+    "build:gatsby": "tsc -p tsconfig.gatsby.json",
     "bundle": "node tools.js --bundle",
     "publish": "node tools.js --publish",
     "link": "node tools.js --link",
@@ -21,28 +23,33 @@
     "test:active": "mocha -r ts-node/register test/integration/*.active.test.ts --recursive --exit",
     "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
     "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
-    "lint": "eslint src/**/*"
+    "lint": "eslint src/**/*",
+    "t": "ts-node src/post-build.ts"
   },
   "dependencies": {
-    "@becomes/cms-client": "^2.0.0",
+    "@becomes/cms-client": "^2.0.3",
+    "@types/uuid": "^8.3.0",
     "arg": "^4.1.3",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
+    "cors": "^2.8.5",
     "fs-extra": "^9.0.1",
-    "sharp": "^0.25.4"
+    "sharp": "^0.27.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
-    "@types/chai": "^4.2.12",
-    "@types/express": "^4.17.9",
-    "@types/fs-extra": "^9.0.1",
-    "@types/mocha": "^8.0.3",
-    "@types/node": "^12.12.62",
+    "@types/chai": "^4.2.14",
+    "@types/cors": "^2.8.9",
+    "@types/express": "^4.17.10",
+    "@types/fs-extra": "^9.0.6",
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^12.19.12",
     "@types/sharp": "^0.25.1",
-    "@typescript-eslint/eslint-plugin": "^4.7.0",
-    "@typescript-eslint/parser": "^4.7.0",
+    "@typescript-eslint/eslint-plugin": "^4.13.0",
+    "@typescript-eslint/parser": "^4.13.0",
     "chai": "^4.2.0",
     "env-cmd": "^10.0.1",
-    "eslint": "^7.13.0",
+    "eslint": "^7.17.0",
     "express": "^4.17.1",
     "mocha": "^7.2.0",
     "ts-node": "^8.10.2",
@@ -59,10 +66,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/becomesco/cms-ssgf.git"
+    "url": "git+https://github.com/becomesco/cms-most.git"
   },
   "bugs": {
-    "url": "https://github.com/becomesco/cms-ssgf/issues"
+    "url": "https://github.com/becomesco/cms-most/issues"
   },
-  "homepage": "https://github.com/becomesco/cms-ssgf#readme"
+  "homepage": "https://github.com/becomesco/cms-most#readme",
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "ts"
+  }
 }
