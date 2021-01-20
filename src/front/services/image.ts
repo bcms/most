@@ -3,6 +3,7 @@ import Axios from 'axios';
 import { BCMSImageDeconstructedSrc, BCMSImageOptions } from '../types';
 
 export interface BCMSImageServicePrototype {
+  setServerPort(port: number): void;
   closest(width: number, set?: number[]): number;
   checkWebP(): boolean;
   parsable(src: string): boolean;
@@ -42,6 +43,7 @@ function imageService(): BCMSImageServicePrototype {
     '1920': 5,
   };
   let isWebPSupported: boolean;
+  let serverPort = 8001;
 
   if (typeof window !== 'undefined') {
     let delay: NodeJS.Timeout;
@@ -56,6 +58,9 @@ function imageService(): BCMSImageServicePrototype {
   }
 
   const self: BCMSImageServicePrototype = {
+    setServerPort(port) {
+      serverPort = port;
+    },
     closest(width, set) {
       let delta = 100000;
       let bestI = 0;
@@ -164,7 +169,7 @@ function imageService(): BCMSImageServicePrototype {
       }
       const opsParsed = self.parseOptions(data.options);
       try {
-        const url = `http://localhost:8001/media/${opsParsed}${data.deconstructedSrc.firstPart}-${data.sizeIndex}.${data.deconstructedSrc.lastPart}`;
+        const url = `http://localhost:${serverPort}/media/${opsParsed}${data.deconstructedSrc.firstPart}-${data.sizeIndex}.${data.deconstructedSrc.lastPart}`;
         if (requiredUrls.includes(url)) {
           return self.getSizeIndex(
             data.element,
@@ -179,7 +184,7 @@ function imageService(): BCMSImageServicePrototype {
         if (data.options && data.options.sizes) {
           for (let i = 0; i < data.options.sizes.length; i++) {
             requiredUrls.push(
-              `http://localhost:8001/media/${opsParsed}${data.deconstructedSrc.firstPart}-${i}.${data.deconstructedSrc.lastPart}`,
+              `http://localhost:${serverPort}/media/${opsParsed}${data.deconstructedSrc.firstPart}-${i}.${data.deconstructedSrc.lastPart}`,
             );
           }
         }
