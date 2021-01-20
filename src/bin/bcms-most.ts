@@ -65,6 +65,8 @@ async function main() {
           },
         ],
       };
+    } else if (!config.media.ppc) {
+      config.media.ppc = os.cpus().length;
     }
     if (config.media.ppc > MAX_PPC) {
       config.media.ppc = MAX_PPC;

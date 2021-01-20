@@ -1,4 +1,9 @@
-import { BCMSClient, BCMSClientPrototype } from '@becomes/cms-client';
+import * as path from 'path';
+import {
+  BCMSClient,
+  BCMSClientPrototype,
+  SocketEventName,
+} from '@becomes/cms-client';
 import {
   BCMSMostCacheHandler,
   BCMSMostCacheHandlerPrototype,
@@ -11,7 +16,8 @@ import {
   BCMSMostMediaHandler,
   BCMSMostMediaHandlerPrototype,
 } from './handlers';
-import { BCMSMostConfig } from './types';
+import { BCMSMostConfig, BCMSMostConfigSchema, BCMSMostPipe } from './types';
+import { Console, FS, General } from './util';
 
 export interface BCMSMostPrototype {
   updateConfig(config: BCMSMostConfig): void;
@@ -21,6 +27,7 @@ export interface BCMSMostPrototype {
   media: BCMSMostMediaHandlerPrototype;
   function: BCMSMostFunctionHandlerPrototype;
   image: BCMSMostImageHandlerPrototype;
+  pipe: BCMSMostPipe;
 }
 
 export const MAX_PPC = 16;
@@ -32,6 +39,7 @@ export function BCMSMost(
   if (!config) {
     config = require(`${process.cwd()}/bcms.config.js`);
   }
+  General.object.compareWithSchema(config, BCMSMostConfigSchema, 'options');
   if (!client) {
     client = BCMSClient({
       cmsOrigin: config.cms.origin,
@@ -53,6 +61,146 @@ export function BCMSMost(
     media,
     function: fn,
     image,
+    pipe: {
+      async initialize(imageServerPort, onSocketEvent) {
+        await self.content.pull();
+        await self.media.pull();
+        if (config.functions) {
+          for (const i in config.functions) {
+            await self.function.call(config.functions[i].name);
+          }
+        }
+        await self.client.socket.connect({
+          url: config.cms.origin,
+          path: '/api/socket/server/',
+        });
+        self.client.socket.subscribe(async (name, data) => {
+          if (name === SocketEventName.ENTRY) {
+            const entry = await self.client.entry.get({
+              entryId: data.entry._id,
+              templateId: data.entry.additional.templateId,
+              parse: true,
+            });
+            const cache = await self.cache.get.content();
+            let found = false;
+            for (const name in cache) {
+              for (const i in cache[name]) {
+                const cacheEntry = cache[name][i];
+                if (cacheEntry._id === entry._id) {
+                  if (config.entries) {
+                    const entryConfig = config.entries.find(
+                      (e) => e.templateId === entry.templateId,
+                    );
+                    if (
+                      entryConfig &&
+                      typeof entryConfig.modify === 'function'
+                    ) {
+                      cache[name][i] = await entryConfig.modify(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        entry as any,
+                        cache,
+                      );
+                    } else {
+                      cache[name][i] = entry;
+                    }
+                  }
+                  found = true;
+                  break;
+                }
+              }
+              if (found) {
+                break;
+              }
+            }
+            await self.cache.update.content(cache);
+            if (onSocketEvent) {
+              try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await onSocketEvent(name, data, entry as any);
+              } catch (error) {
+                console.error(error);
+              }
+            }
+          }
+        });
+        self.image.startServer(imageServerPort);
+      },
+      async postBuild(relativePath, imageServerPort) {
+        if (!self.image.server) {
+          self.image.startServer(imageServerPort);
+        }
+        const cnsl = Console('BCMSMostPipePostBuild');
+        const basePath = path.join(process.cwd(), relativePath);
+        const pages = (await FS.getHtmlFiles(relativePath)).map((e) =>
+          e.replace(basePath, '').substring(1),
+        );
+        const sources: string[] = [];
+        const sourcesBuffer: {
+          [path: string]: boolean;
+        } = {};
+        const done: boolean[] = [];
+        for (const i in pages) {
+          const page = (
+            await FS.read([...relativePath.split('/'), ...pages[i].split('/')])
+          ).toString();
+          const pictures = General.string.getAllTextBetween(
+            page,
+            'class="bcms-img',
+            '</div>',
+          );
+          for (const j in pictures) {
+            if (
+              General.string.getTextBetween(
+                pictures[j],
+                '<picture',
+                '</picture>',
+              )
+            ) {
+              const source = General.string.getAllTextBetween(
+                pictures[j],
+                'srcSet="',
+                '"',
+              )[1];
+              if (source) {
+                sourcesBuffer[source] = true;
+              } else {
+                cnsl.warn(pages[i], 'No source.');
+              }
+            }
+          }
+        }
+        for (const src in sourcesBuffer) {
+          sources.push(src);
+        }
+        cnsl.info('', sources);
+        await new Promise<void>((resolve) => {
+          for (const i in sources) {
+            const src = sources[i];
+            self.image
+              .resolver({
+                method: 'POST',
+                options: src.split('/')[2],
+                originalPath: src,
+                path: '/' + src.split('/').slice(3).join('/'),
+              })
+              .then(() => {
+                cnsl.info('', `${done.length}, ${sources.length}`);
+                done.push(true);
+                if (done.length === sources.length) {
+                  resolve();
+                }
+              })
+              .catch((error) => {
+                cnsl.error(src, error);
+                done.push(true);
+                if (done.length === sources.length) {
+                  resolve();
+                }
+              });
+          }
+        });
+      },
+    },
   };
   return self;
 }

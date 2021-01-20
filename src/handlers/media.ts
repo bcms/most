@@ -27,6 +27,7 @@ export function BCMSMostMediaHandler(
       const startTime = Date.now();
       const mediaCache = await cache.get.media();
       const processMediaCache = await cache.get.processMedia();
+      
       if (!config.media.ppc) {
         config.media.ppc = os.cpus().length;
         if (config.media.ppc > MAX_PPC) {
