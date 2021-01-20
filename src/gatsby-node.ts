@@ -278,15 +278,19 @@ async function postBuild(relativePath: string) {
       '</div>',
     );
     for (const j in pictures) {
-      const source = General.string.getAllTextBetween(
-        pictures[j],
-        'srcSet="',
-        '"/>',
-      )[1];
-      if (source) {
-        sources.push(source);
-      } else {
-        cnsl.warn(pages[i], 'No source.');
+      if (
+        General.string.getTextBetween(pictures[j], '<picture', '</picture>')
+      ) {
+        const source = General.string.getAllTextBetween(
+          pictures[j],
+          'srcSet="',
+          '"',
+        )[1];
+        if (source) {
+          sources.push(source);
+        } else {
+          cnsl.warn(pages[i], 'No source.');
+        }
       }
     }
   }
@@ -302,21 +306,19 @@ async function postBuild(relativePath: string) {
             originalPath: src,
             path: '/' + src.split('/').slice(3).join('/'),
           },
-          undefined,
-          () => {
-            done.push(true);
-            if (done.length === sources.length) {
-              resolve();
-            }
-          },
+          // undefined,
+          // () => {
+          //   done.push(true);
+          //   cnsl.info('done', `${src} - ${done.length}, ${sources.length}`);
+          //   if (done.length === sources.length) {
+          //     resolve();
+          //   }
+          // },
         )
-        .then((output) => {
-          if (output) {
-            console.log(output);
-            done.push(true);
-            if (done.length === sources.length) {
-              resolve();
-            }
+        .then(() => {
+          done.push(true);
+          if (done.length === sources.length) {
+            resolve();
           }
         })
         .catch((error) => {

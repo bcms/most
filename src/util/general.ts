@@ -115,7 +115,7 @@ function generalUtil(): GeneralPrototype {
         if (index.begin === -1) {
           return [];
         }
-        index.end = src.indexOf(end, index.begin);
+        index.end = src.indexOf(end, index.begin + begin.length);
         if (index.end === -1) {
           return [];
         }
@@ -126,7 +126,7 @@ function generalUtil(): GeneralPrototype {
           if (index.begin === -1) {
             break;
           }
-          index.end = src.indexOf(end, index.begin);
+          index.end = src.indexOf(end, index.begin + begin.length);
           if (index.end === -1) {
             break;
           }
