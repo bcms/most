@@ -32,8 +32,21 @@ export interface BCMSMostPrototype {
 
 export const MAX_PPC = 16;
 
+/**
+ * Creates a BCMSMost object with all handlers and additional helpers.
+ *
+ * Usage: `const bcmsMost = BCMSMost(myConfig);`
+ */
 export function BCMSMost(
+  /**
+   * If not provided, `bcms.config.js` file must be available
+   * at the root of the project (**{cwd}/bcms.config.js**).
+   */
   config?: BCMSMostConfig,
+  /**
+   * If not provided, client will be created using data from
+   * the configuration.
+   */
   client?: BCMSClientPrototype,
 ) {
   if (!config) {
