@@ -1,8 +1,10 @@
+import * as os from 'os';
 import * as path from 'path';
 import * as cors from 'cors';
 import * as express from 'express';
 import { BCMSMostConfig } from '../types';
 import { Console, FS, General, PPLB } from '../util';
+import { MAX_PPC } from '../most';
 
 export interface BCMSMostImageHandlerPrototype {
   startServer(port?: number): express.Application;
@@ -91,6 +93,37 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
   let app: express.Application;
   let watch: NodeJS.Timeout;
   let processing = false;
+
+  if (!config.media) {
+    config.media = {
+      output: 'static/media',
+      sizeMap: [
+        {
+          width: 350,
+        },
+        {
+          width: 600,
+        },
+        {
+          width: 900,
+        },
+        {
+          width: 1200,
+        },
+        {
+          width: 1400,
+        },
+        {
+          width: 1920,
+        },
+      ],
+    };
+  } else if (!config.media.ppc) {
+    config.media.ppc = os.cpus().length;
+  }
+  if (config.media.ppc > MAX_PPC) {
+    config.media.ppc = MAX_PPC;
+  }
 
   const self: BCMSMostImageHandlerPrototype = {
     server: app,

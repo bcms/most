@@ -23,7 +23,7 @@ export interface BCMSMostPrototype {
   image: BCMSMostImageHandlerPrototype;
 }
 
-const MAX_PPC = 16;
+export const MAX_PPC = 16;
 
 export function BCMSMost(
   config?: BCMSMostConfig,

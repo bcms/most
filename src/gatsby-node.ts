@@ -267,6 +267,9 @@ async function postBuild(relativePath: string) {
     e.replace(basePath, '').substring(1),
   );
   const sources: string[] = [];
+  const sourcesBuffer: {
+    [path: string]: boolean;
+  } = {};
   const done: boolean[] = [];
   for (const i in pages) {
     const page = (
@@ -287,15 +290,18 @@ async function postBuild(relativePath: string) {
           '"',
         )[1];
         if (source) {
-          sources.push(source);
+          sourcesBuffer[source] = true;
         } else {
           cnsl.warn(pages[i], 'No source.');
         }
       }
     }
   }
+  for (const src in sourcesBuffer) {
+    sources.push(src);
+  }
+  cnsl.info('', sources);
   await new Promise<void>((resolve) => {
-    console.log(sources);
     for (const i in sources) {
       const src = sources[i];
       imageHandle
@@ -316,6 +322,7 @@ async function postBuild(relativePath: string) {
           // },
         )
         .then(() => {
+          cnsl.info('', `${done.length}, ${sources.length}`);
           done.push(true);
           if (done.length === sources.length) {
             resolve();

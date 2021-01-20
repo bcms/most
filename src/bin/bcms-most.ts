@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import * as os from 'os';
 import { BCMSClient } from '@becomes/cms-client';
 import {
   BCMSMostConfig,
@@ -8,7 +9,7 @@ import {
   Media,
 } from '../types';
 import { Arg, Console, General } from '../util';
-import { BCMSMost } from '../most';
+import { BCMSMost, MAX_PPC } from '../most';
 import {
   BCMSMostMediaImageProcessor,
   BCMSMostMediaProcessor,
@@ -42,6 +43,7 @@ async function main() {
     if (!config.media) {
       config.media = {
         output: 'static/media',
+        ppc: os.cpus().length,
         sizeMap: [
           {
             width: 350,
@@ -63,6 +65,9 @@ async function main() {
           },
         ],
       };
+    }
+    if (config.media.ppc > MAX_PPC) {
+      config.media.ppc = MAX_PPC;
     }
     const client = BCMSClient({
       cmsOrigin: config.cms.origin,
