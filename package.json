@@ -23,8 +23,7 @@
     "test:active": "mocha -r ts-node/register test/integration/*.active.test.ts --recursive --exit",
     "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
     "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
-    "lint": "eslint src/**/*",
-    "t": "ts-node src/post-build.ts"
+    "lint": "eslint src/**/*"
   },
   "dependencies": {
     "@becomes/cms-client": "^2.0.4",
@@ -56,6 +55,7 @@
     "tsconfig-paths": "^3.9.0",
     "tslint": "^5.20.1",
     "typedoc": "^0.15.8",
+    "typedoc-neo-theme": "^1.1.0",
     "typescript": "^3.9.7"
   },
   "bin": {

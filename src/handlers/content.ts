@@ -3,13 +3,30 @@ import { BCMSMostCacheContent, BCMSMostConfig } from '../types';
 import { Console, ErrorHandler } from '../util';
 import { BCMSMostCacheHandlerPrototype } from './cache';
 
+/**
+ * Return type from the `BCMSMostContentHandler()` function.
+ * 
+ * This object is used for interaction with the BCMS content API.
+ */
 export interface BCMSMostContentHandlerPrototype {
+  /**
+   * Pull all content from the BCMS. Cached version (if available) is
+   * compared with indexes returned by the BCMS and only modified or
+   * new data is requested. Using `BCMSMostCacheHandler`, local
+   * cache is updated.
+   */
   pull(): Promise<void>;
 }
 
+/**
+ * Provides methods for the BCMS content API.
+ */
 export function BCMSMostContentHandler(
+  /** Configuration object. */
   config: BCMSMostConfig,
+  /** Client created by the `@becomes/cms-client`. */
   client: BCMSClientPrototype,
+  /** Cache handler objet. */
   cache: BCMSMostCacheHandlerPrototype,
 ) {
   const cnsl = Console('BCMSMostContentHandler');

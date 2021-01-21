@@ -13,8 +13,21 @@
     "incremental": true
   },
   "typedocOptions": {
+    "name": "BCMS Most",
+    "theme": "./node_modules/typedoc-neo-theme/bin/default",
+    "plugin": "typedoc-neo-theme",
     "mode": "file",
-    "out": "doc"
+    "out": "doc",
+    "outline": [
+      {
+        "API": {
+          "Overview": "interfaces/bcmsmostprototype",
+          "Cache": "interfaces/bcmsmostcachehandlerprototype",
+          "Content": "interfaces/bcmsmostcontenthandlerprototype",
+          "Media": "interfaces/bcmsmostmediahandlerprototype"
+        }
+      }
+    ]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "public", "lib", "src/front/gatsby"]

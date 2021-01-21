@@ -19,14 +19,41 @@ import {
 import { BCMSMostConfig, BCMSMostConfigSchema, BCMSMostPipe } from './types';
 import { Console, FS, General } from './util';
 
+/**
+ * Output type from the `BCMSMost` function.
+ */
 export interface BCMSMostPrototype {
+  /**
+   * Update configuration object in-memory.
+   */
   updateConfig(config: BCMSMostConfig): void;
+  /**
+   * Local client object created from the `@becomes/cms-client`
+   */
   client: BCMSClientPrototype;
+  /**
+   * Cache handler object.
+   */
   cache: BCMSMostCacheHandlerPrototype;
+  /**
+   * Content handler object.
+   */
   content: BCMSMostContentHandlerPrototype;
+  /**
+   * Media handler object/
+   */
   media: BCMSMostMediaHandlerPrototype;
+  /**
+   * Function handler object
+   */
   function: BCMSMostFunctionHandlerPrototype;
+  /**
+   * Image handler object.
+   */
   image: BCMSMostImageHandlerPrototype;
+  /**
+   * Pipe handler object.
+   */
   pipe: BCMSMostPipe;
 }
 
