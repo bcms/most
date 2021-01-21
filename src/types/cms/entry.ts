@@ -32,7 +32,12 @@ export interface BCMSEntryParsed<MetaType> {
   updatedAt: number;
   templateId: string;
   userId: string;
-  meta: BCMSEntryMetaParsed<MetaType>;
+  meta: BCMSEntryMetaParsed<
+    MetaType & {
+      title: string;
+      slug: string;
+    }
+  >;
   content: {
     [lng: string]: BCMSEntryContentParsed;
   };
