@@ -174,6 +174,7 @@ export function BCMSMost(
         const pages = (await FS.getHtmlFiles(relativePath)).map((e) =>
           e.replace(basePath, '').substring(1),
         );
+        console.log('pages', pages);
         const sources: string[] = [];
         const sourcesBuffer: {
           [path: string]: boolean;
@@ -181,7 +182,11 @@ export function BCMSMost(
         const done: boolean[] = [];
         for (const i in pages) {
           const page = (
-            await FS.read([...relativePath.split('/'), ...pages[i].split('/')])
+            await FS.read([
+              '..',
+              ...relativePath.split('/'),
+              ...pages[i].split('/'),
+            ])
           ).toString();
           const pictures = General.string.getAllTextBetween(
             page,
@@ -212,33 +217,35 @@ export function BCMSMost(
         for (const src in sourcesBuffer) {
           sources.push(src);
         }
-        cnsl.info('', sources);
-        await new Promise<void>((resolve) => {
-          for (const i in sources) {
-            const src = sources[i];
-            self.image
-              .resolver({
-                method: 'POST',
-                options: src.split('/')[2],
-                originalPath: src,
-                path: '/' + src.split('/').slice(3).join('/'),
-              })
-              .then(() => {
-                cnsl.info('', `${done.length}, ${sources.length}`);
-                done.push(true);
-                if (done.length === sources.length) {
-                  resolve();
-                }
-              })
-              .catch((error) => {
-                cnsl.error(src, error);
-                done.push(true);
-                if (done.length === sources.length) {
-                  resolve();
-                }
-              });
-          }
-        });
+        cnsl.info('sources', sources);
+        if (sources.length > 0) {
+          await new Promise<void>((resolve) => {
+            for (const i in sources) {
+              const src = sources[i];
+              self.image
+                .resolver({
+                  method: 'POST',
+                  options: src.split('/')[2],
+                  originalPath: src,
+                  path: '/' + src.split('/').slice(3).join('/'),
+                })
+                .then(() => {
+                  cnsl.info('', `${done.length}, ${sources.length}`);
+                  done.push(true);
+                  if (done.length === sources.length) {
+                    resolve();
+                  }
+                })
+                .catch((error) => {
+                  cnsl.error(src, error);
+                  done.push(true);
+                  if (done.length === sources.length) {
+                    resolve();
+                  }
+                });
+            }
+          });
+        }
       },
     },
   };

@@ -91,16 +91,11 @@ function fsUtil(basePathParts: string[]): FSPrototype {
       );
     },
     async getHtmlFiles(location) {
-      const files = await self.readdir(location.split('/'));
+      const files = await self.readdir(['..', ...location.split('/')]);
       const output: string[] = [];
       for (const i in files) {
-        // if (files[i].endsWith('.html')) {
-        //   output.push(
-        //     path.join(process.cwd(), ...basePathParts, location, files[i]),
-        //   );
-        // } else {
         const file = await util.promisify(fs.lstat)(
-          path.join(process.cwd(), ...basePathParts, location, files[i]),
+          path.join(process.cwd(), ...basePathParts, '..', location, files[i]),
         );
         if (file.isDirectory()) {
           const children = await self.getHtmlFiles(location + '/' + files[i]);
@@ -109,10 +104,15 @@ function fsUtil(basePathParts: string[]): FSPrototype {
           });
         } else if (files[i].endsWith('.html')) {
           output.push(
-            path.join(process.cwd(), ...basePathParts, location, files[i]),
+            path.join(
+              process.cwd(),
+              ...basePathParts,
+              '..',
+              location,
+              files[i],
+            ),
           );
         }
-        // }
       }
       return output;
     },
