@@ -121,11 +121,11 @@ export function BCMSMost(
               templateId: data.entry.additional.templateId,
               parse: true,
             });
-            const cache = await self.cache.get.content();
+            const contentCache = await self.cache.get.content();
             let found = false;
-            for (const name in cache) {
-              for (const i in cache[name]) {
-                const cacheEntry = cache[name][i];
+            for (const contentCacheName in contentCache) {
+              for (const i in contentCache[contentCacheName]) {
+                const cacheEntry = contentCache[contentCacheName][i];
                 if (cacheEntry._id === entry._id) {
                   if (config.entries) {
                     const entryConfig = config.entries.find(
@@ -135,13 +135,13 @@ export function BCMSMost(
                       entryConfig &&
                       typeof entryConfig.modify === 'function'
                     ) {
-                      cache[name][i] = await entryConfig.modify(
+                      contentCache[contentCacheName][i] = await entryConfig.modify(
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         entry as any,
-                        cache,
+                        contentCache,
                       );
                     } else {
-                      cache[name][i] = entry;
+                      contentCache[contentCacheName][i] = entry;
                     }
                   }
                   found = true;
@@ -152,7 +152,7 @@ export function BCMSMost(
                 break;
               }
             }
-            await self.cache.update.content(cache);
+            await self.cache.update.content(contentCache);
             if (onSocketEvent) {
               try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -166,9 +166,6 @@ export function BCMSMost(
         self.image.startServer(imageServerPort);
       },
       async postBuild(relativePath) {
-        // if (!self.image.server()) {
-        //   self.image.startServer(imageServerPort);
-        // }
         const cnsl = Console('BCMSMostPipePostBuild');
         const basePath = path.join(process.cwd(), relativePath);
         const pages = (await FS.getHtmlFiles(relativePath)).map((e) =>

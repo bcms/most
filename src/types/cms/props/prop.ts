@@ -5,6 +5,7 @@ import { PropMedia } from './media';
 import { PropQuill, PropWidgetParsed } from './quill';
 import { PropWidget } from './quill';
 
+// eslint-disable-next-line no-shadow
 export enum PropType {
   STRING = 'STRING',
   NUMBER = 'NUMBER',

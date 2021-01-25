@@ -6,7 +6,7 @@ export interface PPLBPrototype {
   manage<T>(
     ppc: number,
     data: T[],
-    exec: (data: T, chunkId: string) => Promise<void>,
+    exec: (_data: T, chunkId: string) => Promise<void>,
     failOnError?: boolean,
   ): Promise<void>;
 }
@@ -17,7 +17,7 @@ function pplb(): PPLBPrototype {
     async manage<T>(
       ppc: number,
       data: T[],
-      exec: (data: T, chunkId: string) => Promise<void>,
+      exec: (_data: T, chunkId: string) => Promise<void>,
       failOnError?: boolean,
     ): Promise<void> {
       return await new Promise((resolve, reject) => {

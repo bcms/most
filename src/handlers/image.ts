@@ -130,34 +130,42 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
       return app;
     },
     startServer(port) {
-      self.startWatch();
-      if (!port) {
-        port = 8001;
-      }
-      app = express();
-      app.use(cors());
-      app.use('/media/:options', async (req, res) => {
-        console.log(req.originalUrl);
-        const output = await self.resolver({
-          method: req.method,
-          options: req.params.options,
-          originalPath: req.originalUrl,
-          path: req.path,
-        });
-        if (output) {
-          if (output.filePath) {
-            res.sendFile(output.filePath);
-          } else {
-            res.status(output.status);
-            res.send(output.message);
-          }
-        } else {
-          res.status(500);
-          res.send('No output');
-          res.end();
+      if (!app) {
+        self.startWatch();
+        if (!port) {
+          port = 8001;
         }
-      });
-      app.listen(port, () => cnsl.info('', `Server started on port ${port}`));
+        app = express();
+        app.use(cors());
+        app.use('/media/:options', async (req, res) => {
+          console.log(req.originalUrl);
+          const output = await self.resolver({
+            method: req.method,
+            options: req.params.options,
+            originalPath: req.originalUrl,
+            path: req.path,
+          });
+          if (output) {
+            if (output.filePath) {
+              res.sendFile(output.filePath);
+            } else {
+              res.status(output.status);
+              res.send(output.message);
+            }
+          } else {
+            res.status(500);
+            res.send('No output');
+            res.end();
+          }
+        });
+        try {
+          app.listen(port, () =>
+            cnsl.info('', `Server started on port ${port}`),
+          );
+        } catch (error) {
+          cnsl.error('listen', error);
+        }
+      }
       return app;
     },
     async resolver(data) {

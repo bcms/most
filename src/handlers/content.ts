@@ -82,8 +82,8 @@ export function BCMSMostContentHandler(
           true,
         );
         if (typeof entryConfig.modify === 'function') {
-          for (const i in contentCache[name]) {
-            const entry = contentCache[name][i];
+          for (const j in contentCache[name]) {
+            const entry = contentCache[name][j];
             const output = await entryConfig.modify(
               JSON.parse(JSON.stringify(entry)),
               contentCache,
@@ -93,7 +93,7 @@ export function BCMSMostContentHandler(
               output.createdAt = entry.createdAt;
               output.updatedAt = entry.updatedAt;
               output.templateId = entry.templateId;
-              contentCache[name][i] = output;
+              contentCache[name][j] = output;
             } else {
               throw ErrorHandler.get(
                 `Error in "modify" function for entries in template "${

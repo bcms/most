@@ -1,6 +1,7 @@
 /**
  * Used as a utility for Logger.
  */
+// eslint-disable-next-line no-shadow
 export enum ConsoleColors {
   Reset = '\x1b[0m',
   Bright = '\x1b[1m',
