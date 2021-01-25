@@ -15,7 +15,7 @@ export interface BCMSMostImageHandlerPrototype {
     method: string;
   }): Promise<BCMSMostImageResolverResponse>;
   startWatch(): void;
-  server: express.Application;
+  server(): express.Application;
 }
 export interface BCMSMostImageResolverResponse {
   status: number;
@@ -126,7 +126,9 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
   }
 
   const self: BCMSMostImageHandlerPrototype = {
-    server: app,
+    server() {
+      return app;
+    },
     startServer(port) {
       self.startWatch();
       if (!port) {

@@ -165,10 +165,10 @@ export function BCMSMost(
         });
         self.image.startServer(imageServerPort);
       },
-      async postBuild(relativePath, imageServerPort) {
-        if (!self.image.server) {
-          self.image.startServer(imageServerPort);
-        }
+      async postBuild(relativePath) {
+        // if (!self.image.server()) {
+        //   self.image.startServer(imageServerPort);
+        // }
         const cnsl = Console('BCMSMostPipePostBuild');
         const basePath = path.join(process.cwd(), relativePath);
         const pages = (await FS.getHtmlFiles(relativePath)).map((e) =>
