@@ -2,6 +2,7 @@ import * as path from 'path';
 import {
   BCMSClient,
   BCMSClientPrototype,
+  Entry,
   SocketEventName,
 } from '@becomes/cms-client';
 import {
@@ -116,49 +117,61 @@ export function BCMSMost(
         });
         self.client.socket.subscribe(async (name, data) => {
           if (name === SocketEventName.ENTRY) {
-            const entry = await self.client.entry.get({
-              entryId: data.entry._id,
-              templateId: data.entry.additional.templateId,
-              parse: true,
-            });
+            let entry: Entry;
+            if (
+              data.type !== 'remove' &&
+              (await self.client.keyAccess()).templates.find(
+                (e) => e._id === data.entry.additional.templateId,
+              )
+            ) {
+              entry = await self.client.entry.get({
+                entryId: data.entry._id,
+                templateId: data.entry.additional.templateId,
+                parse: true,
+              });
+            }
             const contentCache = await self.cache.get.content();
-            let found = false;
-            for (const contentCacheName in contentCache) {
-              for (const i in contentCache[contentCacheName]) {
-                const cacheEntry = contentCache[contentCacheName][i];
-                if (cacheEntry._id === entry._id) {
-                  if (config.entries) {
-                    const entryConfig = config.entries.find(
-                      (e) => e.templateId === entry.templateId,
-                    );
-                    if (
-                      entryConfig &&
-                      typeof entryConfig.modify === 'function'
-                    ) {
-                      contentCache[contentCacheName][i] = await entryConfig.modify(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        entry as any,
-                        contentCache,
+            if (entry) {
+              let found = false;
+              for (const contentCacheName in contentCache) {
+                for (const i in contentCache[contentCacheName]) {
+                  const cacheEntry = contentCache[contentCacheName][i];
+                  if (cacheEntry._id === entry._id) {
+                    if (config.entries) {
+                      const entryConfig = config.entries.find(
+                        (e) => e.templateId === entry.templateId,
                       );
-                    } else {
-                      contentCache[contentCacheName][i] = entry;
+                      if (
+                        entryConfig &&
+                        typeof entryConfig.modify === 'function'
+                      ) {
+                        contentCache[contentCacheName][
+                          i
+                        ] = await entryConfig.modify(
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          entry as any,
+                          contentCache,
+                        );
+                      } else {
+                        contentCache[contentCacheName][i] = entry;
+                      }
                     }
+                    found = true;
+                    break;
                   }
-                  found = true;
+                }
+                if (found) {
                   break;
                 }
               }
-              if (found) {
-                break;
-              }
-            }
-            await self.cache.update.content(contentCache);
-            if (onSocketEvent) {
-              try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                await onSocketEvent(name, data, entry as any);
-              } catch (error) {
-                console.error(error);
+              await self.cache.update.content(contentCache);
+              if (onSocketEvent) {
+                try {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  await onSocketEvent(name, data, entry as any);
+                } catch (error) {
+                  console.error(error);
+                }
               }
             }
           }
