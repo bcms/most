@@ -1,4 +1,7 @@
 import * as os from 'os';
+import * as fs from 'fs';
+import * as util from 'util';
+import * as path from 'path';
 import {
   BCMSClientPrototype,
   Media,
@@ -22,6 +25,7 @@ export interface BCMSMostMediaHandlerPrototype {
    * cache is updated.
    */
   pull(): Promise<void>;
+
   /**
    * This method will process specified media. Information
    * from the configuration object will be used to generate
@@ -41,7 +45,10 @@ export function BCMSMostMediaHandler(
   const cnsl = Console('BCMSMostMediaHandler');
   const self: BCMSMostMediaHandlerPrototype = {
     async pull() {
-      cnsl.info('pull', 'Started...');
+      cnsl.info(
+        'pull',
+        'Started...',
+      );
       const startTime = Date.now();
       const mediaCache = await cache.get.media();
       const processMediaCache = await cache.get.processMedia();
@@ -52,7 +59,9 @@ export function BCMSMostMediaHandler(
           config.media.ppc = MAX_PPC;
         }
       }
-      const media = (await client.media.getAll()).filter(
+      const media = (
+        await client.media.getAll()
+      ).filter(
         (e) => e.data.type !== MediaType.DIR,
       );
       media.sort((a, b) => b.data.createdAt - a.data.createdAt);
@@ -77,6 +86,11 @@ export function BCMSMostMediaHandler(
         newMediaCache.push(m.data);
       });
       if (mediaToRemove.length > 0) {
+        const staticMediaDirs = await util.promisify(fs.readdir)(
+          path.join(
+            process.cwd(),
+            config.media.output,
+          ));
         await PPLB.manage<MediaResponse>(
           config.media.ppc,
           mediaToRemove,
@@ -89,8 +103,10 @@ export function BCMSMostMediaHandler(
                 }${data.data.name}`,
               );
               const mediaPath = data.data.isInRoot
-                ? [data.data.name]
-                : (data.data.path + '/' + data.data.name).split('/').slice(1);
+                                ? [data.data.name]
+                                : (
+                                  data.data.path + '/' + data.data.name
+                                ).split('/').slice(1);
               const filePath = [
                 '..',
                 ...config.media.output.split('/').slice(1),
@@ -98,6 +114,54 @@ export function BCMSMostMediaHandler(
               ];
               if (await FS.exist(filePath)) {
                 await FS.deleteFile(filePath);
+              }
+              const mediaNameParts = data.data.name.split('.');
+              const mediaName = mediaNameParts.slice(
+                0,
+                mediaNameParts.length - 1,
+              ).join('.');
+              for (let i = 0; i < staticMediaDirs.length; i++) {
+                const fstat = await util.promisify(fs.lstat)(
+                  path.join(
+                    process.cwd(),
+                    config.media.output,
+                    staticMediaDirs[i],
+                    data.data.isInRoot ? '' : data.data.path,
+                  ));
+                if (fstat.isDirectory() && await FS.exist([
+                  '..',
+                  config.media.output,
+                  staticMediaDirs[i],
+                  data.data.isInRoot ? '' : data.data.path,
+                ])) {
+                  const files = await util.promisify(fs.readdir)(
+                    path.join(
+                      process.cwd(),
+                      config.media.output,
+                      staticMediaDirs[i],
+                      data.data.isInRoot ? '' : data.data.path,
+                    ));
+                  for (let j = 0; j < files.length; j++) {
+                    const fParts = files[j].split('.');
+                    const bufferParts = fParts.slice(
+                      0,
+                      fParts.length - 1,
+                    ).join('.').split('-');
+                    const fileName = bufferParts.slice(
+                      0,
+                      bufferParts.length - 1,
+                    ).join('-');
+                    if (fileName === mediaName) {
+                      await FS.deleteFile([
+                        '..',
+                        config.media.output,
+                        staticMediaDirs[i],
+                        data.data.isInRoot ? '' : data.data.path,
+                        files[j],
+                      ]);
+                    }
+                  }
+                }
               }
             }
           },
@@ -118,19 +182,27 @@ export function BCMSMostMediaHandler(
             try {
               buffer = await data.bin();
               const mediaPath = data.data.isInRoot
-                ? [data.data.name]
-                : (data.data.path + '/' + data.data.name).split('/').slice(1);
+                                ? [data.data.name]
+                                : (
+                                  data.data.path + '/' + data.data.name
+                                ).split('/').slice(1);
               const filePath = [
                 '..',
                 ...config.media.output.split('/').filter((e) => !!e),
                 ...mediaPath,
               ];
-              await FS.save(Buffer.from(buffer), filePath);
+              await FS.save(
+                Buffer.from(buffer),
+                filePath,
+              );
             } catch (error) {
               if (config.media.failOnError === true) {
                 throw error;
               }
-              cnsl.error(chunkId, error);
+              cnsl.error(
+                chunkId,
+                error,
+              );
             }
           },
         );
@@ -138,16 +210,26 @@ export function BCMSMostMediaHandler(
 
       await cache.update.media(newMediaCache);
       await cache.update.processMedia(processMediaCache);
-      cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`);
+      cnsl.info(
+        'pull',
+        `Done in: ${(
+          Date.now() - startTime
+        ) / 1000}s`,
+      );
     },
     async process(inputMedia) {
       if (!inputMedia) {
         inputMedia = [];
       }
-      cnsl.info('process', 'Started...');
+      cnsl.info(
+        'process',
+        'Started...',
+      );
       const startTime = Date.now();
       const processMediaCache = [
-        ...(await cache.get.processMedia()),
+        ...(
+          await cache.get.processMedia()
+        ),
         ...inputMedia,
       ];
       if (!config.media.ppc) {
@@ -186,14 +268,17 @@ export function BCMSMostMediaHandler(
               );
             } catch (e) {
               error = e
-                ? e.message
-                : 'Process failed with no message. Output: ' + output;
+                      ? e.message
+                      : 'Process failed with no message. Output: ' + output;
             }
             if (error !== '') {
-              cnsl.error(chunkId, {
-                output,
-                error,
-              });
+              cnsl.error(
+                chunkId,
+                {
+                  output,
+                  error,
+                },
+              );
             } else {
               cnsl.info(
                 chunkId,
@@ -206,7 +291,12 @@ export function BCMSMostMediaHandler(
         );
         await cache.update.processMedia([]);
       }
-      cnsl.info('process', `Done in: ${(Date.now() - startTime) / 1000}s`);
+      cnsl.info(
+        'process',
+        `Done in: ${(
+          Date.now() - startTime
+        ) / 1000}s`,
+      );
     },
   };
   return self;

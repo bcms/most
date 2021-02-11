@@ -184,7 +184,6 @@ export function BCMSMost(
         const pages = (await FS.getHtmlFiles(relativePath)).map((e) =>
           e.replace(basePath, '').substring(1),
         );
-        console.log('pages', pages);
         const sources: string[] = [];
         const sourcesBuffer: {
           [path: string]: boolean;
