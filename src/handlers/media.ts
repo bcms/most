@@ -121,44 +121,46 @@ export function BCMSMostMediaHandler(
                 mediaNameParts.length - 1,
               ).join('.');
               for (let i = 0; i < staticMediaDirs.length; i++) {
-                const fstat = await util.promisify(fs.lstat)(
-                  path.join(
-                    process.cwd(),
-                    config.media.output,
-                    staticMediaDirs[i],
-                    data.data.isInRoot ? '' : data.data.path,
-                  ));
-                if (fstat.isDirectory() && await FS.exist([
+                if (await FS.exist([
                   '..',
                   config.media.output,
                   staticMediaDirs[i],
                   data.data.isInRoot ? '' : data.data.path,
                 ])) {
-                  const files = await util.promisify(fs.readdir)(
+                  const fstat = await util.promisify(fs.lstat)(
                     path.join(
                       process.cwd(),
                       config.media.output,
                       staticMediaDirs[i],
                       data.data.isInRoot ? '' : data.data.path,
                     ));
-                  for (let j = 0; j < files.length; j++) {
-                    const fParts = files[j].split('.');
-                    const bufferParts = fParts.slice(
-                      0,
-                      fParts.length - 1,
-                    ).join('.').split('-');
-                    const fileName = bufferParts.slice(
-                      0,
-                      bufferParts.length - 1,
-                    ).join('-');
-                    if (fileName === mediaName) {
-                      await FS.deleteFile([
-                        '..',
+                  if (fstat.isDirectory()) {
+                    const files = await util.promisify(fs.readdir)(
+                      path.join(
+                        process.cwd(),
                         config.media.output,
                         staticMediaDirs[i],
                         data.data.isInRoot ? '' : data.data.path,
-                        files[j],
-                      ]);
+                      ));
+                    for (let j = 0; j < files.length; j++) {
+                      const fParts = files[j].split('.');
+                      const bufferParts = fParts.slice(
+                        0,
+                        fParts.length - 1,
+                      ).join('.').split('-');
+                      const fileName = bufferParts.slice(
+                        0,
+                        bufferParts.length - 1,
+                      ).join('-');
+                      if (fileName === mediaName) {
+                        await FS.deleteFile([
+                          '..',
+                          config.media.output,
+                          staticMediaDirs[i],
+                          data.data.isInRoot ? '' : data.data.path,
+                          files[j],
+                        ]);
+                      }
                     }
                   }
                 }
