@@ -220,7 +220,7 @@ export function BCMSMostCacheHandler() {
       },
       async function(data) {
         cache.function = data;
-        await FS.save(JSON.stringify(cache.media, null, '  '), [
+        await FS.save(JSON.stringify(cache.function, null, '  '), [
           'function.cache.json',
         ]);
       },
