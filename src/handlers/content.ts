@@ -34,9 +34,6 @@ export function BCMSMostContentHandler(
     async pull() {
       cnsl.info('pull', 'Started...');
       const contentCache = await cache.get.content<BCMSMostCacheContent>();
-      // if (JSON.stringify(contentCache) !== '{}') {
-      //   return;
-      // }
       const startTime = Date.now();
       const templateNameMap: {
         [templateId: string]: string;
@@ -81,8 +78,15 @@ export function BCMSMostContentHandler(
           entryConfig.templateId,
           true,
         );
+        cnsl.info(
+          `[ ${i + 1}/${config.entries.length} ] ${name}`,
+          `Done in: ${(Date.now() - getEntriesTimeOffset) / 1000}s`,
+        );
+      }
+      for(let i = 0; i < config.entries.length; i++) {
+        const entryConfig = config.entries[i];
         if (typeof entryConfig.modify === 'function') {
-          for (const j in contentCache[name]) {
+          for (let j = 0; j < contentCache[name].length; j++) {
             const entry = contentCache[name][j];
             const output = await entryConfig.modify(
               JSON.parse(JSON.stringify(entry)),
@@ -103,10 +107,6 @@ export function BCMSMostContentHandler(
             }
           }
         }
-        cnsl.info(
-          `[ ${i + 1}/${config.entries.length} ] ${name}`,
-          `Done in: ${(Date.now() - getEntriesTimeOffset) / 1000}s`,
-        );
       }
       await cache.update.content(contentCache);
       cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`);
