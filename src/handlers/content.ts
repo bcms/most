@@ -85,6 +85,15 @@ export function BCMSMostContentHandler(
       }
       for(let i = 0; i < config.entries.length; i++) {
         const entryConfig = config.entries[i];
+        const name = templateNameMap[entryConfig.templateId];
+        if (!name) {
+          cnsl.error(
+            '',
+            `Template with ID "${entryConfig.templateId}"` +
+            ` is not known or cannot be accessed by the Key.`,
+          );
+          throw Error();
+        }
         if (typeof entryConfig.modify === 'function') {
           for (let j = 0; j < contentCache[name].length; j++) {
             const entry = contentCache[name][j];
