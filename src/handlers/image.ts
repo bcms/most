@@ -17,6 +17,7 @@ export interface BCMSMostImageHandlerPrototype {
   }): Promise<BCMSMostImageResolverResponse>;
   startWatch(): void;
   // server(): express.Application;
+  close(): void;
   server: Server;
 }
 export interface BCMSMostImageResolverResponse {
@@ -210,7 +211,7 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
             if (isNaN(sizeIndex)) {
               cnsl.error(
                 data.path,
-                `Size index in NaN for "${data.originalPath}".`,
+                `Size index is NaN for "${data.originalPath}".`,
               );
               resolve({
                 status: 400,
@@ -238,7 +239,6 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
                   JSON.stringify(options),
                 );
                 ops.sizeIndex = i;
-                console.log('Options', ops);
                 requestBuffer.push({
                   outputPath: injectablePath.replace('@sizeIndex', '' + i),
                   inputPath: srcPathToFile,
@@ -363,6 +363,11 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
           processing = false;
         }
       }, 1000);
+    },
+    close() {
+      clearInterval(watch);
+      watch = undefined;
+      self.server.close();
     },
     server: undefined,
   };

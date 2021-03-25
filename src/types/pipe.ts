@@ -11,5 +11,5 @@ export interface BCMSMostPipe {
       entry: BCMSEntryParsed<any>,
     ) => Promise<void>,
   ): Promise<void>;
-  postBuild(relativePath: string, imageServerPort?: number): Promise<void>;
+  postBuild(relativePath: string, outputPath: string, imageServerPort?: number): Promise<void>;
 }

@@ -1,3 +1,4 @@
+import * as fse from 'fs-extra';
 import * as path from 'path';
 import {
   BCMSClient,
@@ -179,7 +180,7 @@ export function BCMSMost(
         });
         self.image.startServer(imageServerPort);
       },
-      async postBuild(relativePath) {
+      async postBuild(relativePath, outputPath, imageServerPort) {
         const cnsl = Console('BCMSMostPipePostBuild');
         const basePath = path.join(process.cwd(), relativePath);
         const pages = (await FS.getHtmlFiles(relativePath)).map((e) =>
@@ -219,7 +220,16 @@ export function BCMSMost(
               if (source) {
                 sourcesBuffer[source] = true;
               } else {
-                cnsl.warn(pages[i], 'No source.');
+                const altSource = General.string.getAllTextBetween(
+                  pictures[j],
+                  'srcset="',
+                  '"',
+                )[1];
+                if (altSource) {
+                  sourcesBuffer[altSource] = true;
+                } else {
+                  cnsl.warn(pages[i], 'No source.');
+                }
               }
             }
           }
@@ -255,12 +265,18 @@ export function BCMSMost(
                 });
             }
           });
+          if (outputPath) {
+            await fse.copy(
+              path.join(process.cwd(), config.media.output),
+              path.join(process.cwd(), outputPath),
+            );
+          }
         }
       },
     },
     close() {
-      image.server.close();
-    }
+      image.close();
+    },
   };
   return self;
 }
