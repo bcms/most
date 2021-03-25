@@ -56,6 +56,7 @@ export interface BCMSMostPrototype {
    * Pipe handler object.
    */
   pipe: BCMSMostPipe;
+  close: () => void;
 }
 
 export const MAX_PPC = 16;
@@ -257,6 +258,9 @@ export function BCMSMost(
         }
       },
     },
+    close() {
+      image.server.close();
+    }
   };
   return self;
 }

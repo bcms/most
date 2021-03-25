@@ -5,6 +5,7 @@ import * as express from 'express';
 import { BCMSMostConfig } from '../types';
 import { Console, FS, General, PPLB } from '../util';
 import { MAX_PPC } from '../most';
+import { Server } from 'http';
 
 export interface BCMSMostImageHandlerPrototype {
   startServer(port?: number): express.Application;
@@ -15,7 +16,8 @@ export interface BCMSMostImageHandlerPrototype {
     method: string;
   }): Promise<BCMSMostImageResolverResponse>;
   startWatch(): void;
-  server(): express.Application;
+  // server(): express.Application;
+  server: Server;
 }
 export interface BCMSMostImageResolverResponse {
   status: number;
@@ -126,9 +128,9 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
   }
 
   const self: BCMSMostImageHandlerPrototype = {
-    server() {
-      return app;
-    },
+    // server() {
+    //   return app;
+    // },
     startServer(port) {
       if (!app) {
         self.startWatch();
@@ -159,7 +161,7 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
           }
         });
         try {
-          app.listen(port, () =>
+          self.server = app.listen(port, () =>
             cnsl.info('', `Server started on port ${port}`),
           );
         } catch (error) {
@@ -362,6 +364,7 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
         }
       }, 1000);
     },
+    server: undefined,
   };
   return self;
 }
