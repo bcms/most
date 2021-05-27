@@ -13,10 +13,10 @@
     "incremental": true
   },
   "typedocOptions": {
+    "entryPoints": ["src"],
     "name": "BCMS Most",
     "theme": "./node_modules/typedoc-neo-theme/bin/default",
     "plugin": "typedoc-neo-theme",
-    "mode": "file",
     "out": "doc",
     "outline": [
       {

@@ -1,6 +1,6 @@
 {
   "name": "@becomes/cms-most",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "Utility for Becomes CMS used for client framework applications like Nuxt and Gatsby.",
   "author": "becomes.co",
   "license": "MIT",
@@ -56,7 +56,7 @@
     "tslint": "^5.20.1",
     "typedoc": "^0.20.36",
     "typedoc-neo-theme": "^1.1.1",
-    "typescript": "^4.3.2"
+    "typescript": "^4.2.2"
   },
   "bin": {
     "bcms-most": "bin/bcms-most.js"
