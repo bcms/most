@@ -180,7 +180,7 @@ export function BCMSMost(
         });
         self.image.startServer(imageServerPort);
       },
-      async postBuild(relativePath, outputPath, imageServerPort) {
+      async postBuild(relativePath, outputPath) {
         const cnsl = Console('BCMSMostPipePostBuild');
         const basePath = path.join(process.cwd(), relativePath);
         const pages = (await FS.getHtmlFiles(relativePath)).map((e) =>
@@ -201,7 +201,7 @@ export function BCMSMost(
           ).toString();
           const pictures = General.string.getAllTextBetween(
             page,
-            'class="bcms-img',
+            'bcms-img',
             '</div>',
           );
           for (const j in pictures) {
@@ -212,24 +212,37 @@ export function BCMSMost(
                 '</picture>',
               )
             ) {
-              const source = General.string.getAllTextBetween(
+              let source = General.string.getAllTextBetween(
                 pictures[j],
                 'srcSet="',
                 '"',
               )[1];
+              if (!source) {
+                source = General.string.getAllTextBetween(
+                  pictures[j],
+                  'srcSet=',
+                  '>',
+                )[1];
+                if (!source) {
+                  source = General.string.getAllTextBetween(
+                    pictures[j],
+                    'srcset="',
+                    '"',
+                  )[1];
+                  if (!source) {
+                    source = General.string.getAllTextBetween(
+                      pictures[j],
+                      'srcset=',
+                      '>',
+                    )[1];
+                  }
+                }
+              }
               if (source) {
+                source = source.split(' ')[0];
                 sourcesBuffer[source] = true;
               } else {
-                const altSource = General.string.getAllTextBetween(
-                  pictures[j],
-                  'srcset="',
-                  '"',
-                )[1];
-                if (altSource) {
-                  sourcesBuffer[altSource] = true;
-                } else {
-                  cnsl.warn(pages[i], 'No source.');
-                }
+                cnsl.warn(pages[i], 'No source.');
               }
             }
           }
