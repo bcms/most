@@ -94,12 +94,12 @@ const bundle = async () => {
         // );
       },
     },
-    {
-      title: 'Compile Typedoc.',
-      task: async () => {
-        await exec('npm run typedoc-generate');
-      },
-    },
+    // {
+    //   title: 'Compile Typedoc.',
+    //   task: async () => {
+    //     await exec('npm run typedoc-generate');
+    //   },
+    // },
     {
       title: 'Copy package.json',
       task: async () => {
