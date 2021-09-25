@@ -147,13 +147,12 @@ export function BCMSMost(
                         entryConfig &&
                         typeof entryConfig.modify === 'function'
                       ) {
-                        contentCache[contentCacheName][
-                          i
-                        ] = await entryConfig.modify(
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          entry as any,
-                          contentCache,
-                        );
+                        contentCache[contentCacheName][i] =
+                          await entryConfig.modify(
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            entry as any,
+                            contentCache,
+                          );
                       } else {
                         contentCache[contentCacheName][i] = entry;
                       }
@@ -279,10 +278,14 @@ export function BCMSMost(
             }
           });
           if (outputPath) {
-            await fse.copy(
-              path.join(process.cwd(), config.media.output),
-              path.join(process.cwd(), outputPath),
-            );
+            const src = path.join(process.cwd(), config.media.output);
+            const dest = path.join(process.cwd(), outputPath);
+            if (src !== dest) {
+              await fse.copy(
+                path.join(process.cwd(), config.media.output),
+                path.join(process.cwd(), outputPath),
+              );
+            }
           }
         }
       },
