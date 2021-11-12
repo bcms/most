@@ -98,9 +98,11 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
   let processing = false;
 
   if (!config.media) {
-    config.media = {
-      output: 'static/media',
-      sizeMap: [
+    if (!config.media.output) {
+      config.media.output = 'static/media';
+    }
+    if (!config.media.sizeMap) {
+      config.media.sizeMap = [
         {
           width: 350,
         },
@@ -119,8 +121,8 @@ export function BCMSMostImageHandler(config: BCMSMostConfig) {
         {
           width: 1920,
         },
-      ],
-    };
+      ];
+    }
   } else if (!config.media.ppc) {
     config.media.ppc = os.cpus().length;
   }
