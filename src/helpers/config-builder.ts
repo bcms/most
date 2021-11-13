@@ -1,5 +1,5 @@
 import { BCMSMostConfig } from '../types';
 
-export function BCMSMostConfigBuilder(config: BCMSMostConfig) {
+export function BCMSMostConfigBuilder(config: BCMSMostConfig): BCMSMostConfig {
   return config;
 }

@@ -1,81 +1,50 @@
 #!/usr/bin/env node
 
-import * as os from 'os';
+import * as path from 'path';
 import { BCMSClient } from '@becomes/cms-client';
-import {
-  BCMSMostConfig,
-  BCMSMostConfigMedia,
-  BCMSMostConfigSchema,
-  Media,
-} from '../types';
-import { Arg, Console, General } from '../util';
-import { BCMSMost, MAX_PPC } from '../most';
+import { BCMSMostConfigMedia, Media } from '../types';
+import { Arg } from '../util';
 import {
   BCMSMostMediaImageProcessor,
   BCMSMostMediaProcessor,
 } from '../handlers';
+import { initializeFS, useFS, useLogger } from '@becomes/purple-cheetah';
+import { createBcmsMost } from '../main';
+import { initBcmsMostConfig } from '../config';
 
 async function main() {
   const options = Arg.parse(process.argv);
   if (options.mediaProcessor) {
+    const fs = useFS({
+      base: path.join(process.cwd(), 'bcms'),
+    });
+    useLogger({ name: 'main' });
+    initializeFS();
     if (options.mediaImage) {
-      await BCMSMostMediaImageProcessor(
-        JSON.parse(Buffer.from(options.mediaImage, 'hex').toString()),
-      );
+      await BCMSMostMediaImageProcessor({
+        data: JSON.parse(Buffer.from(options.mediaImage, 'hex').toString()),
+        fs,
+      });
     } else {
       const media: Media = JSON.parse(
-        Buffer.from(options.media, 'hex').toString(),
+        Buffer.from(options.media as string, 'hex').toString(),
       );
       const mediaConfig: BCMSMostConfigMedia = JSON.parse(
-        Buffer.from(options.mediaConfig, 'hex').toString(),
+        Buffer.from(options.mediaConfig as string, 'hex').toString(),
       );
-      await BCMSMostMediaProcessor(media, mediaConfig);
+      await BCMSMostMediaProcessor({
+        media,
+        config: mediaConfig,
+        fs,
+      });
     }
   } else {
-    const config: BCMSMostConfig = await import(
-      `${process.cwd()}/bcms.config.js`
-    );
-    try {
-      General.object.compareWithSchema(config, BCMSMostConfigSchema, 'config');
-    } catch (error) {
-      throw Error(`Error in the configuration file: ${error.message}`);
-    }
-    if (!config.media) {
-      config.media = {
-        output: 'static/media',
-        ppc: os.cpus().length,
-        sizeMap: [
-          {
-            width: 350,
-          },
-          {
-            width: 600,
-          },
-          {
-            width: 900,
-          },
-          {
-            width: 1200,
-          },
-          {
-            width: 1400,
-          },
-          {
-            width: 1920,
-          },
-        ],
-      };
-    } else if (!config.media.ppc) {
-      config.media.ppc = os.cpus().length;
-    }
-    if (config.media.ppc > MAX_PPC) {
-      config.media.ppc = MAX_PPC;
-    }
+    const config = await initBcmsMostConfig();
     const client = BCMSClient({
       cmsOrigin: config.cms.origin,
       key: config.cms.key,
     });
-    const bcms = BCMSMost(config, client);
+    const bcms = await createBcmsMost({ config, client });
     if (options.all) {
       await bcms.content.pull();
       await bcms.function.call();
@@ -93,7 +62,7 @@ async function main() {
   }
 }
 main().catch((error) => {
-  const cnsl = Console('BCMS Most');
-  cnsl.error('', error);
+  // eslint-disable-next-line no-console
+  console.error('', error);
   process.exit(1);
 });

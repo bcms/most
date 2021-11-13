@@ -1,5 +1,8 @@
-import { ObjectSchema } from './object-schema';
+import { ObjectSchema } from '@becomes/purple-cheetah/types';
 
+export interface BCMSMostCacheContentInfo {
+  pullAfter: number;
+}
 export interface BCMSMostCacheContent {
   [name: string]: BCMSMostCacheContentItem[];
 }

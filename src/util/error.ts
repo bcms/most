@@ -1,19 +1,9 @@
-import { ConsoleColors } from './console';
+import { ConsoleColors } from "@becomes/purple-cheetah";
 
-export interface ErrorHandlerPrototype {
-  get(message: string): Error;
+export function ErrorHandler(message: string): Error {
+  return Error(
+    `${ConsoleColors.FgMagenta}[${new Date().toLocaleString()}] ${
+      ConsoleColors.FgRed
+    }${message}${ConsoleColors.Reset}`,
+  );
 }
-
-function errorHandler(): ErrorHandlerPrototype {
-  return {
-    get(message) {
-      return Error(
-        `${ConsoleColors.FgMagenta}[${new Date().toLocaleString()}] ${
-          ConsoleColors.FgRed
-        }${message}${ConsoleColors.Reset}`,
-      );
-    },
-  };
-}
-
-export const ErrorHandler = errorHandler();

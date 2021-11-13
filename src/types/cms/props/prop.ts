@@ -2,8 +2,7 @@ import { PropEnum } from './enum';
 import { PropGroupPointer } from './group-pointer';
 import { PropEntryPointer } from './entry-pointer';
 import { PropMedia } from './media';
-import { PropQuill, PropWidgetParsed } from './quill';
-import { PropWidget } from './quill';
+import { PropQuill, PropWidgetParsed, PropWidget } from './quill';
 
 // eslint-disable-next-line no-shadow
 export enum PropType {

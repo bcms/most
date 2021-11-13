@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ObjectSchema } from '@becomes/purple-cheetah/types';
 import { BCMSMostCacheContentItem } from './cache';
 import { BCMSEntryParsed } from './cms';
-import { ObjectSchema } from './object-schema';
 
 export interface BCMSMostConfigCms {
   /**
@@ -39,7 +39,7 @@ export const BCMSMostConfigCmsSchema: ObjectSchema = {
 export type BCMSMostConfigEntryModifyFunction<
   T,
   K,
-  R extends BCMSMostCacheContentItem
+  R extends BCMSMostCacheContentItem,
 > = (entry: BCMSEntryParsed<T>, cache: K) => Promise<R>;
 export interface BCMSMostConfigEntry {
   /**
@@ -187,6 +187,10 @@ export interface BCMSMostConfig {
    */
   cms: BCMSMostConfigCms;
   /**
+   * For how long will content cache be valid.
+   */
+  contentTTL?: number;
+  /**
    * Modify default output of the CMS on a server level. This is
    * useful for doing some modification to the data at the build
    * time.
@@ -206,6 +210,10 @@ export const BCMSMostConfigSchema: ObjectSchema = {
     __type: 'object',
     __required: true,
     __child: BCMSMostConfigCmsSchema,
+  },
+  contentTTL: {
+    __type: 'number',
+    __required: false,
   },
   entries: {
     __type: 'array',

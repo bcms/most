@@ -1,377 +1,142 @@
-import * as os from 'os';
-import * as path from 'path';
-import * as cors from 'cors';
-import * as express from 'express';
-import { BCMSMostConfig } from '../types';
-import { Console, FS, General, PPLB } from '../util';
-import { MAX_PPC } from '../most';
-import { Server } from 'http';
+import * as nodePath from 'path';
+import { Proc, useLogger, useStringUtility } from '@becomes/purple-cheetah';
+import { HTTPStatus } from '@becomes/purple-cheetah/types';
+import { BCMSMostConfig, BCMSMostConfigMedia } from '../types';
+import {
+  BCMSMostImageHandler,
+  BCMSMostImageOptions,
+  BCMSMostImageOptionsSize,
+} from '../types/handlers/image';
 
-export interface BCMSMostImageHandlerPrototype {
-  startServer(port?: number): express.Application;
-  resolver(data: {
-    options: string;
-    path: string;
-    originalPath: string;
-    method: string;
-  }): Promise<BCMSMostImageResolverResponse>;
-  startWatch(): void;
-  // server(): express.Application;
-  close(): void;
-  server: Server;
-}
-export interface BCMSMostImageResolverResponse {
-  status: number;
-  filePath?: string;
-  message?: string;
-}
-export interface BCMSMostImageHandlerOptions {
-  sizeIndex: number;
-  step?: number;
-  position?: string;
-  quality?: number;
-  sizes?: Array<{
-    width: number;
-    height?: number;
-  }>;
-}
-export interface BCMSMostRequestItem {
-  outputPath: string;
-  inputPath: string;
-  callback(): Promise<void>;
-  optionsRaw: string;
-  options: BCMSMostImageHandlerOptions;
-}
-
-export function BCMSMostImageHandlerParseOptions(
-  optionsRaw: string,
-  sizeIndex: number,
-): BCMSMostImageHandlerOptions {
-  const options: BCMSMostImageHandlerOptions = {
-    sizeIndex,
-  };
-  if (optionsRaw === 'auto') {
-    return options;
-  }
-  options.step = parseInt(
-    General.string.getTextBetween(optionsRaw, '_st', '_ps'),
-  );
-  if (isNaN(options.step)) {
-    options.step = undefined;
-  }
-  options.position = General.string.getTextBetween(optionsRaw, '_ps', '_ql');
-  options.quality = parseInt(
-    General.string.getTextBetween(optionsRaw, '_ql', '_sz'),
-  );
-  if (isNaN(options.quality)) {
-    options.quality = undefined;
-  }
-  const sizesRaw = General.string.getTextBetween(optionsRaw, '_sz');
-  if (sizesRaw !== 'a') {
-    options.sizes = [];
-    sizesRaw.split('-').forEach((sizeRaw) => {
-      const w = parseInt(General.string.getTextBetween(sizeRaw, 'w', 'h'));
-      if (!isNaN(w)) {
-        const h = parseInt(General.string.getTextBetween(sizeRaw, 'h'));
-        if (!isNaN(h)) {
-          options.sizes.push({
-            width: w,
-            height: h,
-          });
-        } else {
-          options.sizes.push({
-            width: w,
-          });
-        }
-      }
-    });
-  }
-  return options;
-}
-export function BCMSMostImageHandler(config: BCMSMostConfig) {
+export function createBcmsMostImageHandler({
+  config,
+}: {
+  config: BCMSMostConfig;
+}): BCMSMostImageHandler {
   const autoSizes = [350, 600, 900, 1200, 1400, 1920];
-  const cnsl = Console('BCMSMostImageHandler');
-  const processedRequests: string[] = [];
-  const requestBuffer: BCMSMostRequestItem[] = [];
-  let app: express.Application;
-  let watch: NodeJS.Timeout;
-  let processing = false;
+  const stringUtil = useStringUtility();
+  const logger = useLogger({ name: 'BCMSMostImageHandler' });
 
-  if (!config.media) {
-    if (!config.media.output) {
-      config.media.output = 'static/media';
-    }
-    if (!config.media.sizeMap) {
-      config.media.sizeMap = [
-        {
-          width: 350,
-        },
-        {
-          width: 600,
-        },
-        {
-          width: 900,
-        },
-        {
-          width: 1200,
-        },
-        {
-          width: 1400,
-        },
-        {
-          width: 1920,
-        },
-      ];
-    }
-  } else if (!config.media.ppc) {
-    config.media.ppc = os.cpus().length;
-  }
-  if (config.media.ppc > MAX_PPC) {
-    config.media.ppc = MAX_PPC;
-  }
-
-  const self: BCMSMostImageHandlerPrototype = {
-    // server() {
-    //   return app;
-    // },
-    startServer(port) {
-      if (!app) {
-        self.startWatch();
-        if (!port) {
-          port = 8001;
-        }
-        app = express();
-        app.use(cors());
-        app.use('/media/:options', async (req, res) => {
-          console.log(req.originalUrl);
-          const output = await self.resolver({
-            method: req.method,
-            options: req.params.options,
-            originalPath: req.originalUrl,
-            path: req.path,
-          });
-          if (output) {
-            if (output.filePath) {
-              res.sendFile(output.filePath);
+  const self: BCMSMostImageHandler = {
+    parseOptions(optionsRaw, sizeIndex) {
+      const options: BCMSMostImageOptions = {
+        sizeIndex,
+      };
+      if (optionsRaw === 'auto') {
+        return options;
+      }
+      options.step = parseInt(stringUtil.textBetween(optionsRaw, '_st', '_ps'));
+      if (isNaN(options.step)) {
+        options.step = undefined;
+      }
+      options.position = stringUtil.textBetween(optionsRaw, '_ps', '_ql');
+      options.quality = parseInt(
+        stringUtil.textBetween(optionsRaw, '_ql', '_sz'),
+      );
+      if (isNaN(options.quality)) {
+        options.quality = undefined;
+      }
+      const sizesRaw = stringUtil.textBetween(optionsRaw, '_sz', '');
+      if (sizesRaw !== 'a') {
+        options.sizes = [];
+        sizesRaw.split('-').forEach((sizeRaw) => {
+          const w = parseInt(stringUtil.textBetween(sizeRaw, 'w', 'h'));
+          if (!isNaN(w)) {
+            const h = parseInt(stringUtil.textBetween(sizeRaw, 'h', ''));
+            if (!isNaN(h)) {
+              (options.sizes as BCMSMostImageOptionsSize[]).push({
+                width: w,
+                height: h,
+              });
             } else {
-              res.status(output.status);
-              res.send(output.message);
+              (options.sizes as BCMSMostImageOptionsSize[]).push({
+                width: w,
+              });
             }
-          } else {
-            res.status(500);
-            res.send('No output');
-            res.end();
           }
         });
+      }
+      return options;
+    },
+    async resolver({ rawOptions, pathToFile, path, rootExt }) {
+      const mediaConfig = config.media as BCMSMostConfigMedia;
+      const srcParts = path.split('.');
+      const firstPart = srcParts.slice(0, srcParts.length - 1).join('.');
+      const firstPartSplit = firstPart.split('-');
+      const lastPart = srcParts[srcParts.length - 1];
+      const sizeIndex = parseInt(firstPartSplit[firstPartSplit.length - 1]);
+      if (isNaN(sizeIndex)) {
+        return {
+          status: HTTPStatus.BAD_REQUEST,
+          message: 'Not allowed, size of NaN.',
+        };
+      }
+      const srcPathToFile = nodePath.join(
+        process.cwd(),
+        `${mediaConfig.output}`,
+        firstPartSplit.slice(0, firstPartSplit.length - 1).join('-') +
+          '.' +
+          (rootExt ? rootExt : lastPart),
+      );
+      const options = self.parseOptions(rawOptions, sizeIndex);
+      const injectablePath = pathToFile.replace(
+        `-${sizeIndex}.`,
+        `-@sizeIndex.`,
+      );
+      if (!options.sizes) {
+        options.sizes = autoSizes.map((e) => {
+          return {
+            width: e,
+          };
+        });
+      }
+      for (let i = 0; i < options.sizes.length; i++) {
+        const ops: BCMSMostImageOptions = JSON.parse(JSON.stringify(options));
+        ops.sizeIndex = i;
+        const outputPath = injectablePath.replace('@sizeIndex', '' + i);
+        logger.info('', `Processing: ${outputPath}`);
+        let output = '';
+        let error = '';
         try {
-          self.server = app.listen(port, () =>
-            cnsl.info('', `Server started on port ${port}`),
+          await Proc.exec(
+            `bcms-most --media-processor --media-image ${Buffer.from(
+              JSON.stringify({
+                inputPath: srcPathToFile,
+                outputPath,
+                optionsRaw: rawOptions,
+                options: ops,
+              }),
+            ).toString('hex')}`,
+            (type, chunk) => {
+              if (type === 'stderr') {
+                error += chunk;
+              } else {
+                output += chunk;
+              }
+            },
           );
-        } catch (error) {
-          cnsl.error('listen', error);
+          if (error) {
+            // eslint-disable-next-line no-console
+            console.error(error);
+          }
+        } catch (err) {
+          return {
+            status: HTTPStatus.INTERNAL_SERVER_ERROR,
+            message: {
+              proc: {
+                output,
+                error,
+              },
+              err,
+            },
+          };
         }
       }
-      return app;
+      return {
+        status: 200,
+        filePath: pathToFile,
+      };
     },
-    async resolver(data) {
-      return await new Promise<BCMSMostImageResolverResponse>((resolve) => {
-        const pathToFile = ['..', config.media.output, data.options, data.path]
-          .join('/')
-          .replace(/\/\//g, '/');
-        if (
-          data.method === 'GET' ||
-          processedRequests.find((e) => e === pathToFile)
-        ) {
-          resolve({
-            status: 200,
-            filePath: path.join(process.cwd(), pathToFile.slice(1)),
-          });
-          return;
-        }
-        FS.exist(pathToFile.split('/')).then((fileExist) => {
-          if (fileExist) {
-            if (data.method === 'POST') {
-              resolve({
-                status: 200,
-                message: 'Success.',
-              });
-              return;
-            }
-            resolve({
-              status: 200,
-              filePath: path.join(process.cwd(), pathToFile.slice(1)),
-            });
-            return;
-          } else {
-            const srcParts = data.path.split('.');
-            const firstPart = srcParts.slice(0, srcParts.length - 1).join('.');
-            const firstPartSplit = firstPart.split('-');
-            const lastPart = srcParts[srcParts.length - 1];
-            const sizeIndex = parseInt(
-              firstPartSplit[firstPartSplit.length - 1],
-            );
-            if (isNaN(sizeIndex)) {
-              cnsl.error(
-                data.path,
-                `Size index is NaN for "${data.originalPath}".`,
-              );
-              resolve({
-                status: 400,
-                message: 'Not allowed, size of NaN.',
-              });
-              return;
-            }
-            const srcPathToFile =
-              `../${config.media.output}` +
-              firstPartSplit.slice(0, firstPartSplit.length - 1).join('-') +
-              '.' +
-              lastPart;
-            const options = BCMSMostImageHandlerParseOptions(
-              data.options,
-              sizeIndex,
-            );
-            const injectablePath = pathToFile.replace(
-              `-${sizeIndex}.`,
-              `-@sizeIndex.`,
-            );
-            const done: number[] = [];
-            if (options.sizes) {
-              options.sizes.forEach((size, i) => {
-                const ops: BCMSMostImageHandlerOptions = JSON.parse(
-                  JSON.stringify(options),
-                );
-                ops.sizeIndex = i;
-                requestBuffer.push({
-                  outputPath: injectablePath.replace('@sizeIndex', '' + i),
-                  inputPath: srcPathToFile,
-                  options: ops,
-                  optionsRaw: data.options,
-                  async callback() {
-                    {
-                      done.push(1);
-                      if (done.length === options.sizes.length) {
-                        resolve({
-                          status: 200,
-                          filePath: path.join(
-                            process.cwd(),
-                            'bcms',
-                            pathToFile,
-                          ),
-                        });
-                        return;
-                      }
-                    }
-                  },
-                });
-              });
-            } else {
-              autoSizes.forEach((size, i) => {
-                // if (i !== sizeIndex) {
-                const ops: BCMSMostImageHandlerOptions = JSON.parse(
-                  JSON.stringify(options),
-                );
-                ops.sizeIndex = i;
-                requestBuffer.push({
-                  outputPath: injectablePath.replace('@sizeIndex', '' + i),
-                  inputPath: srcPathToFile,
-                  options: ops,
-                  optionsRaw: data.options,
-                  async callback() {
-                    {
-                      done.push(1);
-                      if (done.length === autoSizes.length) {
-                        resolve({
-                          status: 200,
-                          filePath: path.join(
-                            process.cwd(),
-                            'bcms',
-                            pathToFile,
-                          ),
-                        });
-                      }
-                    }
-                  },
-                });
-                // }
-              });
-            }
-          }
-        });
-      });
-    },
-    startWatch() {
-      clearInterval(watch);
-      watch = setInterval(async () => {
-        if (!processing) {
-          processing = true;
-          const items: BCMSMostRequestItem[] = [];
-          let loop = true;
-          while (loop) {
-            const item = requestBuffer.pop();
-            if (!item) {
-              loop = false;
-            } else {
-              if (!items.find((e) => e.outputPath === item.outputPath)) {
-                items.push(item);
-              }
-            }
-          }
-          if (items.length > 0) {
-            await PPLB.manage<BCMSMostRequestItem>(
-              config.media.ppc,
-              items,
-              async (data, chunkId) => {
-                cnsl.info(chunkId, `Processing: ${data.outputPath}`);
-                let output = '';
-                let error = '';
-                try {
-                  await General.exec(
-                    `bcms-most --media-processor --media-image ${Buffer.from(
-                      JSON.stringify({
-                        inputPath: data.inputPath,
-                        outputPath: data.outputPath,
-                        optionsRaw: data.optionsRaw,
-                        options: data.options,
-                      }),
-                    ).toString('hex')}`,
-                    (type, chunk) => {
-                      if (type === 'stderr') {
-                        error += chunk;
-                      } else {
-                        output += chunk;
-                      }
-                    },
-                  );
-                } catch (e) {
-                  error = e
-                    ? e.message
-                    : 'Process failed with no message. Output: ' + output;
-                }
-                if (error !== '') {
-                  cnsl.error(chunkId, {
-                    output,
-                    error,
-                  });
-                } else {
-                  cnsl.info(chunkId, `Done: ${data.outputPath}\n\n${output}`);
-                }
-                data.callback().catch((e) => {
-                  cnsl.error(`callback: ${data.outputPath}`, e);
-                });
-                processedRequests.push(data.outputPath);
-              },
-            );
-          }
-          processing = false;
-        }
-      }, 1000);
-    },
-    close() {
-      clearInterval(watch);
-      watch = undefined;
-      self.server.close();
-    },
-    server: undefined,
   };
   return self;
 }

@@ -1,23 +1,27 @@
 import { BCMSClientPrototype } from '@becomes/cms-client';
-import { BCMSMostConfig } from '../types';
-import { Console } from '../util';
-import { BCMSMostCacheHandlerPrototype } from './cache';
+import { useLogger } from '@becomes/purple-cheetah';
+import {
+  BCMSMostCacheHandler,
+  BCMSMostConfig,
+  BCMSMostFunctionHandler,
+} from '../types';
 
-export interface BCMSMostFunctionHandlerPrototype {
-  call(name?: string): Promise<void>;
-}
-
-export function BCMSMostFunctionHandler(
-  config: BCMSMostConfig,
-  client: BCMSClientPrototype,
-  cache: BCMSMostCacheHandlerPrototype,
-) {
-  const cnsl = Console('BCMSMostFunctionHandler');
-  const self: BCMSMostFunctionHandlerPrototype = {
+export function createBcmsMostFunctionHandler({
+  config,
+  client,
+  cache,
+}: {
+  config: BCMSMostConfig;
+  client: BCMSClientPrototype;
+  cache: BCMSMostCacheHandler;
+}): BCMSMostFunctionHandler {
+  const cnsl = useLogger({ name: 'BCMSMostFunctionHandler' });
+  return {
     async call() {
       cnsl.info('started', '');
       const startTime = Date.now();
-      const functionCache = await cache.get.function();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const functionCache = await cache.get.function<any>();
       if (config.functions) {
         for (let i = 0; i < config.functions.length; i = i + 1) {
           const fnConfig = config.functions[i];
@@ -34,9 +38,8 @@ export function BCMSMostFunctionHandler(
             cnsl.error(stage, result.result);
           } else {
             if (fnConfig.modify) {
-              functionCache[
-                fnConfig.name.replace(/-/g, '_')
-              ] = await fnConfig.modify(result.result);
+              functionCache[fnConfig.name.replace(/-/g, '_')] =
+                await fnConfig.modify(result.result);
             } else {
               functionCache[fnConfig.name.replace(/-/g, '_')] = result.result;
             }
@@ -51,5 +54,4 @@ export function BCMSMostFunctionHandler(
       cnsl.info('done', `${(Date.now() - startTime) / 1000}s`);
     },
   };
-  return self;
 }
