@@ -94,6 +94,7 @@ export async function createBcmsMost(data?: {
       try {
         createPurpleCheetah({
           port: data && data.serverPort ? data.serverPort : 3001,
+          logPath: path.join(process.cwd(), 'bcms', 'logs'),
           middleware: [
             createBodyParserMiddleware(),
             createCorsMiddleware(),
