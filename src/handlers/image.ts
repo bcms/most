@@ -36,13 +36,15 @@ export function createBcmsMostImageHandler({
       if (isNaN(options.quality)) {
         options.quality = undefined;
       }
-      const sizesRaw = stringUtil.textBetween(optionsRaw, '_sz', '');
+      const sizesRaw = stringUtil.textBetween(optionsRaw + '__&', '_sz', '__&');
       if (sizesRaw !== 'a') {
         options.sizes = [];
         sizesRaw.split('-').forEach((sizeRaw) => {
           const w = parseInt(stringUtil.textBetween(sizeRaw, 'w', 'h'));
           if (!isNaN(w)) {
-            const h = parseInt(stringUtil.textBetween(sizeRaw, 'h', ''));
+            const h = parseInt(
+              stringUtil.textBetween(sizeRaw + '__&', 'h', '__&'),
+            );
             if (!isNaN(h)) {
               (options.sizes as BCMSMostImageOptionsSize[]).push({
                 width: w,
@@ -78,6 +80,7 @@ export function createBcmsMostImageHandler({
           '.' +
           (rootExt ? rootExt : lastPart),
       );
+
       const options = self.parseOptions(rawOptions, sizeIndex);
       const injectablePath = pathToFile.replace(
         `-${sizeIndex}.`,
@@ -117,7 +120,7 @@ export function createBcmsMostImageHandler({
           );
           if (error) {
             // eslint-disable-next-line no-console
-            console.error(error);
+            console.error('proc err:', error);
           }
         } catch (err) {
           return {
