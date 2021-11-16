@@ -48,7 +48,7 @@ export async function createBcmsMost(data?: {
     base: path.join(process.cwd(), 'bcms'),
   });
 
-  const image = createBcmsMostImageHandler({ config });
+  const image = createBcmsMostImageHandler({ config, fs });
   const cache = createBcmsMostCacheHandler({ fs });
   const content = createBcmsMostContentHandler({
     cache,

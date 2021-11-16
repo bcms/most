@@ -1,21 +1,31 @@
 import * as nodePath from 'path';
-import { Proc, useLogger, useStringUtility } from '@becomes/purple-cheetah';
-import { HTTPStatus } from '@becomes/purple-cheetah/types';
-import { BCMSMostConfig, BCMSMostConfigMedia } from '../types';
 import {
+  createQueue,
+  Proc,
+  useLogger,
+  useStringUtility,
+} from '@becomes/purple-cheetah';
+import { FS, HTTPStatus } from '@becomes/purple-cheetah/types';
+import {
+  BCMSMostConfig,
+  BCMSMostConfigMedia,
   BCMSMostImageHandler,
   BCMSMostImageOptions,
   BCMSMostImageOptionsSize,
-} from '../types/handlers/image';
+  BCMSMostImageResolverResponse,
+} from '../types';
 
 export function createBcmsMostImageHandler({
   config,
+  fs,
 }: {
   config: BCMSMostConfig;
+  fs: FS;
 }): BCMSMostImageHandler {
   const autoSizes = [350, 600, 900, 1200, 1400, 1920];
   const stringUtil = useStringUtility();
   const logger = useLogger({ name: 'BCMSMostImageHandler' });
+  const queue = createQueue({ name: 'Image process' });
 
   const self: BCMSMostImageHandler = {
     parseOptions(optionsRaw, sizeIndex) {
@@ -139,6 +149,80 @@ export function createBcmsMostImageHandler({
         status: 200,
         filePath: pathToFile,
       };
+    },
+    async handlerRequest({ encodedFile }) {
+      const encodedFileParts = encodedFile.split('.');
+      if (encodedFileParts.length !== 2) {
+        return {
+          status: 400,
+          message: 'Bad encoding length.',
+        };
+      }
+      const desiredExtension = encodedFile[1];
+      let fileInfo = '';
+      try {
+        fileInfo = Buffer.from(encodedFileParts[0], 'hex').toString();
+      } catch (error) {
+        return {
+          status: 400,
+          message: 'Bad encoding.',
+        };
+      }
+      let realExtension = '';
+      /** Get real extension */
+      {
+        const filePathParts = fileInfo.split('.');
+        realExtension = filePathParts[filePathParts.length - 1];
+        fileInfo = `${filePathParts.slice(
+          0,
+          filePathParts.length - 1,
+        )}.${desiredExtension}`;
+      }
+      const pathParams = fileInfo.split('/');
+      if (pathParams.length < 2) {
+        return {
+          status: 400,
+          message:
+            'Path params size must be not be lest then 2. Example: auto/test.jpg',
+        };
+      }
+      const mediaConfig = config.media as BCMSMostConfigMedia;
+      const reqOptions = pathParams[0]
+        .replace(/\/\//g, '/')
+        .replace(/\.\./g, '');
+      const reqPath = pathParams
+        .slice(1)
+        .join('/')
+        .replace(/\/\//g, '/')
+        .replace(/\.\./g, '');
+      const pathToFile = nodePath.join(
+        process.cwd(),
+        mediaConfig.output,
+        reqOptions,
+        reqPath,
+      );
+      if (await fs.exist(pathToFile, true)) {
+        return {
+          status: 200,
+          filePath: pathToFile,
+        };
+      }
+      let rez: BCMSMostImageResolverResponse = {
+        status: 200,
+        filePath: pathToFile,
+      };
+      await queue({
+        name: pathToFile,
+        async handler() {
+          rez = await self.resolver({
+            rootExt: realExtension,
+            path: reqPath,
+            pathToFile,
+            rawOptions: reqOptions,
+          });
+        },
+      }).wait;
+      return rez;
     },
   };
   return self;

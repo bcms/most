@@ -6,6 +6,9 @@ export interface BCMSMostImageHandler {
     path: string;
     pathToFile: string;
   }): Promise<BCMSMostImageResolverResponse>;
+  handlerRequest(data: {
+    encodedFile: string;
+  }): Promise<BCMSMostImageResolverResponse>;
 }
 export interface BCMSMostImageResolverResponse {
   status: number;

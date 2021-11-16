@@ -1,6 +1,7 @@
 import * as uuid from 'uuid';
 import Axios from 'axios';
 import { BCMSImageDeconstructedSrc, BCMSImageOptions } from '../types';
+import { Buffer } from 'buffer';
 
 export interface BCMSImageServicePrototype {
   setServerPort(port: number): void;
@@ -32,6 +33,13 @@ export interface BCMSImageServicePrototype {
   }): Promise<number>;
 
   windowResizeSubscribe(callback: (event: Event) => void): () => void;
+
+  toUrl(data: {
+    decodedSrc: BCMSImageDeconstructedSrc;
+    sizeIndex: number;
+    options: string;
+    webP?: boolean;
+  }): string;
 }
 
 function imageService(): BCMSImageServicePrototype {
@@ -56,20 +64,14 @@ function imageService(): BCMSImageServicePrototype {
 
   if (typeof window !== 'undefined') {
     let delay: NodeJS.Timeout;
-    window.addEventListener(
-      'resize',
-      (event) => {
-        clearTimeout(delay);
-        delay = setTimeout(
-          () => {
-            resizeListeners.forEach((e) => {
-              e.handler(event);
-            });
-          },
-          300,
-        );
-      },
-    );
+    window.addEventListener('resize', (event) => {
+      clearTimeout(delay);
+      delay = setTimeout(() => {
+        resizeListeners.forEach((e) => {
+          e.handler(event);
+        });
+      }, 300);
+    });
   }
 
   const self: BCMSImageServicePrototype = {
@@ -106,10 +108,7 @@ function imageService(): BCMSImageServicePrototype {
     },
     toSmallest(src, maxWidth, minWidth?) {
       const srcParts = src.split('.');
-      const name = srcParts.slice(
-        0,
-        srcParts.length - 1,
-      ).join('.');
+      const name = srcParts.slice(0, srcParts.length - 1).join('.');
       let ext = srcParts[srcParts.length - 1];
       if (this.parsable(ext)) {
         if (typeof document !== 'undefined' && this.checkWebP()) {
@@ -117,9 +116,7 @@ function imageService(): BCMSImageServicePrototype {
         }
         const width = this.closest(maxWidth);
         return `${name}-${
-          minWidth ? (
-            width < minWidth ? this.closest(minWidth) : width
-          ) : width
+          minWidth ? (width < minWidth ? this.closest(minWidth) : width) : width
         }.${ext}`;
       }
       return src;
@@ -136,14 +133,11 @@ function imageService(): BCMSImageServicePrototype {
       const wid = self.closest(
         element.parentElement.parentElement.offsetWidth,
         options && options.sizes
-        ? options.sizes.map((e) => e.width)
-        : undefined,
+          ? options.sizes.map((e) => e.width)
+          : undefined,
       );
       if (autoMaxWidth) {
-        element.style.setProperty(
-          'max-width',
-          `${wid}px`,
-        );
+        element.style.setProperty('max-width', `${wid}px`);
       }
       if (options && options.sizes) {
         for (let i = 0; i < options.sizes.length; i++) {
@@ -156,41 +150,44 @@ function imageService(): BCMSImageServicePrototype {
     },
     parseOptions(ops) {
       return ops
-             ? [
-               `_st${ops.step ? ops.step : 'a'}`,
-               `_ps${ops.position ? ops.position : 'a'}`,
-               `_ql${ops.quality ? ops.quality : 'a'}`,
-               `_sz${
-                 ops.sizes
-                 ? ops.sizes
-                   .map((size) => {
-                     return `w${size.width}h${
-                       size.height ? size.height : 'a'
-                     }`;
-                   })
-                   .join('-')
-                 : 'a'
-               }`,
-             ].join('')
-             : 'auto';
+        ? [
+            `_st${ops.step ? ops.step : 'a'}`,
+            `_ps${ops.position ? ops.position : 'a'}`,
+            `_ql${ops.quality ? ops.quality : 'a'}`,
+            `_sz${
+              ops.sizes
+                ? ops.sizes
+                    .map((size) => {
+                      return `w${size.width}h${
+                        size.height ? size.height : 'a'
+                      }`;
+                    })
+                    .join('-')
+                : 'a'
+            }`,
+          ].join('')
+        : 'auto';
     },
     deconstructSrc(src) {
       const srcParts = src.split('.');
       const firstPart = srcParts
-        .slice(
-          0,
-          srcParts.length - 1,
-        )
+        .slice(0, srcParts.length - 1)
         .join('.')
-        .replace(
-          '/media',
-          '',
-        );
+        .replace('/media', '');
       const lastPart = srcParts[srcParts.length - 1];
       return {
         firstPart,
         lastPart,
       };
+    },
+    toUrl(data) {
+      return (
+        Buffer.from(
+          `${data.options}/${data.decodedSrc.firstPart}-${data.sizeIndex}.${data.decodedSrc.lastPart}`,
+        ).toString('hex') +
+        '.' +
+        `${data.webP ? 'webp' : data.decodedSrc.lastPart}`
+      );
     },
     async require(data) {
       const parsable = self.parsable(data.deconstructedSrc.lastPart);
@@ -222,11 +219,7 @@ function imageService(): BCMSImageServicePrototype {
         console.error(error);
         return 0;
       }
-      return self.getSizeIndex(
-        data.element,
-        data.autoMaxWidth,
-        data.options,
-      );
+      return self.getSizeIndex(data.element, data.autoMaxWidth, data.options);
     },
     windowResizeSubscribe(callback) {
       const id = uuid.v4();
@@ -237,10 +230,7 @@ function imageService(): BCMSImageServicePrototype {
       return () => {
         for (let i = 0; i < resizeListeners.length; i++) {
           if (resizeListeners[i].id === id) {
-            resizeListeners.splice(
-              i,
-              1,
-            );
+            resizeListeners.splice(i, 1);
           }
         }
       };
