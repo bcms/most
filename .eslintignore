@@ -2,6 +2,7 @@
 /dist
 /uploads
 tools.js
+/npm-tool.js
 /dev.js
 /test.js
 /gatsby-dist

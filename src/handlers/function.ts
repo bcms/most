@@ -1,57 +1,53 @@
-import { BCMSClientPrototype } from '@becomes/cms-client';
-import { useLogger } from '@becomes/purple-cheetah';
-import {
+import type { BCMSClient } from '@becomes/cms-client/types';
+import { createBcmsMostDefaultOnMessage } from '../on-message';
+import type {
   BCMSMostCacheHandler,
   BCMSMostConfig,
   BCMSMostFunctionHandler,
 } from '../types';
+import { createBcmsMostConsole } from '../util';
 
 export function createBcmsMostFunctionHandler({
-  config,
-  client,
   cache,
+  client,
+  config,
 }: {
-  config: BCMSMostConfig;
-  client: BCMSClientPrototype;
   cache: BCMSMostCacheHandler;
+  client: BCMSClient;
+  config: BCMSMostConfig;
 }): BCMSMostFunctionHandler {
-  const cnsl = useLogger({ name: 'BCMSMostFunctionHandler' });
+  const cnsl = createBcmsMostConsole('Function handler');
+
   return {
-    async call() {
-      cnsl.info('started', '');
-      const startTime = Date.now();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const functionCache = await cache.get.function<any>();
-      if (config.functions) {
-        for (let i = 0; i < config.functions.length; i = i + 1) {
-          const fnConfig = config.functions[i];
-          const stage = `[ ${i + 1}/${config.functions.length} ] ${
-            fnConfig.name
-          }`;
-          cnsl.info(stage, 'calling ...');
-          const callFunctionTimeOffset = Date.now();
-          const result = await client.function.call(
-            fnConfig.name,
-            fnConfig.payload,
+    async call(data) {
+      const onMessage =
+        data && data.onMessage
+          ? data.onMessage
+          : createBcmsMostDefaultOnMessage();
+      if (data && data.name) {
+        onMessage('info', cnsl.info('call', `Calling ${data.name} ...`));
+        const res = await client.function.call(data.name, data.payload);
+        cache.function.set(data.name, res.result);
+        onMessage('info', cnsl.info('call', `${data.name} Done.`));
+      } else if (config.functions && config.functions.call) {
+        for (let i = 0; i < config.functions.call.length; i++) {
+          const fnToCall = await config.functions.call[i]();
+          onMessage('info', cnsl.info('call', `Calling ${fnToCall.name} ...`));
+          const res = await client.function.call(
+            fnToCall.name,
+            fnToCall.payload,
           );
-          if (result.success === false) {
-            cnsl.error(stage, result.result);
+          if (!res.success) {
+            onMessage('error', cnsl.error('call', res.result));
           } else {
-            if (fnConfig.modify) {
-              functionCache[fnConfig.name.replace(/-/g, '_')] =
-                await fnConfig.modify(result.result);
-            } else {
-              functionCache[fnConfig.name.replace(/-/g, '_')] = result.result;
-            }
-            cnsl.info(
-              stage,
-              `Done in: ${(Date.now() - callFunctionTimeOffset) / 1000}s`,
+            await cache.function.set(fnToCall.name, res.result);
+            onMessage(
+              'info',
+              cnsl.info('call', `${fnToCall.name.replace(/-/g, '_')} Done.`),
             );
           }
         }
       }
-      await cache.update.function(functionCache);
-      cnsl.info('done', `${(Date.now() - startTime) / 1000}s`);
     },
   };
 }

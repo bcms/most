@@ -1,128 +1,84 @@
-import { BCMSClientPrototype } from '@becomes/cms-client';
-import { useLogger } from '@becomes/purple-cheetah';
-import {
-  BCMSMostCacheContent,
+import type { BCMSClient } from '@becomes/cms-client/types';
+import { createBcmsMostDefaultOnMessage } from '../on-message';
+import type {
   BCMSMostCacheHandler,
   BCMSMostConfig,
   BCMSMostContentHandler,
 } from '../types';
-import { ErrorHandler } from '../util';
-/**
- * Provides methods for the BCMS content API.
- */
-export function createBcmsMostContentHandler({
-  config,
-  client,
-  cache,
-}: {
-  /** Configuration object. */
-  config: BCMSMostConfig;
-  /** Client created by the `@becomes/cms-client`. */
-  client: BCMSClientPrototype;
-  /** Cache handler objet. */
-  cache: BCMSMostCacheHandler;
-}): BCMSMostContentHandler {
-  const cnsl = useLogger({
-    name: 'BCMSMostContentHandler',
-  });
-  return {
-    async pull() {
-      cnsl.info('pull', 'Started...');
-      const contentInfo = await cache.get.contentInfo();
-      if (contentInfo.pullAfter < Date.now()) {
-        if (config.contentTTL) {
-          await cache.update.contentInfo({
-            pullAfter: Date.now() + config.contentTTL,
-          });
-        }
-        const contentCache = await cache.get.content<BCMSMostCacheContent>();
-        const startTime = Date.now();
-        const templateNameMap: {
-          [templateId: string]: string;
-        } = {};
-        const access = await client.keyAccess();
-        for (const i in access.templates) {
-          const templateAccess = access.templates[i];
-          if (templateAccess.get) {
-            const template = await client.template.get(templateAccess._id);
-            templateNameMap[template._id] = template.name;
-          }
-        }
-        if (!config.entries) {
-          config.entries = [];
-        }
-        for (const templateId in templateNameMap) {
-          const eConf = config.entries.find((e) => e.templateId === templateId);
-          if (!eConf) {
-            config.entries.push({
-              templateId,
-            });
-          }
-        }
-        for (let i = 0; i < config.entries.length; i = i + 1) {
-          const entryConfig = config.entries[i];
-          const name = templateNameMap[entryConfig.templateId];
-          if (!name) {
-            cnsl.error(
-              '',
-              `Template with ID "${entryConfig.templateId}"` +
-                ` is not known or cannot be accessed by the Key.`,
-            );
-            throw Error();
-          }
-          cnsl.info(
-            `[ ${i + 1}/${config.entries.length} ] ${name}`,
-            'getting entries ...',
-          );
-          const getEntriesTimeOffset = Date.now();
+import { createBcmsMostConsole } from '../util';
 
-          contentCache[name] = await client.entry.getAll(
-            entryConfig.templateId,
-            true,
-          );
-          cnsl.info(
-            `[ ${i + 1}/${config.entries.length} ] ${name}`,
-            `Done in: ${(Date.now() - getEntriesTimeOffset) / 1000}s`,
-          );
+export function createBcmsMostContentHandler({
+  cache,
+  client,
+  config,
+}: {
+  cache: BCMSMostCacheHandler;
+  client: BCMSClient;
+  config: BCMSMostConfig;
+}): BCMSMostContentHandler {
+  const cnsl = createBcmsMostConsole('Content handler');
+  return {
+    async pull(data) {
+      const startTime = Date.now();
+      const onMessage =
+        data && data.onMessage
+          ? data.onMessage
+          : createBcmsMostDefaultOnMessage();
+      onMessage('info', cnsl.info('pull', 'Started...'));
+
+      const templateNameMap: {
+        [name: string]: string;
+      } = {};
+      const keyAccess = await client.getKeyAccess();
+      for (let i = 0; i < keyAccess.templates.length; i++) {
+        const tempAccess = keyAccess.templates[i];
+        if (tempAccess.get) {
+          const template = await client.template.get({
+            templateId: tempAccess._id,
+          });
+          templateNameMap[template.name] = template._id;
         }
-        for (let i = 0; i < config.entries.length; i++) {
-          const entryConfig = config.entries[i];
-          const name = templateNameMap[entryConfig.templateId];
-          if (!name) {
-            cnsl.error(
-              '',
-              `Template with ID "${entryConfig.templateId}"` +
-                ` is not known or cannot be accessed by the Key.`,
-            );
-            throw Error();
-          }
-          if (typeof entryConfig.modify === 'function') {
-            for (let j = 0; j < contentCache[name].length; j++) {
-              const entry = contentCache[name][j];
-              const output = await entryConfig.modify(
-                JSON.parse(JSON.stringify(entry)),
-                contentCache,
-              );
-              if (typeof output === 'object') {
-                output._id = entry._id;
-                output.createdAt = entry.createdAt;
-                output.updatedAt = entry.updatedAt;
-                output.templateId = entry.templateId;
-                contentCache[name][j] = output;
-              } else {
-                throw ErrorHandler(
-                  `Error in "modify" function for entries in template "${
-                    entryConfig.templateId
-                  }". Expected output to be "object" but got "${typeof output}"`,
-                );
-              }
+      }
+      if (config.entries) {
+        if (config.entries.includeFromTemplates) {
+          const templateNames = Object.keys(templateNameMap);
+          for (const templateName in templateNames) {
+            const templateId = templateNames[templateName];
+            if (!config.entries.includeFromTemplates.includes(templateId)) {
+              delete templateNames[templateName];
             }
           }
         }
-        await cache.update.content(contentCache);
-        cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`);
+        if (config.entries.excludeFromTemplates) {
+          const templateNames = Object.keys(templateNameMap);
+          for (const templateName in templateNames) {
+            const templateId = templateNames[templateName];
+            if (config.entries.excludeFromTemplates.includes(templateId)) {
+              delete templateNames[templateName];
+            }
+          }
+        }
       }
-      cnsl.info('pull', `Done in: 0s`);
+      for (const templateName in templateNameMap) {
+        const timeOffset = Date.now();
+        const templateId = templateNameMap[templateName];
+        onMessage('info', cnsl.info(templateName, 'getting entries ...'));
+        const entries = await client.entry.getAll({
+          templateId,
+        });
+        await cache.content.set({ groupName: templateName, items: entries });
+        onMessage(
+          'info',
+          cnsl.info(
+            `${templateName}`,
+            `Done in: ${(Date.now() - timeOffset) / 1000}s`,
+          ),
+        );
+      }
+      onMessage(
+        'info',
+        cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`),
+      );
     },
   };
 }

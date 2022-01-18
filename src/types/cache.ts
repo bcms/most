@@ -1,36 +1,13 @@
-import { ObjectSchema } from '@becomes/purple-cheetah/types';
+import type { BCMSEntryParsed, BCMSMedia } from '@becomes/cms-client/types';
 
-export interface BCMSMostCacheContentInfo {
-  pullAfter: number;
-}
 export interface BCMSMostCacheContent {
-  [name: string]: BCMSMostCacheContentItem[];
+  [name: string]: BCMSEntryParsed[];
 }
-export interface BCMSMostCacheContentItem {
-  _id: string;
-  createdAt: number;
-  updatedAt: number;
-  templateId: string;
+
+export interface BCMSMostFnCache {
+  [name: string]: unknown;
 }
-export const BCMSMostCacheContentItemSchema: ObjectSchema = {
-  _id: {
-    __type: 'string',
-    __required: true,
-  },
-  createdAt: {
-    __type: 'number',
-    __required: true,
-  },
-  updatedAt: {
-    __type: 'number',
-    __required: true,
-  },
-  templateId: {
-    __type: 'string',
-    __required: true,
-  },
-};
-export interface BCMSMostFunctionCache {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [name: string]: any;
+
+export interface BCMSMostMediaCache {
+  items: BCMSMedia[];
 }

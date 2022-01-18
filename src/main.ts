@@ -1,124 +1,70 @@
 import * as path from 'path';
-import { BCMSClient, BCMSClientPrototype } from '@becomes/cms-client';
-import { BCMSMost, BCMSMostConfig } from './types';
-import {
-  createBodyParserMiddleware,
-  createCorsMiddleware,
-  createPurpleCheetah,
-  createRequestLoggerMiddleware,
-  useFS,
-} from '@becomes/purple-cheetah';
-import { createBcmsMostMediaMiddleware } from './server';
+import { createBcmsClient } from '@becomes/cms-client';
+import type { BCMSClient } from '@becomes/cms-client/types';
+import { BCMSMost, BCMSMostConfig, BCMSMostConfigSchema } from './types';
+import { ObjectUtility } from '@banez/object-utility';
+import { ObjectUtilityError } from '@banez/object-utility/types';
 import {
   createBcmsMostCacheHandler,
   createBcmsMostContentHandler,
   createBcmsMostFunctionHandler,
-  createBcmsMostImageHandler,
   createBcmsMostMediaHandler,
-} from '.';
-import { createBcmsMostPipe } from './pipe';
-import { initBcmsMostConfig } from './config';
+} from './handlers';
+import { createFS } from '@banez/fs';
 
-export const MAX_PPC = 16;
-
-export async function createBcmsMost(data?: {
-  serverPort?: number;
-  disableServer?: boolean;
-  /**
-   * If not provided, `bcms.config.js` file must be available
-   * at the root of the project (**{cwd}/bcms.config.js**).
-   */
+export function createBcmsMost({
+  config,
+  client,
+}: {
   config?: BCMSMostConfig;
+  client?: BCMSClient;
+}): BCMSMost {
+  if (!config) {
+    config = require(`${path.join(process.cwd(), 'bcms.config.js')}`);
+  }
+  if (!config) {
+    throw Error('Missing configuration.');
+  }
   /**
-   * If not provided, client will be created using data from
-   * the configuration.
+   * Check Config object.
    */
-  client?: BCMSClientPrototype;
-}): Promise<BCMSMost> {
-  const disableServer = data && data.disableServer ? true : false;
-  const config = data && data.config ? data.config : await initBcmsMostConfig();
-  const client: BCMSClientPrototype =
-    data && data.client
-      ? data.client
-      : BCMSClient({
-          cmsOrigin: config.cms.origin,
-          key: config.cms.key,
-        });
-  const fs = useFS({
+  {
+    const configCheck = ObjectUtility.compareWithSchema(
+      config,
+      BCMSMostConfigSchema,
+      'config',
+    );
+    if (configCheck instanceof ObjectUtilityError) {
+      throw Error(configCheck.message);
+    }
+  }
+
+  if (!client) {
+    client = createBcmsClient({
+      cmsOrigin: config.cms.origin,
+      key: {
+        id: config.cms.key.id,
+        secret: config.cms.key.secret,
+      },
+    });
+  }
+
+  const rootFs = createFS({
     base: path.join(process.cwd(), 'bcms'),
   });
 
-  const image = createBcmsMostImageHandler({ config, fs });
-  const cache = createBcmsMostCacheHandler({ fs });
-  const content = createBcmsMostContentHandler({
-    cache,
-    config,
-    client,
+  const cache = createBcmsMostCacheHandler({
+    rootFs,
   });
-  const media = createBcmsMostMediaHandler({
-    fs,
-    config,
-    client,
+  const content = createBcmsMostContentHandler({ cache, client, config });
+  const fn = createBcmsMostFunctionHandler({ cache, client, config });
+  const media = createBcmsMostMediaHandler({ cache, config, client });
+
+  return {
+    client: client,
     cache,
-    MAX_PPC,
-  });
-  const fn = createBcmsMostFunctionHandler({
-    cache,
-    client,
-    config,
-  });
-  const pipe = createBcmsMostPipe({
-    fs,
-    cache,
-    client,
-    config,
     content,
-    image,
+    function: fn,
     media,
-  });
-  if (disableServer) {
-    return {
-      cache,
-      client,
-      content,
-      media,
-      function: fn,
-      close() {
-        /** Do nothing */
-      },
-      image,
-      pipe,
-    };
-  } else {
-    return await new Promise<BCMSMost>((resolve, reject) => {
-      try {
-        createPurpleCheetah({
-          port: data && data.serverPort ? data.serverPort : 3001,
-          logPath: path.join(process.cwd(), 'bcms', 'logs'),
-          middleware: [
-            createBodyParserMiddleware(),
-            createCorsMiddleware(),
-            createRequestLoggerMiddleware(),
-            createBcmsMostMediaMiddleware({ config, fs, image }),
-          ],
-          onReady(pc) {
-            resolve({
-              cache,
-              client,
-              content,
-              media,
-              function: fn,
-              close() {
-                pc.getServer().close();
-              },
-              image,
-              pipe,
-            });
-          },
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
+  };
 }
