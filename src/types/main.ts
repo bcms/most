@@ -4,6 +4,7 @@ import type {
   BCMSMostContentHandler,
   BCMSMostFunctionHandler,
   BCMSMostMediaHandler,
+  BCMSMostImageProcessorHandler,
 } from './handlers';
 
 export interface BCMSMost {
@@ -12,4 +13,5 @@ export interface BCMSMost {
   content: BCMSMostContentHandler;
   function: BCMSMostFunctionHandler;
   media: BCMSMostMediaHandler;
+  imageProcessor: BCMSMostImageProcessorHandler;
 }

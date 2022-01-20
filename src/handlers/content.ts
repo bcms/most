@@ -1,3 +1,4 @@
+import * as Progress from 'progress';
 import type { BCMSClient } from '@becomes/cms-client/types';
 import { createBcmsMostDefaultOnMessage } from '../on-message';
 import type {
@@ -24,6 +25,19 @@ export function createBcmsMostContentHandler({
         data && data.onMessage
           ? data.onMessage
           : createBcmsMostDefaultOnMessage();
+
+      const cacheContentChanges = await cache.content.changes.get();
+      const contentChanges = await client.changes.getInfo();
+      if (cacheContentChanges) {
+        if (
+          contentChanges.entry.lastChangeAt ===
+          cacheContentChanges.entry.lastChangeAt
+        ) {
+          onMessage('info', cnsl.info('pull', 'Cache up to date.'));
+          return;
+        }
+      }
+
       onMessage('info', cnsl.info('pull', 'Started...'));
 
       const templateNameMap: {
@@ -59,22 +73,29 @@ export function createBcmsMostContentHandler({
           }
         }
       }
+      const progressBar = new Progress('Pulling entries [:bar] :percent', {
+        complete: '#',
+        incomplete: ' ',
+        total: Object.keys(templateNameMap).length,
+      });
       for (const templateName in templateNameMap) {
         const timeOffset = Date.now();
         const templateId = templateNameMap[templateName];
-        onMessage('info', cnsl.info(templateName, 'getting entries ...'));
+        progressBar.interrupt(cnsl.info(templateName, 'getting entries ...'));
         const entries = await client.entry.getAll({
           templateId,
         });
         await cache.content.set({ groupName: templateName, items: entries });
-        onMessage(
-          'info',
+        progressBar.interrupt(
           cnsl.info(
             `${templateName}`,
             `Done in: ${(Date.now() - timeOffset) / 1000}s`,
           ),
         );
+        progressBar.tick();
       }
+      progressBar.terminate();
+      await cache.content.changes.set(contentChanges);
       onMessage(
         'info',
         cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`),

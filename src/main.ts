@@ -8,22 +8,43 @@ import {
   createBcmsMostCacheHandler,
   createBcmsMostContentHandler,
   createBcmsMostFunctionHandler,
+  createBcmsMostImageProcessor,
   createBcmsMostMediaHandler,
 } from './handlers';
 import { createFS } from '@banez/fs';
+import { bcmsMostSocketInit } from './handlers/sockets';
 
-export function createBcmsMost({
-  config,
-  client,
-}: {
+export function createBcmsMost(data?: {
   config?: BCMSMostConfig;
   client?: BCMSClient;
 }): BCMSMost {
-  if (!config) {
+  let config: BCMSMostConfig | undefined = undefined;
+  let client: BCMSClient | undefined = undefined;
+
+  if (!data || !data.config) {
     config = require(`${path.join(process.cwd(), 'bcms.config.js')}`);
+  } else if (data && data.config) {
+    config = data.config;
   }
+  if (config) {
+    if (!data || !data.client) {
+      client = createBcmsClient({
+        cmsOrigin: config.cms.origin,
+        key: {
+          id: config.cms.key.id,
+          secret: config.cms.key.secret,
+        },
+      });
+    } else if (data && data.client) {
+      client = data.client;
+    }
+  }
+
   if (!config) {
     throw Error('Missing configuration.');
+  }
+  if (!client) {
+    throw Error('Missing BCMS client.');
   }
   /**
    * Check Config object.
@@ -39,16 +60,6 @@ export function createBcmsMost({
     }
   }
 
-  if (!client) {
-    client = createBcmsClient({
-      cmsOrigin: config.cms.origin,
-      key: {
-        id: config.cms.key.id,
-        secret: config.cms.key.secret,
-      },
-    });
-  }
-
   const rootFs = createFS({
     base: path.join(process.cwd(), 'bcms'),
   });
@@ -58,7 +69,26 @@ export function createBcmsMost({
   });
   const content = createBcmsMostContentHandler({ cache, client, config });
   const fn = createBcmsMostFunctionHandler({ cache, client, config });
-  const media = createBcmsMostMediaHandler({ cache, config, client });
+  const media = createBcmsMostMediaHandler({
+    cache,
+    config,
+    client,
+    getImageProcessor: () => {
+      return imageProcessor;
+    },
+  });
+  const imageProcessor = createBcmsMostImageProcessor({
+    config,
+    cache,
+    mediaHandler: media,
+  });
+
+  bcmsMostSocketInit({
+    cache,
+    client,
+    mediaHandler: media,
+    config,
+  });
 
   return {
     client: client,
@@ -66,5 +96,6 @@ export function createBcmsMost({
     content,
     function: fn,
     media,
+    imageProcessor,
   };
 }

@@ -1,4 +1,8 @@
-import type { BCMSEntryParsed, BCMSMedia } from '@becomes/cms-client/types';
+import type {
+  BCMSClientChangesGetInfoData,
+  BCMSEntryParsed,
+  BCMSMedia,
+} from '@becomes/cms-client/types';
 import type {
   BCMSMostFnCache,
   BCMSMostMediaCache,
@@ -31,6 +35,10 @@ interface Query<Item> {
  */
 export interface BCMSMostCacheHandler {
   content: {
+    changes: {
+      get(): Promise<BCMSClientChangesGetInfoData | null>;
+      set(data: BCMSClientChangesGetInfoData): Promise<void>;
+    };
     get(): Promise<BCMSMostCacheContent>;
     findOneInGroup(
       groupName: string,
@@ -46,12 +54,23 @@ export interface BCMSMostCacheHandler {
       groupName: string;
       items: BCMSEntryParsed | BCMSEntryParsed[];
     }): Promise<void>;
+    update(items: BCMSEntryParsed | BCMSEntryParsed[]): Promise<void>;
+    remove(
+      items:
+        | BCMSEntryParsed
+        | BCMSEntryParsed[]
+        | { _id: string }
+        | Array<{ _id: string }>,
+    ): Promise<void>;
   };
   media: {
     get(): Promise<BCMSMostMediaCache>;
     findOne(query: Query<BCMSMedia>): Promise<BCMSMedia | null>;
     find(query: Query<BCMSMedia>): Promise<BCMSMedia[]>;
     set(items: BCMSMedia | BCMSMedia[]): Promise<void>;
+    remove(
+      items: BCMSMedia | BCMSMedia[] | { _id: string } | Array<{ _id: string }>,
+    ): Promise<void>;
   };
   function: {
     get(): Promise<BCMSMostFnCache>;
