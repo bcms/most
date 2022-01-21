@@ -62,6 +62,7 @@ export function createBcmsMostMediaHandler({
   });
 
   const self: BCMSMostMediaHandler = {
+    output,
     getPath(media, allMedia) {
       if (
         media.type !== BCMSMediaType.DIR &&
@@ -77,6 +78,20 @@ export function createBcmsMostMediaHandler({
         return `${self.getPath(parent, allMedia)}/${media.name}`;
       }
     },
+    async startImageProcessor({ media, options, imageProcessor }) {
+      const outputPath = path.join(process.cwd(), ...output);
+      await ChildProcess.spawn('node', [
+        path.join(__dirname, '..', 'image-processor-starter.js'),
+        '--mediaId',
+        media._id,
+        '--inputBasePath',
+        outputPath,
+        '--outputBasePath',
+        outputPath,
+        '--optionsAsString',
+        imageProcessor.optionsToString(options),
+      ]);
+    },
     async pull() {
       // eslint-disable-next-line no-console
       console.log(cnsl.info('pull', 'Pulling media...'));
@@ -86,7 +101,7 @@ export function createBcmsMostMediaHandler({
       for (let i = 0; i < cacheAllMedia.length; i++) {
         const cacheMedia = cacheAllMedia[i];
         if (!allMedia.find((e) => e._id === cacheMedia._id)) {
-          const pathToFile = self.getPath(cacheMedia, cacheAllMedia);
+          const pathToFile = cacheMedia.fullPath; // self.getPath(cacheMedia, cacheAllMedia);
           if (pathToFile) {
             const pathParts = pathToFile.substring(1).split('/');
             if (
@@ -154,8 +169,8 @@ export function createBcmsMostMediaHandler({
         progressBar.terminate();
       }
       await cache.media.set(allMedia);
-      const imageProcessor = getImageProcessor();
       if (processImages) {
+        const imageProcessor = getImageProcessor();
         const progressBar = new ProgressBar(
           'Processing images [:bar] :percent',
           {
@@ -181,7 +196,6 @@ export function createBcmsMostMediaHandler({
                       exec: imageSizes.length > 0 ? imageSizes : undefined,
                     },
                   };
-                  const outputPath = path.join(process.cwd(), ...output);
                   const versionPaths = imageProcessor.getVersionPaths({
                     media,
                     allMedia,
@@ -196,17 +210,11 @@ export function createBcmsMostMediaHandler({
                     }
                   }
                   if (!skip) {
-                    await ChildProcess.spawn('node', [
-                      path.join(__dirname, '..', 'image-processor-starter.js'),
-                      '--mediaId',
-                      media._id,
-                      '--inputBasePath',
-                      outputPath,
-                      '--outputBasePath',
-                      outputPath,
-                      '--optionsAsString',
-                      imageProcessor.optionsToString(options),
-                    ]);
+                    self.startImageProcessor({
+                      media,
+                      options,
+                      imageProcessor,
+                    });
                   }
                   progressBar.interrupt(
                     cnsl.info(`[w${wid}] ` + pathToFile, 'Done.'),
@@ -247,6 +255,66 @@ export function createBcmsMostMediaHandler({
         }
       }
       return result;
+    },
+    async download(target, allMedia) {
+      if (!allMedia) {
+        allMedia = (await cache.media.get()).items;
+      }
+      const media = await client.media.get(target as string);
+      await cache.media.set(media);
+      allMedia.push(media);
+      if (media.type !== BCMSMediaType.DIR) {
+        const pathToFile = self.getPath(media, allMedia);
+        if (pathToFile) {
+          if (download) {
+            const pathParts = pathToFile.substring(1).split('/');
+            const file = (await media.bin()) as Buffer;
+            await outputFs.save(pathParts, file);
+          }
+          if (processImages && media.type === BCMSMediaType.IMG) {
+            const imageProcessor = getImageProcessor();
+            const options: BCMSMostImageProcessorProcessOptions = {
+              position: 'cover',
+              sizes: {
+                auto: imageSizes.length > 0 ? undefined : true,
+                exec: imageSizes.length > 0 ? imageSizes : undefined,
+              },
+            };
+            const outputPath = path.join(process.cwd(), ...output);
+            await ChildProcess.spawn('node', [
+              path.join(__dirname, '..', 'image-processor-starter.js'),
+              '--mediaId',
+              media._id,
+              '--inputBasePath',
+              outputPath,
+              '--outputBasePath',
+              outputPath,
+              '--optionsAsString',
+              imageProcessor.optionsToString(options),
+            ]);
+          }
+        }
+      }
+    },
+    async remove(target, allMedia) {
+      if (!allMedia) {
+        allMedia = (await cache.media.get()).items;
+      }
+      const media = allMedia.find((e) => e._id === target);
+      if (media) {
+        const pathToFile = self.getPath(media, allMedia);
+        let childrenToRemove: BCMSMedia[] = [];
+        if (pathToFile) {
+          const pathParts = pathToFile.substring(1).split('/');
+          if (media.type === BCMSMediaType.DIR) {
+            await outputFs.deleteDir(pathParts);
+            childrenToRemove = self.findAllChildren(media, allMedia);
+          } else {
+            await outputFs.deleteFile(pathParts);
+          }
+        }
+        await cache.media.remove([{ _id: target }, ...childrenToRemove]);
+      }
     },
   };
 

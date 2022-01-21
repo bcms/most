@@ -1,16 +1,24 @@
 import type { FS } from '@banez/fs/types';
-import type { BCMSEntryParsed, BCMSMedia } from '@becomes/cms-client/types';
-import type { BCMSMostCacheHandler } from '../types';
+import type { BCMSEntryParsed } from '@becomes/cms-client/types';
+import type {
+  BCMSMediaExtended,
+  BCMSMostCacheHandler,
+  BCMSMostMediaHandler,
+} from '../types';
 
 export function createBcmsMostCacheHandler({
   rootFs,
+  getMediaHandler,
 }: {
   rootFs: FS;
+  getMediaHandler(): BCMSMostMediaHandler;
 }): BCMSMostCacheHandler {
   const contentChangesFileName = 'content-changes.cache.json';
   const contentFileName = 'content.cache.json';
   const mediaFileName = 'media.cache.json';
   const fnFileName = 'function.cache.json';
+
+  let mediaHandler: BCMSMostMediaHandler | undefined = undefined;
 
   const self: BCMSMostCacheHandler = {
     content: {
@@ -171,7 +179,7 @@ export function createBcmsMostCacheHandler({
       },
       async find(query) {
         const cache = await self.media.get();
-        const output: BCMSMedia[] = [];
+        const output: BCMSMediaExtended[] = [];
         for (let i = 0; i < cache.items.length; i++) {
           const item = cache.items[i];
           if (query(item)) {
@@ -191,6 +199,9 @@ export function createBcmsMostCacheHandler({
         return null;
       },
       async set(items) {
+        if (!mediaHandler) {
+          mediaHandler = getMediaHandler();
+        }
         const input = items instanceof Array ? items : [items];
         const cache = await self.media.get();
         for (let i = 0; i < input.length; i++) {
@@ -199,12 +210,24 @@ export function createBcmsMostCacheHandler({
           for (let j = 0; j < cache.items.length; j++) {
             const cacheItem = cache.items[j];
             if (inputItem._id === cacheItem._id) {
-              cache.items[j] = inputItem;
+              const fullPath = mediaHandler.getPath(
+                inputItem,
+                cache.items,
+              );
+              cache.items[j] = {
+                ...inputItem,
+                fullPath: fullPath ? fullPath : `/${inputItem.name}`,
+              };
               found = true;
+              break;
             }
           }
           if (!found) {
-            cache.items.push(inputItem);
+            const fullPath = mediaHandler.getPath(inputItem, cache.items);
+            cache.items.push({
+              ...inputItem,
+              fullPath: fullPath ? fullPath : `/${inputItem.name}`,
+            });
           }
         }
         if (input.length > 0) {

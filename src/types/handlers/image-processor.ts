@@ -1,4 +1,5 @@
 import type { BCMSMedia } from '@becomes/cms-client/types';
+import type { BCMSMediaExtended } from '..';
 
 /**
  * Options for image processor. Can be represented as a string:
@@ -39,7 +40,7 @@ export interface BCMSMostImageProcessorProcessOptions {
 }
 
 export interface BCMSMostImageProcessorProcessConfig {
-  input: string | BCMSMedia;
+  input: string | BCMSMediaExtended;
   inputBasePath: string;
   outputBasePath: string;
   options?: BCMSMostImageProcessorProcessOptions;
@@ -51,8 +52,8 @@ export interface BCMSMostImageProcessorHandler {
   optionsToString(options: BCMSMostImageProcessorProcessOptions): string;
   stringToOptions(options: string): BCMSMostImageProcessorProcessOptions;
   getVersionPaths(data: {
-    media: BCMSMedia;
-    allMedia: BCMSMedia[];
+    media: BCMSMediaExtended | BCMSMedia;
+    allMedia?: Array<BCMSMediaExtended | BCMSMedia>;
     options: BCMSMostImageProcessorProcessOptions;
   }): string[];
 }

@@ -19,7 +19,7 @@
     "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
     "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
     "lint": "eslint src/**/*",
-    "t": "ts-node src/test.ts"
+    "t": "node dist/test.js"
   },
   "dependencies": {
     "@banez/child_process": "^1.0.3",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@banez/npm-tool": "^1.0.1",
+    "@becomes/cms-client": "file:bcms-client.tgz",
     "@types/chai": "^4.2.18",
     "@types/mocha": "^9.0.0",
     "@types/progress": "^2.0.5",

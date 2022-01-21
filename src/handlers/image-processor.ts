@@ -1,7 +1,8 @@
 import * as sharp from 'sharp';
 import * as path from 'path';
-import { BCMSMedia, BCMSMediaType } from '@becomes/cms-client/types';
+import { BCMSMediaType } from '@becomes/cms-client/types';
 import type {
+  BCMSMediaExtended,
   BCMSMostCacheHandler,
   BCMSMostConfig,
   BCMSMostImageProcessorHandler,
@@ -153,11 +154,20 @@ export function createBcmsMostImageProcessor({
         ops = options as BCMSMostImageProcessorProcessOptions;
       }
 
-      let media: BCMSMedia | null = null;
+      let media: BCMSMediaExtended | null = null;
       if (typeof input === 'string') {
         media = await cache.media.findOne((e) => e._id === input);
       } else {
         media = input;
+        // if ((input as BCMSMediaExtended).fullPath) {
+        //   media = input as BCMSMediaExtended;
+        // } else {
+        //   const fullPath = mediaHandler.getPath(input, allMedia);
+        //   media = {
+        //     ...input,
+        //     fullPath: fullPath ? fullPath : input.name,
+        //   };
+        // }
       }
       if (!media) {
         // eslint-disable-next-line no-console
@@ -167,8 +177,7 @@ export function createBcmsMostImageProcessor({
       if (media.type !== BCMSMediaType.IMG) {
         throw Error(`Input file is of type ${media.type} is not IMG.`);
       }
-      const allMedia = (await cache.media.get()).items;
-      const relativeInputFilePath = mediaHandler.getPath(media, allMedia);
+      const relativeInputFilePath = media.fullPath; //mediaHandler.getPath(media, allMedia);
       if (!relativeInputFilePath) {
         // eslint-disable-next-line no-console
         console.warn(cnsl.warn('process', media));
@@ -315,7 +324,9 @@ export function createBcmsMostImageProcessor({
         }
       }
       const result: string[] = [];
-      const relativeInputFilePath = mediaHandler.getPath(media, allMedia);
+      const relativeInputFilePath = (media as BCMSMediaExtended).fullPath
+        ? (media as BCMSMediaExtended).fullPath
+        : mediaHandler.getPath(media, allMedia as BCMSMediaExtended[]);
       if (!relativeInputFilePath) {
         return [];
       }

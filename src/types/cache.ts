@@ -9,5 +9,9 @@ export interface BCMSMostFnCache {
 }
 
 export interface BCMSMostMediaCache {
-  items: BCMSMedia[];
+  items: BCMSMediaExtended[];
+}
+
+export interface BCMSMediaExtended extends BCMSMedia {
+  fullPath: string;
 }

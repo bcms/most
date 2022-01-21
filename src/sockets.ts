@@ -11,10 +11,10 @@ import type {
   BCMSMostCacheHandler,
   BCMSMostConfig,
   BCMSMostMediaHandler,
-} from '../types';
+} from './types';
 import { WorkerError } from '@banez/workers/types';
 
-export function bcmsMostSocketInit({
+export async function bcmsMostSocketInit({
   client,
   cache,
   mediaHandler,
@@ -24,7 +24,7 @@ export function bcmsMostSocketInit({
   cache: BCMSMostCacheHandler;
   mediaHandler: BCMSMostMediaHandler;
   config: BCMSMostConfig;
-}): void {
+}): Promise<void> {
   const workers = createWorkerManager({
     count:
       config.media && config.media.ppc ? config.media.ppc : os.cpus().length,
@@ -66,14 +66,7 @@ export function bcmsMostSocketInit({
     }
   });
 
-  client.socket
-    .connect()
-    .then(() => {
-      // eslint-disable-next-line no-console
-      console.log('Connected to socket server.');
-    })
-    .catch((err) => {
-      // eslint-disable-next-line no-console
-      console.error(err);
-    });
+  if (!client.socket.connected()) {
+    await client.socket.connect();
+  }
 }

@@ -10,9 +10,11 @@ import {
   createBcmsMostFunctionHandler,
   createBcmsMostImageProcessor,
   createBcmsMostMediaHandler,
+  createBcmsMostHttpHandler,
+  createBcmsMostTypeConverterHandler,
 } from './handlers';
 import { createFS } from '@banez/fs';
-import { bcmsMostSocketInit } from './handlers/sockets';
+import { bcmsMostSocketInit } from './sockets';
 
 export function createBcmsMost(data?: {
   config?: BCMSMostConfig;
@@ -66,6 +68,9 @@ export function createBcmsMost(data?: {
 
   const cache = createBcmsMostCacheHandler({
     rootFs,
+    getMediaHandler() {
+      return media;
+    },
   });
   const content = createBcmsMostContentHandler({ cache, client, config });
   const fn = createBcmsMostFunctionHandler({ cache, client, config });
@@ -82,12 +87,15 @@ export function createBcmsMost(data?: {
     cache,
     mediaHandler: media,
   });
-
-  bcmsMostSocketInit({
+  const httpHandler = createBcmsMostHttpHandler({
     cache,
-    client,
-    mediaHandler: media,
     config,
+    imageProcessor,
+    mediaHandler: media,
+  });
+  const typeConverter = createBcmsMostTypeConverterHandler({
+    client,
+    rootFs,
   });
 
   return {
@@ -97,5 +105,15 @@ export function createBcmsMost(data?: {
     function: fn,
     media,
     imageProcessor,
+    http: httpHandler,
+    typeConverter,
+    async socketConnect() {
+      await bcmsMostSocketInit({
+        cache,
+        client: client as BCMSClient,
+        mediaHandler: media,
+        config: config as BCMSMostConfig,
+      });
+    },
   };
 }

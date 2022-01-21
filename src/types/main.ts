@@ -5,6 +5,8 @@ import type {
   BCMSMostFunctionHandler,
   BCMSMostMediaHandler,
   BCMSMostImageProcessorHandler,
+  BCMSMostHttpHandler,
+  BCMSMostTypeConverterHandler,
 } from './handlers';
 
 export interface BCMSMost {
@@ -14,4 +16,7 @@ export interface BCMSMost {
   function: BCMSMostFunctionHandler;
   media: BCMSMostMediaHandler;
   imageProcessor: BCMSMostImageProcessorHandler;
+  http: BCMSMostHttpHandler;
+  typeConverter: BCMSMostTypeConverterHandler;
+  socketConnect(): Promise<void>;
 }

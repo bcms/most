@@ -3,6 +3,7 @@ import type {
   BCMSEntryParsed,
   BCMSMedia,
 } from '@becomes/cms-client/types';
+import type { BCMSMediaExtended } from '..';
 import type {
   BCMSMostFnCache,
   BCMSMostMediaCache,
@@ -65,11 +66,19 @@ export interface BCMSMostCacheHandler {
   };
   media: {
     get(): Promise<BCMSMostMediaCache>;
-    findOne(query: Query<BCMSMedia>): Promise<BCMSMedia | null>;
-    find(query: Query<BCMSMedia>): Promise<BCMSMedia[]>;
-    set(items: BCMSMedia | BCMSMedia[]): Promise<void>;
+    findOne(query: Query<BCMSMediaExtended>): Promise<BCMSMediaExtended | null>;
+    find(query: Query<BCMSMediaExtended>): Promise<BCMSMediaExtended[]>;
+    set(
+      items: BCMSMediaExtended | BCMSMediaExtended[] | BCMSMedia | BCMSMedia[],
+    ): Promise<void>;
     remove(
-      items: BCMSMedia | BCMSMedia[] | { _id: string } | Array<{ _id: string }>,
+      items:
+        | BCMSMedia
+        | BCMSMedia[]
+        | BCMSMediaExtended
+        | BCMSMediaExtended[]
+        | { _id: string }
+        | Array<{ _id: string }>,
     ): Promise<void>;
   };
   function: {
