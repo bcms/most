@@ -21,6 +21,9 @@
     "lint": "eslint src/**/*",
     "t": "node dist/test.js"
   },
+  "peerDependencies": {
+    "@becomes/cms-client": ">=3.0.0-alpha1"
+  },
   "dependencies": {
     "@banez/child_process": "^1.0.3",
     "@banez/fs": "^1.0.2",
@@ -33,7 +36,7 @@
   },
   "devDependencies": {
     "@banez/npm-tool": "^1.0.1",
-    "@becomes/cms-client": "file:bcms-client.tgz",
+    "@becomes/cms-client": "^3.0.0-alpha1",
     "@types/chai": "^4.2.18",
     "@types/mocha": "^9.0.0",
     "@types/progress": "^2.0.5",
