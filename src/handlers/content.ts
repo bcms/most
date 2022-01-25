@@ -101,5 +101,43 @@ export function createBcmsMostContentHandler({
         cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`),
       );
     },
+    entry: {
+      async find(template, query) {
+        const contentCache = await cache.content.get();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const output: any[] = [];
+        if (contentCache[template]) {
+          for (let i = 0; i < contentCache[template].length; i++) {
+            const item = contentCache[template][i];
+            const queryResult = await query(item, contentCache);
+            if (queryResult) {
+              output.push(queryResult);
+            }
+          }
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn(`Template "${template}" does not exist.`);
+        }
+
+        return output;
+      },
+      async findOne(template, query) {
+        const contentCache = await cache.content.get();
+        if (contentCache[template]) {
+          for (let i = 0; i < contentCache[template].length; i++) {
+            const item = contentCache[template][i];
+            const queryResult = await query(item, contentCache);
+            if (queryResult) {
+              return queryResult;
+            }
+          }
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn(`Template "${template}" does not exist.`);
+        }
+
+        return null;
+      },
+    },
   };
 }

@@ -1,3 +1,4 @@
+import type { FS } from '@banez/fs/types';
 import type { BCMSMedia } from '@becomes/cms-client/types';
 import type {
   BCMSMostImageProcessorHandler,
@@ -17,4 +18,6 @@ export interface BCMSMostMediaHandler {
   findAllChildren(target: BCMSMedia, allMedia: BCMSMedia[]): BCMSMedia[];
   remove(target: string, allMedia?: BCMSMedia[]): Promise<void>;
   download(target: string, allMedia?: BCMSMedia[]): Promise<void>;
+  outputFs: FS;
+  ppc: number;
 }

@@ -63,6 +63,7 @@ export function createBcmsMostMediaHandler({
 
   const self: BCMSMostMediaHandler = {
     output,
+    ppc,
     getPath(media, allMedia) {
       if (
         media.type !== BCMSMediaType.DIR &&
@@ -90,6 +91,8 @@ export function createBcmsMostMediaHandler({
         outputPath,
         '--optionsAsString',
         imageProcessor.optionsToString(options),
+        '--config',
+        Buffer.from(JSON.stringify(config)).toString('base64'),
       ]);
     },
     async pull() {
@@ -316,6 +319,7 @@ export function createBcmsMostMediaHandler({
         await cache.media.remove([{ _id: target }, ...childrenToRemove]);
       }
     },
+    outputFs,
   };
 
   return self;

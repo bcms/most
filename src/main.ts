@@ -12,6 +12,7 @@ import {
   createBcmsMostMediaHandler,
   createBcmsMostHttpHandler,
   createBcmsMostTypeConverterHandler,
+  createBcmsMostServerHandler,
 } from './handlers';
 import { createFS } from '@banez/fs';
 import { bcmsMostSocketInit } from './sockets';
@@ -97,8 +98,17 @@ export function createBcmsMost(data?: {
     client,
     rootFs,
   });
+  const serverHandler = createBcmsMostServerHandler({
+    cache,
+    imageProcessor,
+    mediaHandler: media,
+    getBcmsMost() {
+      return self;
+    },
+    port: 3001,
+  });
 
-  return {
+  const self: BCMSMost = {
     client: client,
     cache,
     content,
@@ -107,6 +117,7 @@ export function createBcmsMost(data?: {
     imageProcessor,
     http: httpHandler,
     typeConverter,
+    server: serverHandler,
     async socketConnect() {
       await bcmsMostSocketInit({
         cache,
@@ -116,4 +127,6 @@ export function createBcmsMost(data?: {
       });
     },
   };
+
+  return self;
 }

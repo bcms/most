@@ -7,6 +7,7 @@ interface Args {
   inputBasePath?: string;
   outputBasePath?: string;
   optionsAsString?: string;
+  config?: string;
 }
 
 export function parseArgs(rawArgs: string[]): Args {
@@ -64,6 +65,9 @@ export function parseArgs(rawArgs: string[]): Args {
     optionsAsString: {
       type: 'string',
     },
+    config: {
+      type: 'string',
+    },
   };
   const groups: {
     [name: string]: {
@@ -85,6 +89,7 @@ export function parseArgs(rawArgs: string[]): Args {
     '--inputBasePath': groups.inputBasePath.name,
     '--outputBasePath': groups.outputBasePath.name,
     '--optionsAsString': groups.optionsAsString.name,
+    '--config': groups.config.name,
   };
   const output: {
     [name: string]: string | boolean | undefined;
@@ -135,13 +140,21 @@ async function main() {
         __type: 'string',
         __required: true,
       },
+      config: {
+        __type: 'string',
+        __required: false,
+      },
     },
     'args',
   );
   if (check instanceof ObjectUtilityError) {
     throw Error(check.message);
   }
-  const most = createBcmsMost();
+  const most = createBcmsMost({
+    config: args.config
+      ? JSON.parse(Buffer.from(args.config, 'base64').toString())
+      : undefined,
+  });
   await most.imageProcessor.process({
     input: args.mediaId as string,
     inputBasePath: args.inputBasePath as string,

@@ -196,6 +196,16 @@ export const BCMSMostConfigMediaSchema: ObjectSchema = {
   },
 };
 
+export interface BCMSMostConfigServer {
+  port?: number;
+}
+export const BCMSMostConfigServerSchema: ObjectSchema = {
+  port: {
+    __type: 'number',
+    __required: false,
+  },
+};
+
 export interface BCMSMostConfig {
   /**
    * Required for connecting to the BCMS.
@@ -207,6 +217,7 @@ export interface BCMSMostConfig {
   entries?: BCMSMostConfigEntries;
   functions?: BCMSMostConfigFunctions;
   media?: BCMSMostConfigMedia;
+  server?: BCMSMostConfigServer;
 }
 export const BCMSMostConfigSchema: ObjectSchema = {
   cms: {
@@ -228,5 +239,10 @@ export const BCMSMostConfigSchema: ObjectSchema = {
     __type: 'object',
     __required: false,
     __child: BCMSMostConfigMediaSchema,
+  },
+  server: {
+    __type: 'object',
+    __required: false,
+    __child: BCMSMostConfigServerSchema,
   },
 };
