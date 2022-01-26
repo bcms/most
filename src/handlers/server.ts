@@ -71,7 +71,7 @@ export function createBcmsMostServerHandler({
                 limit: 6000000,
               }),
               createMiddleware({
-                path: `/bcms/image`,
+                path: `/api/bcms-images`,
                 name: 'BCMS Most image processor middleware',
                 handler() {
                   return async (req: Request, res: Response) => {
@@ -102,14 +102,15 @@ export function createBcmsMostServerHandler({
                           });
                         });
                       }
+                      const filePath = path.join(
+                        process.cwd(),
+                        ...mediaHandler.output,
+                        ...req.path.split('/'),
+                      );
                       res.json({
                         exist: true,
-                        path: path.join(
-                          process.cwd(),
-                          ...mediaHandler.output,
-                          ...req.path.split('/'),
-                        ),
-                        mimetype: media.mimetype,
+                        path: filePath,
+                        mimetype: filePath.endsWith('.webp') ? 'image/webp' : media.mimetype,
                         fileName: media.name,
                         fileSize: media.size,
                       });
@@ -123,7 +124,7 @@ export function createBcmsMostServerHandler({
             controllers: [
               createController({
                 name: 'BCMS Most server controller',
-                path: '/bcms/api',
+                path: '/api/bcms',
                 methods() {
                   const output: {
                     [name: string]: ControllerMethodConfig<unknown, unknown>;
