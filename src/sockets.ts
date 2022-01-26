@@ -37,8 +37,8 @@ export async function bcmsMostSocketInit({
       if (tempAccess && tempAccess.get) {
         if (data.t === BCMSSocketEventType.UPDATE) {
           const entry = await client.entry.get({
-            templateId: data.t,
-            entryId: data.e,
+            template: data.t,
+            entry: data.e,
           });
           cache.content.update(entry);
         } else {

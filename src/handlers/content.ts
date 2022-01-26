@@ -47,10 +47,10 @@ export function createBcmsMostContentHandler({
       for (let i = 0; i < keyAccess.templates.length; i++) {
         const tempAccess = keyAccess.templates[i];
         if (tempAccess.get) {
-          const template = await client.template.get({
-            templateId: tempAccess._id,
-          });
-          templateNameMap[template.name] = template._id;
+          // const template = await client.template.get({
+          //   template: tempAccess._id,
+          // });
+          templateNameMap[tempAccess.name] = tempAccess._id;
         }
       }
       if (config.entries) {
@@ -83,7 +83,7 @@ export function createBcmsMostContentHandler({
         const templateId = templateNameMap[templateName];
         progressBar.interrupt(cnsl.info(templateName, 'getting entries ...'));
         const entries = await client.entry.getAll({
-          templateId,
+          template: templateId,
         });
         await cache.content.set({ groupName: templateName, items: entries });
         progressBar.interrupt(
