@@ -3,6 +3,7 @@ import type {
   BCMSImageHandler,
   BCMSMostImageProcessorProcessOptions,
 } from '../types';
+import { output } from './_output-path';
 
 function optionsToString(options: BCMSMostImageProcessorProcessOptions) {
   const ops: string[] = [];
@@ -29,10 +30,13 @@ function optionsToString(options: BCMSMostImageProcessorProcessOptions) {
 }
 
 export function createBcmsImageHandler(
-  basePath: string,
   media: BCMSMediaParsed,
   options?: BCMSMostImageProcessorProcessOptions,
+  basePath?: string,
 ): BCMSImageHandler {
+  if (!basePath) {
+    basePath = '/api/bcms-images';
+  }
   let parsable = true;
   if (!options) {
     options = {
@@ -88,7 +92,7 @@ export function createBcmsImageHandler(
     optionString,
     getSrcSet(ops) {
       if (!parsable) {
-        return [`${basePath}${media.src}`, `${basePath}${media.src}`];
+        return [`${output}${media.src}`, `${output}${media.src}`];
       }
       if (!ops) {
         return [

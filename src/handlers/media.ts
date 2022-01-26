@@ -40,7 +40,7 @@ export function createBcmsMostMediaHandler({
 
   if (config.media) {
     if (config.media.output) {
-      output = config.media.output.split('/');
+      output = [...config.media.output.split('/'), 'bcms-media'];
     }
     if (config.media.ppc) {
       ppc = config.media.ppc;
@@ -60,6 +60,19 @@ export function createBcmsMostMediaHandler({
   const outputFs = createFS({
     base: path.join(process.cwd(), ...output),
   });
+
+  outputFs
+    .save(
+      path.join(__dirname, '..', 'frontend', '_output-path.js'),
+      `"use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.output = void 0;
+    exports.output = '/${output.slice(1).join('/')}';`,
+    )
+    .catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error(cnsl.warn('_output-path.js', err));
+    });
 
   const self: BCMSMostMediaHandler = {
     output,
