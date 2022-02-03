@@ -4,6 +4,7 @@ import { PropEntryPointer } from './entry-pointer';
 import { PropMedia } from './media';
 import { PropQuill, PropWidgetParsed } from './quill';
 import { PropWidget } from './quill';
+import { PropGroupPointerParsed } from '.';
 
 // eslint-disable-next-line no-shadow
 export enum PropType {
@@ -61,6 +62,7 @@ export type PropParsed =
   | number[]
   | PropEnum
   | PropWidgetParsed
+  | PropGroupPointerParsed
   | {
       type: PropType;
       value: PropParsed;

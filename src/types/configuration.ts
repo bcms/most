@@ -37,10 +37,9 @@ export const BCMSMostConfigCmsSchema: ObjectSchema = {
   },
 };
 export type BCMSMostConfigEntryModifyFunction<
-  T,
   K,
-  R extends BCMSMostCacheContentItem
-> = (entry: BCMSEntryParsed<T>, cache: K) => Promise<R>;
+  R extends BCMSMostCacheContentItem,
+> = (entry: BCMSEntryParsed, cache: K) => Promise<R>;
 export interface BCMSMostConfigEntry {
   /**
    * ID of the template which entries will be modified.
@@ -52,10 +51,10 @@ export interface BCMSMostConfigEntry {
    * each object does not have `_id`, `createdAt` and `updatedAt`
    * properties, they will be appended automatically.
    */
-  modify?<T, K, R extends BCMSMostCacheContentItem>(
-    entry: BCMSEntryParsed<T>,
-    cache: K,
-  ): Promise<R>;
+  modify?<Cache, Result extends BCMSMostCacheContentItem>(
+    entry: BCMSEntryParsed,
+    cache: Cache,
+  ): Promise<Result>;
 }
 export const BCMSMostConfigEntrySchema: ObjectSchema = {
   templateId: {

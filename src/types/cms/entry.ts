@@ -4,9 +4,6 @@ export interface BCMSEntryMeta {
   lng: string;
   props: Prop[];
 }
-export interface BCMSEntryMetaParsed<T> {
-  [lng: string]: T;
-}
 export interface BCMSEntryContent {
   lng: string;
   props: Prop[];
@@ -26,18 +23,18 @@ export interface BCMSEntry {
   meta: BCMSEntryMeta[];
   content: BCMSEntryContent[];
 }
-export interface BCMSEntryParsed<MetaType> {
+export interface BCMSEntryMetaParsed {
+  [lng: string]: {
+    [name: string]: PropParsed;
+  };
+}
+export interface BCMSEntryParsed {
   _id: string;
   createdAt: number;
   updatedAt: number;
   templateId: string;
   userId: string;
-  meta: BCMSEntryMetaParsed<
-    MetaType & {
-      title: string;
-      slug: string;
-    }
-  >;
+  meta: BCMSEntryMetaParsed;
   content: {
     [lng: string]: BCMSEntryContentParsed;
   };

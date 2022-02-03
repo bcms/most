@@ -81,7 +81,7 @@ export interface BCMSMostCacheHandlerPrototype {
      * break this handler or some other handler which is using
      * cache and expects cache to be structured in a specific way.
      */
-    content<T extends BCMSMostCacheContent>(cache: T): Promise<void>;
+    content(cache: BCMSMostCacheContent): Promise<void>;
     /**
      * This method will update `root/bcms/media.cache.json`
      * and in-memory copy of the data with provided cache object.

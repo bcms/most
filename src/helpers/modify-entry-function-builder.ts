@@ -4,11 +4,10 @@ import {
 } from '../types';
 
 export function BCMSModifyEntryFunctionBuilder<
-  T,
-  K,
-  R extends BCMSMostCacheContentItem
+  Cache,
+  Result extends BCMSMostCacheContentItem,
 >(
-  handler: BCMSMostConfigEntryModifyFunction<T, K, R>,
-): BCMSMostConfigEntryModifyFunction<T, K, R> {
+  handler: BCMSMostConfigEntryModifyFunction<Cache, Result>,
+): BCMSMostConfigEntryModifyFunction<Cache, Result> {
   return handler;
 }

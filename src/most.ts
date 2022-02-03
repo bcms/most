@@ -3,7 +3,7 @@ import * as path from 'path';
 import {
   BCMSClient,
   BCMSClientPrototype,
-  Entry,
+  EntryParsed,
   SocketEventName,
 } from '@becomes/cms-client';
 import {
@@ -119,18 +119,18 @@ export function BCMSMost(
         });
         self.client.socket.subscribe(async (name, data) => {
           if (name === SocketEventName.ENTRY) {
-            let entry: Entry;
+            let entry: EntryParsed;
             if (
               data.type !== 'remove' &&
               (await self.client.keyAccess()).templates.find(
                 (e) => e._id === data.entry.additional.templateId,
               )
             ) {
-              entry = await self.client.entry.get({
+              entry = (await self.client.entry.get({
                 entryId: data.entry._id,
                 templateId: data.entry.additional.templateId,
                 parse: true,
-              });
+              })) as EntryParsed;
             }
             const contentCache = await self.cache.get.content();
             if (entry) {
@@ -175,9 +175,11 @@ export function BCMSMost(
                 }
               }
             }
+          } else if (name === SocketEventName.MEDIA) {
+            await self.media.pull();
+            await self.media.process();
           }
         });
-        self.image.startServer(imageServerPort);
       },
       async postBuild(relativePath, outputPath) {
         const cnsl = Console('BCMSMostPipePostBuild');

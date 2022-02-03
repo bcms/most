@@ -8,7 +8,7 @@ export interface BCMSMostPipe {
       name: SocketEventName,
       data: SocketEventData,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      entry: BCMSEntryParsed<any>,
+      entry: BCMSEntryParsed,
     ) => Promise<void>,
   ): Promise<void>;
   postBuild(relativePath: string, outputPath: string, imageServerPort?: number): Promise<void>;

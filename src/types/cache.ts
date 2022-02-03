@@ -1,7 +1,8 @@
+import { BCMSEntryParsed } from '.';
 import { ObjectSchema } from './object-schema';
 
 export interface BCMSMostCacheContent {
-  [name: string]: BCMSMostCacheContentItem[];
+  [name: string]: BCMSEntryParsed[];
 }
 export interface BCMSMostCacheContentItem {
   _id: string;
