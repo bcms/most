@@ -55,8 +55,15 @@ export function createBcmsMostServerHandler({
   });
 
   return {
-    async start(routes) {
+    async start(_routes) {
       bcms = getBcmsMost();
+      let routes: BCMSMostServerRoutes;
+      if (!_routes) {
+        const filePath = `./bcms.routes.js`;
+        routes = await import(filePath);
+      } else {
+        routes = _routes;
+      }
 
       await new Promise<void>((resolve, reject) => {
         try {
@@ -110,7 +117,9 @@ export function createBcmsMostServerHandler({
                       res.json({
                         exist: true,
                         path: filePath,
-                        mimetype: filePath.endsWith('.webp') ? 'image/webp' : media.mimetype,
+                        mimetype: filePath.endsWith('.webp')
+                          ? 'image/webp'
+                          : media.mimetype,
                         fileName: media.name,
                         fileSize: media.size,
                       });

@@ -24,6 +24,6 @@ export interface BCMSMostServerRoutes {
 }
 
 export interface BCMSMostServerHandler {
-  start(routes: BCMSMostServerRoutes): Promise<void>;
+  start(routes?: BCMSMostServerRoutes): Promise<void>;
   stop(): Promise<void>;
 }

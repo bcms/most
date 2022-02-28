@@ -105,7 +105,7 @@ export function createBcmsMost(data?: {
     getBcmsMost() {
       return self;
     },
-    port: 3001,
+    port: config.server && config.server.port ? config.server.port : 3001,
   });
 
   const self: BCMSMost = {
