@@ -60,7 +60,10 @@ export function createBcmsMostServerHandler({
       let routes: BCMSMostServerRoutes;
       if (!_routes) {
         const filePath = `./bcms.routes.js`;
-        routes = await import(filePath);
+        routes = (await import(filePath)).default;
+        if (!routes) {
+          routes = {};
+        }
       } else {
         routes = _routes;
       }
