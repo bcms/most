@@ -53,22 +53,33 @@ export function createBcmsImageHandler(
   ) {
     parsable = false;
   }
+  const aspectRatio = media.width / media.height;
   const optionString = optionsToString(options);
   const srcParts = media.src.split('.');
   const srcMain = srcParts.slice(0, srcParts.length - 1).join('.');
   const srcExt = srcParts[srcParts.length - 1];
 
-  function closest(_width: number): number {
+  function closest(_width: number): [number, number, number] {
     const ops = options as BCMSMostImageProcessorProcessOptions;
     const width = _width * window.devicePixelRatio;
     let delta = 100000;
     let bestI = 0;
     let wids: number[] = [];
+    let heis: number[] = [];
     if (ops.sizes) {
       if (ops.sizes.exec) {
-        wids = ops.sizes.exec.map((e) => e.width);
+        for (let i = 0; i < ops.sizes.exec.length; i++) {
+          const size = ops.sizes.exec[i];
+          wids.push(size.width);
+          if (size.height) {
+            heis.push(size.height);
+          } else {
+            heis.push(size.width / aspectRatio);
+          }
+        }
       } else if (ops.sizes.auto) {
         wids = [350, 650, 900, 1200, 1920];
+        heis = wids.map((e) => e / aspectRatio);
       } else if (ops.sizes.steps) {
         const widthStep = media.width / ops.sizes.steps;
         for (let i = 0; i <= ops.sizes; i++) {
@@ -84,7 +95,7 @@ export function createBcmsImageHandler(
         bestI = i;
       }
     }
-    return bestI;
+    return [bestI, wids[bestI], heis[bestI]];
   }
 
   return {
@@ -92,18 +103,27 @@ export function createBcmsImageHandler(
     optionString,
     getSrcSet(ops) {
       if (!parsable) {
-        return [`${output}${media.src}`, `${output}${media.src}`];
+        return [
+          `${output}${media.src}`,
+          `${output}${media.src}`,
+          media.width,
+          media.height,
+        ];
       }
       if (!ops) {
         return [
           `${basePath}/${optionString}${srcMain}_0.webp`,
           `${basePath}/${optionString}${srcMain}_0.${srcExt}`,
+          350,
+          350 / aspectRatio,
         ];
       } else {
-        const index = closest(ops.width);
+        const [index, wid, hei] = closest(ops.width);
         return [
           `${basePath}/${optionString}${srcMain}_${index}.webp`,
           `${basePath}/${optionString}${srcMain}_${index}.${srcExt}`,
+          wid,
+          hei,
         ];
       }
     },

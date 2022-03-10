@@ -98,12 +98,16 @@ export function createBcmsMostServerHandler({
                       e.fullPath.startsWith(fileBasePath),
                     );
                     if (media) {
-                      if (
-                        !(await mediaHandler.outputFs.exist(
+                      let exists = true;
+                      try {
+                        exists = await mediaHandler.outputFs.exist(
                           req.path.split('/'),
                           true,
-                        ))
-                      ) {
+                        );
+                      } catch (error) {
+                        exists = false;
+                      }
+                      if (!exists) {
                         await imageWorkers.assign(async () => {
                           await mediaHandler.startImageProcessor({
                             media,
