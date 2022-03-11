@@ -218,6 +218,7 @@ export interface BCMSMostConfig {
   functions?: BCMSMostConfigFunctions;
   media?: BCMSMostConfigMedia;
   server?: BCMSMostConfigServer;
+  enableClientCache?: boolean;
 }
 export const BCMSMostConfigSchema: ObjectSchema = {
   cms: {
@@ -244,5 +245,9 @@ export const BCMSMostConfigSchema: ObjectSchema = {
     __type: 'object',
     __required: false,
     __child: BCMSMostConfigServerSchema,
+  },
+  enableClientCache: {
+    __type: 'boolean',
+    __required: false,
   },
 };

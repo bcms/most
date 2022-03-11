@@ -38,6 +38,7 @@ export function createBcmsMost(data?: {
           id: config.cms.key.id,
           secret: config.cms.key.secret,
         },
+        enableCache: config.enableClientCache,
       });
     } else if (data && data.client) {
       client = data.client;
