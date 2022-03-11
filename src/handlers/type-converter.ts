@@ -21,6 +21,12 @@ export function createBcmsMostTypeConverterHandler({
           item.content,
         );
       }
+      await rootFs.save(
+        ['types-ts', 'index.ts'],
+        ts
+          .map((e) => `export * from './${e.outputFile.replace('.ts', '')}';`)
+          .join('\n'),
+      );
       const js = await client.typeConverter.getAll({
         language: 'jsDoc',
       });
