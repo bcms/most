@@ -20,10 +20,10 @@
     "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
     "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
     "lint": "eslint src/**/*",
-    "t": "node dist/test.js"
+    "t": "ts-node src/test.ts"
   },
   "peerDependencies": {
-    "@becomes/cms-client": ">=3.0.0-alpha2"
+    "@becomes/cms-client": ">=3.0.0-alpha.2"
   },
   "dependencies": {
     "@banez/child_process": "^1.0.3",
@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@banez/npm-tool": "^1.0.1",
-    "@becomes/cms-client": "^3.0.0-alpha2",
+    "@becomes/cms-client": "^3.0.0-alpha.2",
     "@types/chai": "^4.2.18",
     "@types/express": "^4.17.13",
     "@types/mocha": "^9.0.0",

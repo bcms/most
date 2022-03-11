@@ -8,6 +8,7 @@ import type {
   BCMSMostHttpHandler,
   BCMSMostTypeConverterHandler,
   BCMSMostServerHandler,
+  BCMSMostTemplateHandler,
 } from './handlers';
 
 export interface BCMSMost {
@@ -20,5 +21,6 @@ export interface BCMSMost {
   http: BCMSMostHttpHandler;
   typeConverter: BCMSMostTypeConverterHandler;
   server: BCMSMostServerHandler;
+  template: BCMSMostTemplateHandler;
   socketConnect(): Promise<void>;
 }

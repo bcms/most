@@ -2,6 +2,7 @@ import type {
   BCMSClientChangesGetInfoData,
   BCMSEntryParsed,
   BCMSMedia,
+  BCMSTemplate,
 } from '@becomes/cms-client/types';
 import type { BCMSMediaExtended } from '..';
 import type {
@@ -35,6 +36,13 @@ interface Query<Item> {
  * and manipulation of them.
  */
 export interface BCMSMostCacheHandler {
+  template: {
+    get(): Promise<BCMSTemplate[]>;
+    find(query: Query<BCMSTemplate>): Promise<BCMSTemplate[]>;
+    findOne(query: Query<BCMSTemplate>): Promise<BCMSTemplate | null>;
+    set(items: BCMSTemplate | BCMSTemplate[]): Promise<void>;
+    remove(items: BCMSTemplate | BCMSTemplate[]): Promise<void>;
+  };
   content: {
     changes: {
       get(): Promise<BCMSClientChangesGetInfoData | null>;

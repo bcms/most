@@ -13,6 +13,7 @@ import {
   createBcmsMostHttpHandler,
   createBcmsMostTypeConverterHandler,
   createBcmsMostServerHandler,
+  createBcmsMostTemplateHandler,
 } from './handlers';
 import { createFS } from '@banez/fs';
 import { bcmsMostSocketInit } from './sockets';
@@ -98,6 +99,7 @@ export function createBcmsMost(data?: {
     client,
     rootFs,
   });
+  const templateHandler = createBcmsMostTemplateHandler({ cache, client });
   const serverHandler = createBcmsMostServerHandler({
     cache,
     imageProcessor,
@@ -117,6 +119,7 @@ export function createBcmsMost(data?: {
     imageProcessor,
     http: httpHandler,
     typeConverter,
+    template: templateHandler,
     server: serverHandler,
     async socketConnect() {
       await bcmsMostSocketInit({

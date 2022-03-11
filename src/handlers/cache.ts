@@ -1,5 +1,5 @@
 import type { FS } from '@banez/fs/types';
-import type { BCMSEntryParsed } from '@becomes/cms-client/types';
+import type { BCMSEntryParsed, BCMSTemplate } from '@becomes/cms-client/types';
 import type {
   BCMSMediaExtended,
   BCMSMostCacheHandler,
@@ -17,10 +17,80 @@ export function createBcmsMostCacheHandler({
   const contentFileName = 'content.cache.json';
   const mediaFileName = 'media.cache.json';
   const fnFileName = 'function.cache.json';
+  const templateFileName = 'template.cache.json';
 
   let mediaHandler: BCMSMostMediaHandler | undefined = undefined;
 
   const self: BCMSMostCacheHandler = {
+    template: {
+      async get() {
+        if (await rootFs.exist(templateFileName, true)) {
+          return JSON.parse(await rootFs.readString(templateFileName));
+        }
+        return [];
+      },
+      async find(query) {
+        const output: BCMSTemplate[] = [];
+        const cache = await self.template.get();
+        for (let i = 0; i < cache.length; i++) {
+          const item = cache[i];
+          if (query(item)) {
+            output.push(item);
+          }
+        }
+        return output;
+      },
+      async findOne(query) {
+        const cache = await self.template.get();
+        for (let i = 0; i < cache.length; i++) {
+          const item = cache[i];
+          if (query(item)) {
+            return item;
+          }
+        }
+        return null;
+      },
+      async set(items) {
+        const input = items instanceof Array ? items : [items];
+        const cache = await self.template.get();
+        for (let i = 0; i < input.length; i++) {
+          const inputItem = input[i];
+          let found = false;
+          for (let j = 0; j < cache.length; j++) {
+            const cacheItem = cache[j];
+            if (inputItem._id === cacheItem._id) {
+              cache[j] = inputItem;
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            cache.push(inputItem);
+          }
+        }
+        if (input.length > 0) {
+          await rootFs.save(
+            templateFileName,
+            JSON.stringify(cache, null, '  '),
+          );
+        }
+      },
+      async remove(items) {
+        const input = items instanceof Array ? items : [items];
+        const cache = await self.template.get();
+        for (let i = 0; i < input.length; i++) {
+          const inputItem = input[i];
+          for (let j = 0; j < cache.length; j++) {
+            const cacheItem = cache[j];
+            if (cacheItem._id === inputItem._id) {
+              cache.splice(j, 1);
+              break;
+            }
+          }
+        }
+        await rootFs.save(templateFileName, JSON.stringify(cache, null, '  '));
+      },
+    },
     content: {
       changes: {
         async get() {
@@ -210,10 +280,7 @@ export function createBcmsMostCacheHandler({
           for (let j = 0; j < cache.items.length; j++) {
             const cacheItem = cache.items[j];
             if (inputItem._id === cacheItem._id) {
-              const fullPath = mediaHandler.getPath(
-                inputItem,
-                cache.items,
-              );
+              const fullPath = mediaHandler.getPath(inputItem, cache.items);
               cache.items[j] = {
                 ...inputItem,
                 fullPath: fullPath ? fullPath : `/${inputItem.name}`,
