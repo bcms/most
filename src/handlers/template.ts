@@ -16,18 +16,7 @@ export function createBcmsMostTemplateHandler({
     async pull() {
       const startTime = Date.now();
       const onMessage = createBcmsMostDefaultOnMessage();
-
-      const cacheContentChanges = await cache.content.changes.get();
-      const contentChanges = await client.changes.getInfo();
-      if (cacheContentChanges) {
-        if (
-          contentChanges.templates.lastChangeAt ===
-          cacheContentChanges.templates.lastChangeAt
-        ) {
-          onMessage('info', cnsl.info('pull', 'Cache up to date.'));
-          return;
-        }
-      }
+      
       onMessage('info', cnsl.info('pull', 'Started ...'));
       const templates = await client.template.getAll();
       onMessage(
