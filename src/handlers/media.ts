@@ -83,7 +83,7 @@ export function createBcmsMostMediaHandler({
         media.isInRoot &&
         !media.parentId
       ) {
-        return `${media.name}`;
+        return `/${media.name}`;
       } else {
         const parent = allMedia.find((e) => e._id === media.parentId);
         if (!parent) {
