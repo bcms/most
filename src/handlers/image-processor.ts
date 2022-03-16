@@ -12,6 +12,7 @@ import type {
 } from '../types';
 import { createBcmsMostConsole } from '../util';
 import { createFS } from '@banez/fs';
+import { createWorkerManager } from '@banez/workers';
 
 export function createBcmsMostImageProcessor({
   config,
@@ -22,6 +23,9 @@ export function createBcmsMostImageProcessor({
   cache: BCMSMostCacheHandler;
   mediaHandler: BCMSMostMediaHandler;
 }): BCMSMostImageProcessorHandler {
+  const imageWorkers = createWorkerManager({
+    count: mediaHandler.ppc,
+  });
   const mimetypeMap: {
     jpg: string[];
     png: string[];
@@ -345,6 +349,49 @@ export function createBcmsMostImageProcessor({
         );
       }
       return result;
+    },
+    async middlewareHelper(_path) {
+      const pathParts = _path.split('/');
+      const options = self.stringToOptions(pathParts[1]);
+      const rawFilePath = '/' + pathParts.slice(2).join('/');
+      const underSplit = rawFilePath.split('_');
+      const fileBasePath = underSplit.slice(0, underSplit.length - 1).join('_');
+      const media = await cache.media.findOne((e) =>
+        e.fullPath.startsWith(fileBasePath),
+      );
+      if (media) {
+        let exists = true;
+        try {
+          exists = await mediaHandler.outputFs.exist(_path.split('/'), true);
+        } catch (error) {
+          exists = false;
+        }
+        if (!exists) {
+          await imageWorkers.assign(async () => {
+            await mediaHandler.startImageProcessor({
+              media,
+              imageProcessor: self,
+              options,
+            });
+          });
+        }
+        const filePath = path.join(
+          process.cwd(),
+          ...mediaHandler.output,
+          ..._path.split('/'),
+        );
+        return {
+          exist: true,
+          path: filePath,
+          mimetype: filePath.endsWith('.webp') ? 'image/webp' : media.mimetype,
+          fileName: media.name,
+          fileSize: media.size,
+        };
+      } else {
+        return {
+          exist: false,
+        };
+      }
     },
   };
 
