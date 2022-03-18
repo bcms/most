@@ -12,6 +12,7 @@
     "build": "npm-tool --build",
     "publish": "npm-tool --publish",
     "link": "npm-tool --link",
+    "link:sudo": "npm-tool --link --sudo",
     "unlink": "npm-tool --unlink",
     "pack": "npm-tool --pack",
     "typedoc": "typedoc",
@@ -23,7 +24,7 @@
     "t": "ts-node src/test.ts"
   },
   "peerDependencies": {
-    "@becomes/cms-client": ">=3.0.0-alpha.2"
+    "@becomes/cms-client": ">=3.0.0-alpha.4"
   },
   "dependencies": {
     "@banez/child_process": "^1.0.3",
@@ -39,7 +40,7 @@
   },
   "devDependencies": {
     "@banez/npm-tool": "^1.0.1",
-    "@becomes/cms-client": "^3.0.0-alpha.3",
+    "@becomes/cms-client": "^3.0.0-alpha.4",
     "@types/chai": "^4.2.18",
     "@types/express": "^4.17.13",
     "@types/mocha": "^9.0.0",
