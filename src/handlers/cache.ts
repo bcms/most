@@ -187,6 +187,9 @@ export function createBcmsMostCacheHandler({
             }
           }
         }
+        if (input.length > 0) {
+          await rootFs.save(contentFileName, JSON.stringify(cache, null, '  '));
+        }
       },
       async set({ groupName, items }) {
         const input = items instanceof Array ? items : [items];
@@ -196,10 +199,11 @@ export function createBcmsMostCacheHandler({
         }
         for (let i = 0; i < input.length; i++) {
           const inputItem = input[i];
-          const found = false;
+          let found = false;
           for (let j = 0; j < cache[groupName].length; j++) {
             const item = cache[groupName][j];
             if (item._id === inputItem._id) {
+              found = true;
               cache[groupName][j] = inputItem;
               break;
             }

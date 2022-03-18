@@ -33,14 +33,20 @@ export async function bcmsMostSocketInit({
     const result = await workers.assign(async () => {
       const data = event.data as BCMSSocketEntryEvent;
       const keyAccess = await client.getKeyAccess();
-      const tempAccess = keyAccess.templates.find((e) => e._id === data.t);
+      const tempAccess = keyAccess.templates.find(
+        (e) => e._id === data.tm || e.name === data.tm,
+      );
       if (tempAccess && tempAccess.get) {
         if (data.t === BCMSSocketEventType.UPDATE) {
           const entry = await client.entry.get({
-            template: data.t,
+            template: data.tm,
             entry: data.e,
+            skipCache: true,
           });
-          cache.content.update(entry);
+          cache.content.set({
+            groupName: tempAccess.name,
+            items: entry,
+          });
         } else {
           cache.content.remove({ _id: data.e });
         }
