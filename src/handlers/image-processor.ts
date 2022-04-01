@@ -355,7 +355,8 @@ export function createBcmsMostImageProcessor({
       const options = self.stringToOptions(pathParts[1]);
       const rawFilePath = '/' + pathParts.slice(2).join('/');
       const underSplit = rawFilePath.split('_');
-      const fileBasePath = underSplit.slice(0, underSplit.length - 1).join('_');
+      const fileBasePath =
+        underSplit.slice(0, underSplit.length - 1).join('_') + '.';
       const media = await cache.media.findOne((e) =>
         e.fullPath.startsWith(fileBasePath),
       );
