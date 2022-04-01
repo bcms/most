@@ -109,9 +109,8 @@ export function createBcmsMostContentHandler({
         if (contentCache[template]) {
           for (let i = 0; i < contentCache[template].length; i++) {
             const item = contentCache[template][i];
-            const queryResult = await query(item, contentCache);
-            if (queryResult) {
-              output.push(queryResult);
+            if (await query(item, contentCache)) {
+              output.push(item);
             }
           }
         } else {
@@ -126,16 +125,14 @@ export function createBcmsMostContentHandler({
         if (contentCache[template]) {
           for (let i = 0; i < contentCache[template].length; i++) {
             const item = contentCache[template][i];
-            const queryResult = await query(item, contentCache);
-            if (queryResult) {
-              return queryResult;
+            if (await query(item, contentCache)) {
+              return item as never;
             }
           }
         } else {
           // eslint-disable-next-line no-console
           console.warn(`Template "${template}" does not exist.`);
         }
-
         return null;
       },
     },

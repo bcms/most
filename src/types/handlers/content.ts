@@ -10,13 +10,13 @@ export type BCMSMostContentEntryQueryFunction<QueryResult> = (
 export interface BCMSMostContentHandler {
   pull(data?: { onMessage?: BCMSMostOnMessage }): Promise<void>;
   entry: {
-    findOne<QueryResult>(
+    findOne<EntryType extends BCMSEntryParsed = BCMSEntryParsed>(
       template: string,
-      query: BCMSMostContentEntryQueryFunction<QueryResult>,
-    ): Promise<QueryResult | null>;
-    find<QueryResult>(
+      query: BCMSMostContentEntryQueryFunction<unknown>,
+    ): Promise<EntryType | null>;
+    find<EntryType extends BCMSEntryParsed = BCMSEntryParsed>(
       template: string,
-      query: BCMSMostContentEntryQueryFunction<QueryResult>,
-    ): Promise<QueryResult[]>;
+      query: BCMSMostContentEntryQueryFunction<unknown>,
+    ): Promise<EntryType[]>;
   };
 }
