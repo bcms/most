@@ -16,6 +16,7 @@ import type { Request, Response } from 'express';
 import type {
   BCMSMost,
   BCMSMostCacheHandler,
+  BCMSMostConfig,
   BCMSMostImageProcessorHandler,
   BCMSMostMediaHandler,
   BCMSMostServerHandler,
@@ -41,11 +42,13 @@ export function createBcmsMostServerHandler({
   imageProcessor,
   port,
   getBcmsMost,
+  config,
 }: {
   cache: BCMSMostCacheHandler;
   mediaHandler: BCMSMostMediaHandler;
   imageProcessor: BCMSMostImageProcessorHandler;
   port: number;
+  config: BCMSMostConfig;
   getBcmsMost(): BCMSMost;
 }): BCMSMostServerHandler {
   let pc: PurpleCheetah;
@@ -75,6 +78,7 @@ export function createBcmsMostServerHandler({
             onReady() {
               resolve();
             },
+            silentLogs: config.server ? false : true,
             middleware: [
               createCorsMiddleware(),
               createBodyParserMiddleware({

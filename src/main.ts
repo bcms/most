@@ -105,6 +105,7 @@ export function createBcmsMost(data?: {
     cache,
     imageProcessor,
     mediaHandler: media,
+    config,
     getBcmsMost() {
       return self;
     },
