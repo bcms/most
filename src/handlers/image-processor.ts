@@ -13,6 +13,8 @@ import type {
 import { createBcmsMostConsole } from '../util';
 import { createFS } from '@banez/fs';
 import { createWorkerManager } from '@banez/workers';
+import Axios from 'axios';
+import { StringUtility } from '@becomes/purple-cheetah';
 
 export function createBcmsMostImageProcessor({
   config,
@@ -393,6 +395,48 @@ export function createBcmsMostImageProcessor({
           exist: false,
         };
       }
+    },
+    async parseSite({ urls }) {
+      const imagesMap: {
+        [path: string]: boolean;
+      } = {};
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+
+        const res = await Axios({ url, method: 'GET' });
+        const html = res.data as string;
+        const imageData = StringUtility.allTextBetween(
+          html,
+          'data-bcms-image="',
+          '" ',
+        );
+        for (let j = 0; j < imageData.length; j++) {
+          const data = imageData[j];
+          imagesMap[data] = true;
+        }
+      }
+      const images: Array<{
+        media: BCMSMediaExtended;
+        options: string;
+      }> = [];
+      for (const data in imagesMap) {
+        const [options, src] = data.split(';');
+        const media = await cache.media.findOne((e) => e.fullPath === src);
+        if (media && options) {
+          images.push({ media, options });
+        }
+      }
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        imageWorkers.assign(async () => {
+          await mediaHandler.startImageProcessor({
+            media: image.media,
+            imageProcessor: self,
+            options: self.stringToOptions(image.options),
+          });
+        });
+      }
+      await imageWorkers.wait();
     },
   };
 

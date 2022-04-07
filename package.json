@@ -33,6 +33,7 @@
     "@banez/queue": "^1.0.0",
     "@banez/workers": "^1.1.1",
     "@becomes/purple-cheetah": "^3.5.1",
+    "axios": "^0.26.1",
     "express": "^4.17.2",
     "progress": "^2.0.3",
     "sharp": "^0.30.3",

@@ -63,4 +63,5 @@ export interface BCMSMostImageProcessorHandler {
     fileName?: string;
     fileSize?: number;
   }>;
+  parseSite(data: { urls: string[]; basePath?: string[] }): Promise<void>;
 }
