@@ -3,7 +3,6 @@ import type {
   BCMSImageHandler,
   BCMSMostImageProcessorProcessOptions,
 } from '../types';
-import { output } from './_output-path';
 
 function optionsToString(options: BCMSMostImageProcessorProcessOptions) {
   const ops: string[] = [];
@@ -97,6 +96,7 @@ export function createBcmsImageHandler(
     }
     return [bestI, wids[bestI], heis[bestI]];
   }
+  const output = '/bcms-media';
 
   return {
     parsable,
