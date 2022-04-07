@@ -4,5 +4,5 @@ export interface BCMSImageHandler {
   getSrcSet(options?: {
     width: number;
     height?: number;
-  }): [string, string, number, number];
+  }): [string, string, number, number, number];
 }

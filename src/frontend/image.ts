@@ -108,6 +108,7 @@ export function createBcmsImageHandler(
           `${output}${media.src}`,
           media.width,
           media.height,
+          -1,
         ];
       }
       if (!ops) {
@@ -116,6 +117,7 @@ export function createBcmsImageHandler(
           `${basePath}/${optionString}${srcMain}_0.${srcExt}`,
           350,
           350 / aspectRatio,
+          0,
         ];
       } else {
         const [index, wid, hei] = closest(ops.width);
@@ -124,6 +126,7 @@ export function createBcmsImageHandler(
           `${basePath}/${optionString}${srcMain}_${index}.${srcExt}`,
           wid,
           hei,
+          index,
         ];
       }
     },
