@@ -45,10 +45,11 @@ export function createBcmsImageHandler(
       },
     };
   }
+  const mediaName = media.name.toLowerCase();
   if (
-    !media.name.endsWith('.jpg') &&
-    !media.name.endsWith('.jpeg') &&
-    !media.name.endsWith('.png')
+    !mediaName.endsWith('.jpg') &&
+    !mediaName.endsWith('.jpeg') &&
+    !mediaName.endsWith('.png')
   ) {
     parsable = false;
   }
