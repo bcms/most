@@ -352,7 +352,7 @@ export function createBcmsMostImageProcessor({
       }
       return result;
     },
-    async middlewareHelper(_path) {
+    async middlewareHelper(_path, outputBase) {
       const pathParts = _path.split('/');
       const options = self.stringToOptions(pathParts[1]);
       const rawFilePath = '/' + pathParts.slice(2).join('/');
@@ -365,7 +365,18 @@ export function createBcmsMostImageProcessor({
       if (media) {
         let exists = true;
         try {
-          exists = await mediaHandler.outputFs.exist(_path.split('/'), true);
+          if (outputBase) {
+            exists = await mediaHandler.outputFs.exist(
+              path.join(
+                process.cwd(),
+                ...outputBase,
+                ..._path.split('/').filter((e) => !outputBase.includes(e)),
+              ),
+              true,
+            );
+          } else {
+            exists = await mediaHandler.outputFs.exist(_path.split('/'), true);
+          }
         } catch (error) {
           exists = false;
         }
@@ -375,14 +386,21 @@ export function createBcmsMostImageProcessor({
               media,
               imageProcessor: self,
               options,
+              outputBase,
             });
           });
         }
-        const filePath = path.join(
-          process.cwd(),
-          ...mediaHandler.output,
-          ..._path.split('/'),
-        );
+        const filePath = outputBase
+          ? path.join(
+              process.cwd(),
+              ...outputBase,
+              ..._path.split('/').filter((e) => !outputBase.includes(e)),
+            )
+          : path.join(
+              process.cwd(),
+              ...mediaHandler.output,
+              ..._path.split('/'),
+            );
         return {
           exist: true,
           path: filePath,

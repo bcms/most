@@ -92,14 +92,15 @@ export function createBcmsMostMediaHandler({
         return `${self.getPath(parent, allMedia)}/${media.name}`;
       }
     },
-    async startImageProcessor({ media, options, imageProcessor }) {
-      const outputPath = path.join(process.cwd(), ...output);
+    async startImageProcessor({ media, options, imageProcessor, outputBase }) {
+      const relativeOutput = outputBase || output;
+      const outputPath = path.join(process.cwd(), ...relativeOutput);
       await ChildProcess.spawn('node', [
         path.join(__dirname, '..', 'image-processor-starter.js'),
         '--mediaId',
         media._id,
         '--inputBasePath',
-        outputPath,
+        path.join(process.cwd(), ...output),
         '--outputBasePath',
         outputPath,
         '--optionsAsString',

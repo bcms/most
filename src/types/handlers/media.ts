@@ -13,6 +13,7 @@ export interface BCMSMostMediaHandler {
     media: BCMSMediaExtended | BCMSMedia;
     options: BCMSMostImageProcessorProcessOptions;
     imageProcessor: BCMSMostImageProcessorHandler;
+    outputBase?: string[];
   }): Promise<void>;
   getPath(target: BCMSMedia, allMedia: BCMSMedia[]): string | null;
   findAllChildren(target: BCMSMedia, allMedia: BCMSMedia[]): BCMSMedia[];

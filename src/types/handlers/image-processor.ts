@@ -56,7 +56,10 @@ export interface BCMSMostImageProcessorHandler {
     allMedia?: Array<BCMSMediaExtended | BCMSMedia>;
     options: BCMSMostImageProcessorProcessOptions;
   }): string[];
-  middlewareHelper(path: string): Promise<{
+  middlewareHelper(
+    path: string,
+    outputBase?: string[],
+  ): Promise<{
     exist: boolean;
     path?: string;
     mimetype?: string;
