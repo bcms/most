@@ -243,7 +243,7 @@ export function createBcmsMostImageProcessor({
                 fit: ops.position ? ops.position : 'cover',
                 width: size.width,
                 height: size.height,
-                withoutEnlargement: true,
+                withoutEnlargement: false,
               })
               .jpeg({
                 quality: ops.quality ? ops.quality : 70,
@@ -267,7 +267,7 @@ export function createBcmsMostImageProcessor({
                 fit: ops.position ? ops.position : 'cover',
                 width: size.width,
                 height: size.height,
-                withoutEnlargement: true,
+                withoutEnlargement: false,
               })
               .png({
                 quality: ops.quality ? ops.quality : 70,
@@ -291,7 +291,7 @@ export function createBcmsMostImageProcessor({
                 fit: ops.position ? ops.position : 'cover',
                 width: size.width,
                 height: size.height,
-                withoutEnlargement: true,
+                withoutEnlargement: false,
               })
               .webp({
                 quality: ops.quality ? ops.quality : 70,
