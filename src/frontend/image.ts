@@ -59,8 +59,13 @@ export function createBcmsImageHandler(
   const srcMain = srcParts.slice(0, srcParts.length - 1).join('.');
   const srcExt = srcParts[srcParts.length - 1];
 
-  function closest(_width: number): [number, number, number] {
-    const ops = options as BCMSMostImageProcessorProcessOptions;
+  function closest(
+    _width: number,
+    ops?: BCMSMostImageProcessorProcessOptions,
+  ): [number, number, number] {
+    if (!ops) {
+      ops = options as BCMSMostImageProcessorProcessOptions;
+    }
     const width = _width * window.devicePixelRatio;
     let delta = 100000;
     let bestI = 0;
