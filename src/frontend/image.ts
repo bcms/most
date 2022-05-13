@@ -66,7 +66,8 @@ export function createBcmsImageHandler(
     if (!ops) {
       ops = options as BCMSMostImageProcessorProcessOptions;
     }
-    const width = _width * window.devicePixelRatio;
+    const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio;
+    const width = _width * dpr;
     let delta = 100000;
     let bestI = 0;
     let wids: number[] = [];
@@ -118,11 +119,12 @@ export function createBcmsImageHandler(
         ];
       }
       if (!ops) {
+        const result = closest(0);
         return [
           `${basePath}/${optionString}${srcMain}_0.webp`,
           `${basePath}/${optionString}${srcMain}_0.${srcExt}`,
-          350,
-          350 / aspectRatio,
+          result[1],
+          result[2],
           0,
         ];
       } else {
