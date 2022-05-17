@@ -1,3 +1,4 @@
+import * as ProgressBar from 'progress';
 import * as sharp from 'sharp';
 import * as path from 'path';
 import { BCMSMediaType } from '@becomes/cms-client/types';
@@ -455,6 +456,95 @@ export function createBcmsMostImageProcessor({
         });
       }
       await imageWorkers.wait();
+    },
+    async postBuild({ buildOutput }) {
+      const timeOffset = Date.now();
+      const outputFs = createFS({
+        base: path.join(process.cwd(), ...buildOutput),
+      });
+      if (!(await outputFs.exist(''))) {
+        await outputFs.save('_d.txt', '');
+        await outputFs.deleteFile('_d.txt');
+      }
+      const fileTree = (await outputFs.fileTree('', '')).filter((e) =>
+        e.path.rel.endsWith('.html'),
+      );
+      const toProcess: Array<{
+        media: BCMSMediaExtended;
+        options: BCMSMostImageProcessorProcessOptions;
+        rawOps: string;
+      }> = [];
+      for (let i = 0; i < fileTree.length; i++) {
+        const filePath = fileTree[i];
+        const html = await outputFs.readString(filePath.path.rel);
+        const rawData = StringUtility.allTextBetween(
+          html,
+          '<div data-bcms',
+          '>',
+        );
+        if (rawData.length > 0) {
+          for (let j = 0; j < rawData.length; j++) {
+            const raw = rawData[j];
+            const src = StringUtility.textBetween(
+              raw,
+              'data-bcms-img-src="',
+              '"',
+            );
+            const ops = StringUtility.textBetween(
+              raw,
+              'data-bcms-img-ops="',
+              '"',
+            );
+            const media = await cache.media.findOne((e) => e.fullPath === src);
+            if (media) {
+              toProcess.push({
+                media,
+                options: self.stringToOptions(ops),
+                rawOps: ops,
+              });
+            }
+          }
+        }
+      }
+      const progressBar = new ProgressBar('Processing images [:bar] :percent', {
+        complete: '#',
+        incomplete: ' ',
+        total: toProcess.length,
+        width: parseInt((process.stdout.columns / 2).toFixed(0)),
+      });
+      const outputBase = [...buildOutput, ...mediaHandler.output.slice(1)];
+      for (let i = 0; i < toProcess.length; i++) {
+        const item = toProcess[i];
+        imageWorkers.assign(async () => {
+          const checkMediaPathParts = item.media.fullPath.split('.');
+          const checkMediaPathFirst = checkMediaPathParts
+            .slice(0, checkMediaPathParts.length - 1)
+            .join('.');
+          const checkMediaPathLast =
+            checkMediaPathParts[checkMediaPathParts.length - 1];
+          const fullFilePath = path.join(
+            process.cwd(),
+            ...outputBase,
+            ...`${item.rawOps}${checkMediaPathFirst}_0.${checkMediaPathLast}`.split('/'),
+          );
+          if (!(await outputFs.exist(fullFilePath, true))) {
+            await mediaHandler.startImageProcessor({
+              media: item.media,
+              imageProcessor: self,
+              options: item.options,
+              outputBase,
+            });
+            progressBar.interrupt(cnsl.info(item.media.fullPath, item.rawOps));
+          }
+          progressBar.tick();
+        });
+      }
+      await imageWorkers.wait();
+      progressBar.terminate();
+      cnsl.info(
+        'postBuild',
+        `Done in ${((Date.now() - timeOffset) / 1000).toFixed(2)}s`,
+      );
     },
   };
 

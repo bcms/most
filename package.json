@@ -21,7 +21,7 @@
     "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
     "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
     "lint": "eslint src/**/*",
-    "t": "ts-node src/test.ts"
+    "t": "node dist/test.js"
   },
   "peerDependencies": {
     "@becomes/cms-client": ">=3.0.0-alpha.4"
@@ -31,6 +31,7 @@
     "@banez/fs": "^1.0.2",
     "@banez/object-utility": "^1.0.0",
     "@banez/queue": "^1.0.0",
+    "@banez/string-utility": "^1.0.1",
     "@banez/workers": "^1.1.1",
     "@becomes/purple-cheetah": "^3.5.1",
     "axios": "^0.26.1",
