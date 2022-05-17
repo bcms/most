@@ -513,8 +513,12 @@ export function createBcmsMostImageProcessor({
         width: parseInt((process.stdout.columns / 2).toFixed(0)),
       });
       const outputBase = [...buildOutput, ...mediaHandler.output.slice(1)];
+      const optionsMap: {
+        [name: string]: boolean;
+      } = {};
       for (let i = 0; i < toProcess.length; i++) {
         const item = toProcess[i];
+        optionsMap[item.rawOps] = true;
         imageWorkers.assign(async () => {
           const checkMediaPathParts = item.media.fullPath.split('.');
           const checkMediaPathFirst = checkMediaPathParts
@@ -525,7 +529,9 @@ export function createBcmsMostImageProcessor({
           const fullFilePath = path.join(
             process.cwd(),
             ...outputBase,
-            ...`${item.rawOps}${checkMediaPathFirst}_0.${checkMediaPathLast}`.split('/'),
+            ...`${item.rawOps}${checkMediaPathFirst}_0.${checkMediaPathLast}`.split(
+              '/',
+            ),
           );
           if (!(await outputFs.exist(fullFilePath, true))) {
             await mediaHandler.startImageProcessor({
@@ -541,6 +547,11 @@ export function createBcmsMostImageProcessor({
       }
       await imageWorkers.wait();
       progressBar.terminate();
+      for (const option in optionsMap) {
+        const copyFrom = path.join(process.cwd(), ...outputBase, option);
+        const copyTo = path.join(process.cwd(), ...mediaHandler.output, option);
+        await outputFs.copy(copyFrom, copyTo);
+      }
       cnsl.info(
         'postBuild',
         `Done in ${((Date.now() - timeOffset) / 1000).toFixed(2)}s`,
