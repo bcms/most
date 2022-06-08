@@ -18,6 +18,9 @@ import {
 import { createFS } from '@banez/fs';
 import { bcmsMostSocketInit } from './sockets';
 
+/**
+ * Create BCMS Most instance.
+ */
 export function createBcmsMost(data?: {
   config?: BCMSMostConfig;
   client?: BCMSClient;
