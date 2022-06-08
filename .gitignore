@@ -2,6 +2,12 @@
 /dist
 /node_modules
 bcms.config.js
+/bcms
+/public
+/typedoc
+/doc
+/gatsby-dist
+/static
 
 # Logs
 logs
@@ -36,3 +42,5 @@ publish.sh
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+/tsconfig.tsbuildinfo

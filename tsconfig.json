@@ -6,14 +6,20 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "es5",
-    "sourceMap": true,
+    "jsx": "react",
+    "sourceMap": false,
     "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true
+    "rootDir": "./src",
+    "incremental": false,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "importsNotUsedAsValues": "error"
   },
   "typedocOptions": {
-    "mode": "file",
-    "out": "typedoc"
+    "entryPoints": ["src", "src/types"],
+    "name": "BCMS Most",
+    "out": "doc"
   },
-  "exclude": ["node_modules", "dist", "public", "lib"]
+  "include": ["src"]
 }
