@@ -17,22 +17,9 @@
     "importsNotUsedAsValues": "error"
   },
   "typedocOptions": {
-    "entryPoints": ["src"],
+    "entryPoints": ["src", "src/types"],
     "name": "BCMS Most",
-    "theme": "./node_modules/typedoc-neo-theme/bin/default",
-    "plugin": "typedoc-neo-theme",
-    "out": "doc",
-    "outline": [
-      {
-        "API": {
-          "Overview": "interfaces/bcmsmostprototype",
-          "Cache": "interfaces/bcmsmostcachehandlerprototype",
-          "Content": "interfaces/bcmsmostcontenthandlerprototype",
-          "Media": "interfaces/bcmsmostmediahandlerprototype"
-        }
-      }
-    ]
+    "out": "doc"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "public", "lib", "src/front/gatsby"]
+  "include": ["src"]
 }
