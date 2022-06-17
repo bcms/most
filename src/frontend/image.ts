@@ -3,6 +3,8 @@ import type {
   BCMSImageHandler,
   BCMSMostImageProcessorProcessOptions,
 } from '../types';
+import { BCMSImageConfig } from './image-config';
+import { Buffer } from 'buffer';
 
 function optionsToString(options: BCMSMostImageProcessorProcessOptions) {
   const ops: string[] = [];
@@ -129,13 +131,31 @@ export function createBcmsImageHandler(
         ];
       } else {
         const [index, wid, hei] = closest(ops.width);
-        return [
-          `${basePath}/${optionString}${srcMain}_${index}.webp`,
-          `${basePath}/${optionString}${srcMain}_${index}.${srcExt}`,
-          wid,
-          hei,
-          index,
-        ];
+        if (BCMSImageConfig.localeImageProcessing) {
+          return [
+            `${basePath}/${optionString}${srcMain}_${index}.webp`,
+            `${basePath}/${optionString}${srcMain}_${index}.${srcExt}`,
+            wid,
+            hei,
+            index,
+          ];
+        } else {
+          return [
+            `${BCMSImageConfig.cmsOrigin}/api/media/pip/${media._id}/bin/${
+              BCMSImageConfig.publicApiKeyId
+            }/${Buffer.from(
+              `ops=${optionString}&idx=${index}&webp=true`,
+            ).toString('hex')}.webp`,
+            `${BCMSImageConfig.cmsOrigin}/api/media/pip/${media._id}/bin/${
+              BCMSImageConfig.publicApiKeyId
+            }/${Buffer.from(`ops=${optionString}&idx=${index}`).toString(
+              'hex',
+            )}.${srcExt}`,
+            wid,
+            hei,
+            index,
+          ];
+        }
       }
     },
   };
