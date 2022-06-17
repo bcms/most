@@ -32,7 +32,11 @@ export function createBcmsMost(data?: {
   let client: BCMSClient | undefined = undefined;
 
   if (!data || !data.config) {
-    config = require(`${path.join(process.cwd(), 'bcms.config.js')}`);
+    try {
+      config = require(`${path.join(process.cwd(), 'bcms.config.js')}`);
+    } catch (error) {
+      config = require(`${path.join(process.cwd(), 'bcms.config.cjs')}`);
+    }
   } else if (data && data.config) {
     config = data.config;
   }
