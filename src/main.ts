@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as dotenv from 'dotenv';
 import { createBcmsClient } from '@becomes/cms-client';
 import type { BCMSClient } from '@becomes/cms-client/types';
 import { BCMSMost, BCMSMostConfig, BCMSMostConfigSchema } from './types';
@@ -17,6 +18,8 @@ import {
 } from './handlers';
 import { createFS } from '@banez/fs';
 import { bcmsMostSocketInit } from './sockets';
+
+dotenv.config();
 
 /**
  * Create BCMS Most instance.
