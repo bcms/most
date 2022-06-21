@@ -120,42 +120,31 @@ export function createBcmsImageHandler(
           -1,
         ];
       }
-      if (!ops) {
-        const result = closest(0);
+      const [index, wid, hei] = closest(ops ? ops.width : 0);
+      if (BCMSImageConfig.localeImageProcessing) {
         return [
-          `${basePath}/${optionString}${srcMain}_0.webp`,
-          `${basePath}/${optionString}${srcMain}_0.${srcExt}`,
-          result[1],
-          result[2],
-          0,
+          `${basePath}/${optionString}${srcMain}_${index}.webp`,
+          `${basePath}/${optionString}${srcMain}_${index}.${srcExt}`,
+          wid,
+          hei,
+          index,
         ];
       } else {
-        const [index, wid, hei] = closest(ops.width);
-        if (BCMSImageConfig.localeImageProcessing) {
-          return [
-            `${basePath}/${optionString}${srcMain}_${index}.webp`,
-            `${basePath}/${optionString}${srcMain}_${index}.${srcExt}`,
-            wid,
-            hei,
-            index,
-          ];
-        } else {
-          return [
-            `${BCMSImageConfig.cmsOrigin}/api/media/pip/${media._id}/bin/${
-              BCMSImageConfig.publicApiKeyId
-            }/${Buffer.from(
-              `ops=${optionString}&idx=${index}&webp=true`,
-            ).toString('hex')}.webp`,
-            `${BCMSImageConfig.cmsOrigin}/api/media/pip/${media._id}/bin/${
-              BCMSImageConfig.publicApiKeyId
-            }/${Buffer.from(`ops=${optionString}&idx=${index}`).toString(
-              'hex',
-            )}.${srcExt}`,
-            wid,
-            hei,
-            index,
-          ];
-        }
+        return [
+          `${BCMSImageConfig.cmsOrigin}/api/media/pip/${media._id}/bin/${
+            BCMSImageConfig.publicApiKeyId
+          }/${Buffer.from(
+            `ops=${optionString}&idx=${index}&webp=true`,
+          ).toString('hex')}.webp`,
+          `${BCMSImageConfig.cmsOrigin}/api/media/pip/${media._id}/bin/${
+            BCMSImageConfig.publicApiKeyId
+          }/${Buffer.from(`ops=${optionString}&idx=${index}`).toString(
+            'hex',
+          )}.${srcExt}`,
+          wid,
+          hei,
+          index,
+        ];
       }
     },
   };
