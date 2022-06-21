@@ -111,7 +111,7 @@ export function createBcmsImageHandler(
     parsable,
     optionString,
     getSrcSet(ops) {
-      if (!parsable) {
+      if (BCMSImageConfig.localeImageProcessing && !parsable) {
         return [
           `${output}${media.src}`,
           `${output}${media.src}`,
