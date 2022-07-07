@@ -1,4 +1,4 @@
-import * as ProgressBar from 'progress';
+// import * as ProgressBar from 'progress';
 import * as sharp from 'sharp';
 import * as path from 'path';
 import { BCMSMediaType } from '@becomes/cms-client/types';
@@ -16,6 +16,7 @@ import { createFS } from '@banez/fs';
 import { createWorkerManager } from '@banez/workers';
 import Axios from 'axios';
 import { StringUtility } from '@becomes/purple-cheetah';
+import { createBcmsMostDefaultOnMessage } from '../on-message';
 
 export function createBcmsMostImageProcessor({
   config,
@@ -64,6 +65,8 @@ export function createBcmsMostImageProcessor({
       };
     });
   }
+
+  const onMessage = createBcmsMostDefaultOnMessage();
 
   const self: BCMSMostImageProcessorHandler = {
     optionsToString(options) {
@@ -506,12 +509,12 @@ export function createBcmsMostImageProcessor({
           }
         }
       }
-      const progressBar = new ProgressBar('Processing images [:bar] :percent', {
-        complete: '#',
-        incomplete: ' ',
-        total: toProcess.length,
-        width: parseInt((process.stdout.columns / 2).toFixed(0)),
-      });
+      // const progressBar = new ProgressBar('Processing images [:bar] :percent', {
+      //   complete: '#',
+      //   incomplete: ' ',
+      //   total: toProcess.length,
+      //   width: parseInt((process.stdout.columns / 2).toFixed(0)),
+      // });
       const outputBase = [...buildOutput, ...mediaHandler.output.slice(1)];
       const optionsMap: {
         [name: string]: boolean;
@@ -540,21 +543,25 @@ export function createBcmsMostImageProcessor({
               options: item.options,
               outputBase,
             });
-            progressBar.interrupt(cnsl.info(item.media.fullPath, item.rawOps));
+            // progressBar.interrupt(cnsl.info(item.media.fullPath, item.rawOps));
+            onMessage('info', cnsl.info(item.media.fullPath, item.rawOps));
           }
-          progressBar.tick();
+          // progressBar.tick();
         });
       }
       await imageWorkers.wait();
-      progressBar.terminate();
+      // progressBar.terminate();
       for (const option in optionsMap) {
         const copyFrom = path.join(process.cwd(), ...outputBase, option);
         const copyTo = path.join(process.cwd(), ...mediaHandler.output, option);
         await outputFs.copy(copyFrom, copyTo);
       }
-      cnsl.info(
-        'postBuild',
-        `Done in ${((Date.now() - timeOffset) / 1000).toFixed(2)}s`,
+      onMessage(
+        'info',
+        cnsl.info(
+          'postBuild',
+          `Done in ${((Date.now() - timeOffset) / 1000).toFixed(2)}s`,
+        ),
       );
     },
   };

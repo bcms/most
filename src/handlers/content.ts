@@ -1,4 +1,4 @@
-import * as Progress from 'progress';
+// import * as Progress from 'progress';
 import type { BCMSClient } from '@becomes/cms-client/types';
 import { createBcmsMostDefaultOnMessage } from '../on-message';
 import type {
@@ -73,28 +73,36 @@ export function createBcmsMostContentHandler({
           }
         }
       }
-      const progressBar = new Progress('Pulling entries [:bar] :percent', {
-        complete: '#',
-        incomplete: ' ',
-        total: Object.keys(templateNameMap).length,
-      });
+      // const progressBar = new Progress('Pulling entries [:bar] :percent', {
+      //   complete: '#',
+      //   incomplete: ' ',
+      //   total: Object.keys(templateNameMap).length,
+      // });
       for (const templateName in templateNameMap) {
         const timeOffset = Date.now();
         const templateId = templateNameMap[templateName];
-        progressBar.interrupt(cnsl.info(templateName, 'getting entries ...'));
+        onMessage('info', cnsl.info(templateName, 'getting entries ...'));
+        // progressBar.interrupt(cnsl.info(templateName, 'getting entries ...'));
         const entries = await client.entry.getAll({
           template: templateId,
         });
         await cache.content.set({ groupName: templateName, items: entries });
-        progressBar.interrupt(
+        onMessage(
+          'info',
           cnsl.info(
-            `${templateName}`,
+            templateName,
             `Done in: ${(Date.now() - timeOffset) / 1000}s`,
           ),
         );
-        progressBar.tick();
+        // progressBar.interrupt(
+        //   cnsl.info(
+        //     `${templateName}`,
+        //     `Done in: ${(Date.now() - timeOffset) / 1000}s`,
+        //   ),
+        // );
+        // progressBar.tick();
       }
-      progressBar.terminate();
+      // progressBar.terminate();
       await cache.content.changes.set(contentChanges);
       onMessage(
         'info',

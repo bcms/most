@@ -1,4 +1,4 @@
-import * as ProgressBar from 'progress';
+// import * as ProgressBar from 'progress';
 import * as path from 'path';
 import * as os from 'os';
 import { createWorkerManager } from '@banez/workers';
@@ -19,6 +19,7 @@ import { createFS } from '@banez/fs';
 import { WorkerError } from '@banez/workers/types';
 import { createBcmsMostConsole } from '../util';
 import { ChildProcess } from '@banez/child_process';
+import { createBcmsMostDefaultOnMessage } from '../on-message';
 
 export function createBcmsMostMediaHandler({
   config,
@@ -73,6 +74,8 @@ export function createBcmsMostMediaHandler({
       // eslint-disable-next-line no-console
       console.error(cnsl.warn('_output-path.js', err));
     });
+
+  const onMessage = createBcmsMostDefaultOnMessage();
 
   const self: BCMSMostMediaHandler = {
     output,
@@ -145,14 +148,14 @@ export function createBcmsMostMediaHandler({
         }
       }
       if (download) {
-        const progressBar = new ProgressBar(
-          'Downloading media [:bar] :percent',
-          {
-            complete: '#',
-            incomplete: ' ',
-            total: allMedia.filter((e) => e.type !== BCMSMediaType.DIR).length,
-          },
-        );
+        // const progressBar = new ProgressBar(
+        //   'Downloading media [:bar] :percent',
+        //   {
+        //     complete: '#',
+        //     incomplete: ' ',
+        //     total: allMedia.filter((e) => e.type !== BCMSMediaType.DIR).length,
+        //   },
+        // );
         for (let i = 0; i < allMedia.length; i++) {
           const media = allMedia[i];
           if (media.type !== BCMSMediaType.DIR) {
@@ -166,36 +169,38 @@ export function createBcmsMostMediaHandler({
                     (cacheMedia && cacheMedia.updatedAt !== media.updatedAt) ||
                     !(await outputFs.exist(pathParts, true))
                   ) {
-                    progressBar.interrupt(cnsl.info(pathToFile, 'Started...'));
+                    onMessage('info', cnsl.info(pathToFile, 'Started...'));
+                    // progressBar.interrupt(cnsl.info(pathToFile, 'Started...'));
                     const file = (await media.bin()) as Buffer;
                     await outputFs.save(pathParts, file);
-                    progressBar.interrupt(cnsl.info(pathToFile, 'Done.'));
+                    onMessage('info', cnsl.info(pathToFile, 'Done.'));
+                    // progressBar.interrupt(cnsl.info(pathToFile, 'Done.'));
                   }
                 })
                 .then((result) => {
                   if (result instanceof WorkerError) {
-                    // eslint-disable-next-line no-console
-                    progressBar.interrupt(cnsl.error(pathToFile, result.error));
+                    onMessage('error', cnsl.error(pathToFile, result.error));
+                    // progressBar.interrupt(cnsl.error(pathToFile, result.error));
                   }
-                  progressBar.tick();
+                  // progressBar.tick();
                 });
             }
           }
         }
         await workers.wait();
-        progressBar.terminate();
+        // progressBar.terminate();
       }
       await cache.media.set(allMedia);
       if (processImages) {
         const imageProcessor = getImageProcessor();
-        const progressBar = new ProgressBar(
-          'Processing images [:bar] :percent',
-          {
-            complete: '#',
-            incomplete: ' ',
-            total: allMedia.filter((e) => e.type === BCMSMediaType.IMG).length,
-          },
-        );
+        // const progressBar = new ProgressBar(
+        //   'Processing images [:bar] :percent',
+        //   {
+        //     complete: '#',
+        //     incomplete: ' ',
+        //     total: allMedia.filter((e) => e.type === BCMSMediaType.IMG).length,
+        //   },
+        // );
         for (let i = 0; i < allMedia.length; i++) {
           const media = allMedia[i];
           if (media.type === BCMSMediaType.IMG) {
@@ -203,9 +208,13 @@ export function createBcmsMostMediaHandler({
             if (pathToFile) {
               workers
                 .assign(async (wid) => {
-                  progressBar.interrupt(
+                  onMessage(
+                    'info',
                     cnsl.info(`[w${wid}] ` + pathToFile, 'Processing...'),
                   );
+                  // progressBar.interrupt(
+                  //   cnsl.info(`[w${wid}] ` + pathToFile, 'Processing...'),
+                  // );
                   const options: BCMSMostImageProcessorProcessOptions = {
                     position: 'cover',
                     sizes: {
@@ -233,7 +242,8 @@ export function createBcmsMostMediaHandler({
                       imageProcessor,
                     });
                   }
-                  progressBar.interrupt(
+                  onMessage(
+                    'info',
                     cnsl.info(`[w${wid}] ` + pathToFile, 'Done.'),
                   );
                 })
@@ -242,16 +252,14 @@ export function createBcmsMostMediaHandler({
                     // eslint-disable-next-line no-console
                     console.error(cnsl.error(pathToFile, result.error));
                   }
-                  progressBar.tick();
                 });
             }
           }
         }
         await workers.wait();
-        progressBar.terminate();
       }
-      // eslint-disable-next-line no-console
-      console.log(
+      onMessage(
+        'info',
         cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`),
       );
     },
