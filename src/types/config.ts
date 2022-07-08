@@ -219,6 +219,7 @@ export interface BCMSMostConfig {
   media?: BCMSMostConfigMedia;
   server?: BCMSMostConfigServer;
   enableClientCache?: boolean;
+  debug?: boolean;
 }
 export const BCMSMostConfigSchema: ObjectSchema = {
   cms: {
