@@ -140,6 +140,7 @@ export function createBcmsMost(data?: {
         client: client as BCMSClient,
         mediaHandler: media,
         config: config as BCMSMostConfig,
+        typeConverter,
       });
     },
   };

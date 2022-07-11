@@ -11,6 +11,13 @@ export function createBcmsMostTypeConverterHandler({
 }): BCMSMostTypeConverterHandler {
   return {
     async pull() {
+      const clear = ['types-ts', 'types-js'];
+      for (let i = 0; i < clear.length; i++) {
+        const item = clear[i];
+        if (await rootFs.exist(item)) {
+          await rootFs.deleteDir(item);
+        }
+      }
       const ts = await client.typeConverter.getAll({
         language: 'typescript',
       });

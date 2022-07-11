@@ -11,6 +11,7 @@ import type {
   BCMSMostCacheHandler,
   BCMSMostConfig,
   BCMSMostMediaHandler,
+  BCMSMostTypeConverterHandler,
 } from './types';
 import { WorkerError } from '@banez/workers/types';
 import { createBcmsMostDefaultOnMessage } from './on-message';
@@ -21,11 +22,13 @@ export async function bcmsMostSocketInit({
   cache,
   mediaHandler,
   config,
+  typeConverter,
 }: {
   client: BCMSClient;
   cache: BCMSMostCacheHandler;
   mediaHandler: BCMSMostMediaHandler;
   config: BCMSMostConfig;
+  typeConverter: BCMSMostTypeConverterHandler;
 }): Promise<void> {
   const workers = createWorkerManager({
     count:
@@ -73,6 +76,18 @@ export async function bcmsMostSocketInit({
     if (result instanceof WorkerError) {
       onMessage('error', cnsl.error('entry', result.error));
     }
+  });
+  async function handleTypeUpdate() {
+    await typeConverter.pull();
+  }
+  client.socket.subscribe(BCMSSocketEventName.GROUP, async () => {
+    handleTypeUpdate();
+  });
+  client.socket.subscribe(BCMSSocketEventName.WIDGET, async () => {
+    handleTypeUpdate();
+  });
+  client.socket.subscribe(BCMSSocketEventName.TEMPLATE, async () => {
+    handleTypeUpdate();
   });
   if (config.media && config.media.download) {
     client.socket.subscribe(BCMSSocketEventName.MEDIA, async (event) => {
