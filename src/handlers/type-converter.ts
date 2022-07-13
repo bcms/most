@@ -11,7 +11,7 @@ export function createBcmsMostTypeConverterHandler({
 }): BCMSMostTypeConverterHandler {
   return {
     async pull() {
-      const clear = ['types-ts', 'types-js'];
+      const clear = ['types', 'graphql'];
       for (let i = 0; i < clear.length; i++) {
         const item = clear[i];
         if (await rootFs.exist(item)) {
@@ -24,23 +24,23 @@ export function createBcmsMostTypeConverterHandler({
       for (let i = 0; i < ts.length; i++) {
         const item = ts[i];
         await rootFs.save(
-          ['types-ts', ...item.outputFile.split('/')],
+          ['types', ...item.outputFile.split('/')],
           item.content,
         );
       }
       await rootFs.save(
-        ['types-ts', 'index.ts'],
+        ['types', 'index.d.ts'],
         ts
-          .map((e) => `export * from './${e.outputFile.replace('.ts', '')}';`)
+          .map((e) => `export * from './${e.outputFile.replace('.d.ts', '')}';`)
           .join('\n'),
       );
-      const js = await client.typeConverter.getAll({
-        language: 'jsDoc',
+      const gql = await client.typeConverter.getAll({
+        language: 'gql',
       });
-      for (let i = 0; i < js.length; i++) {
-        const item = js[i];
+      for (let i = 0; i < gql.length; i++) {
+        const item = gql[i];
         await rootFs.save(
-          ['types-js', ...item.outputFile.split('/')],
+          ['graphql', ...item.outputFile.split('/')],
           item.content,
         );
       }
