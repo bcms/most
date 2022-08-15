@@ -2,7 +2,9 @@ import type { FS } from '@banez/fs/types';
 import type { BCMSEntryParsed, BCMSTemplate } from '@becomes/cms-client/types';
 import type {
   BCMSMediaExtended,
+  BCMSMostCacheContent,
   BCMSMostCacheHandler,
+  BCMSMostMediaCache,
   BCMSMostMediaHandler,
 } from '../types';
 
@@ -21,13 +23,26 @@ export function createBcmsMostCacheHandler({
 
   let mediaHandler: BCMSMostMediaHandler | undefined = undefined;
 
+  let contentCache: BCMSMostCacheContent = {};
+  let contentCacheAvailable = false;
+  let mediaCache: BCMSMostMediaCache = {
+    items: [],
+  };
+  let mediaCacheAvailable = false;
+  let templateCache: BCMSTemplate[] = [];
+  let templateCacheAvailable = false;
+
   const self: BCMSMostCacheHandler = {
     template: {
-      async get() {
-        if (await rootFs.exist(templateFileName, true)) {
-          return JSON.parse(await rootFs.readString(templateFileName));
+      async get(force) {
+        if (!force && templateCacheAvailable) {
+          return templateCache;
         }
-        return [];
+        if (await rootFs.exist(templateFileName, true)) {
+          templateCache = JSON.parse(await rootFs.readString(templateFileName));
+          templateCacheAvailable = true;
+        }
+        return templateCache;
       },
       async find(query) {
         const output: BCMSTemplate[] = [];
@@ -69,6 +84,7 @@ export function createBcmsMostCacheHandler({
           }
         }
         if (input.length > 0) {
+          templateCache = cache;
           await rootFs.save(
             templateFileName,
             JSON.stringify(cache, null, '  '),
@@ -106,11 +122,15 @@ export function createBcmsMostCacheHandler({
           );
         },
       },
-      async get() {
-        if (await rootFs.exist(contentFileName, true)) {
-          return JSON.parse(await rootFs.readString(contentFileName));
+      async get(force) {
+        if (!force && contentCacheAvailable) {
+          return contentCache;
         }
-        return {};
+        if (await rootFs.exist(contentFileName, true)) {
+          contentCache = JSON.parse(await rootFs.readString(contentFileName));
+          contentCacheAvailable = true;
+        }
+        return contentCache;
       },
       async find(query) {
         const cache = await self.content.get();
@@ -188,6 +208,7 @@ export function createBcmsMostCacheHandler({
           }
         }
         if (input.length > 0) {
+          contentCache = cache;
           await rootFs.save(contentFileName, JSON.stringify(cache, null, '  '));
         }
       },
@@ -213,6 +234,7 @@ export function createBcmsMostCacheHandler({
           }
         }
         if (input.length > 0) {
+          contentCache = cache;
           await rootFs.save(contentFileName, JSON.stringify(cache, null, '  '));
         }
       },
@@ -243,13 +265,15 @@ export function createBcmsMostCacheHandler({
       },
     },
     media: {
-      async get() {
-        if (await rootFs.exist(mediaFileName, true)) {
-          return JSON.parse(await rootFs.readString(mediaFileName));
+      async get(force) {
+        if (!force && mediaCacheAvailable) {
+          return mediaCache;
         }
-        return {
-          items: [],
-        };
+        if (await rootFs.exist(mediaFileName, true)) {
+          mediaCache = JSON.parse(await rootFs.readString(mediaFileName));
+          mediaCacheAvailable = true;
+        }
+        return mediaCache;
       },
       async find(query) {
         const cache = await self.media.get();
@@ -302,6 +326,7 @@ export function createBcmsMostCacheHandler({
           }
         }
         if (input.length > 0) {
+          mediaCache = cache;
           await rootFs.save(mediaFileName, JSON.stringify(cache, null, '  '));
         }
       },

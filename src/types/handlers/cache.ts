@@ -37,7 +37,7 @@ interface Query<Item> {
  */
 export interface BCMSMostCacheHandler {
   template: {
-    get(): Promise<BCMSTemplate[]>;
+    get(force?: boolean): Promise<BCMSTemplate[]>;
     find(query: Query<BCMSTemplate>): Promise<BCMSTemplate[]>;
     findOne(query: Query<BCMSTemplate>): Promise<BCMSTemplate | null>;
     set(items: BCMSTemplate | BCMSTemplate[]): Promise<void>;
@@ -48,7 +48,7 @@ export interface BCMSMostCacheHandler {
       get(): Promise<BCMSClientChangesGetInfoData | null>;
       set(data: BCMSClientChangesGetInfoData): Promise<void>;
     };
-    get(): Promise<BCMSMostCacheContent>;
+    get(force?: boolean): Promise<BCMSMostCacheContent>;
     findOneInGroup(
       groupName: string,
       query: Query<BCMSEntryParsed>,
@@ -73,7 +73,7 @@ export interface BCMSMostCacheHandler {
     ): Promise<void>;
   };
   media: {
-    get(): Promise<BCMSMostMediaCache>;
+    get(force?: boolean): Promise<BCMSMostMediaCache>;
     findOne(query: Query<BCMSMediaExtended>): Promise<BCMSMediaExtended | null>;
     find(query: Query<BCMSMediaExtended>): Promise<BCMSMediaExtended[]>;
     set(
