@@ -2,6 +2,7 @@ import * as os from 'os';
 import { createWorkerManager } from '@banez/workers';
 import {
   BCMSClient,
+  BCMSEntryParsed,
   BCMSSocketEntryEvent,
   BCMSSocketEventName,
   BCMSSocketEventType,
@@ -45,20 +46,53 @@ export async function bcmsMostSocketInit({
       );
       if (tempAccess && tempAccess.get) {
         if (data.t === BCMSSocketEventType.UPDATE) {
-          const entry = await client.entry.get({
-            template: data.tm,
-            entry: data.e,
-            skipCache: true,
-          });
-          await cache.content.set({
-            groupName: tempAccess.name,
-            items: entry,
-          });
+          const entries = [
+            (await cache.content.findOne(
+              (e) => e._id === data.e,
+            )) as BCMSEntryParsed,
+          ];
+          if (!entries[0]) {
+            return;
+          }
+          entries.push(
+            ...(await cache.content.find(
+              (e) =>
+                e._id !== entries[0]._id &&
+                JSON.stringify(e).includes(entries[0]._id),
+            )),
+          );
+          const groupedEntries: {
+            [templateName: string]: BCMSEntryParsed[];
+          } = {};
+          for (let i = 0; i < entries.length; i++) {
+            const entry = entries[i];
+            const access = keyAccess.templates.find(
+              (e) => e._id === entry.templateId,
+            );
+            if (access && access.get) {
+              if (!groupedEntries[access.name]) {
+                groupedEntries[access.name] = [];
+              }
+              groupedEntries[access.name].push(
+                await client.entry.get({
+                  template: entry.templateId,
+                  entry: entry._id,
+                  skipCache: true,
+                }),
+              );
+            }
+          }
+          for (const groupName in groupedEntries) {
+            await cache.content.set({
+              groupName,
+              items: groupedEntries[groupName],
+            });
+          }
           onMessage(
             'info',
             cnsl.info(
               'entry',
-              `Successfully updated "${entry.meta.en.slug}" in "${tempAccess.name}"`,
+              `Successfully updated "${entries[0].meta.en.slug}" in "${tempAccess.name}"`,
             ),
           );
         } else {
