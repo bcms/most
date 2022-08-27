@@ -122,6 +122,22 @@ export function createBcmsMostCacheHandler({
           );
         },
       },
+      async getGroups(reverse) {
+        const output: {
+          [groupName: string]: string;
+        } = {};
+        const cache = await self.content.get();
+        for (const groupName in cache) {
+          if (cache[groupName].length > 0) {
+            if (reverse) {
+              output[cache[groupName][0].templateId] = groupName;
+            } else {
+              output[groupName] = cache[groupName][0].templateId;
+            }
+          }
+        }
+        return output;
+      },
       async get(force) {
         if (!force && contentCacheAvailable) {
           return contentCache;
