@@ -4,6 +4,10 @@ export interface BCMSMostCacheContent {
   [name: string]: BCMSEntryParsed[];
 }
 
+export interface BCMSMostCacheFn {
+  [name: string]: unknown;
+}
+
 export interface BCMSMostFnCache {
   [name: string]: unknown;
 }

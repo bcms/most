@@ -3,6 +3,7 @@ import type { BCMSEntryParsed, BCMSTemplate } from '@becomes/cms-client/types';
 import type {
   BCMSMediaExtended,
   BCMSMostCacheContent,
+  BCMSMostCacheFn,
   BCMSMostCacheHandler,
   BCMSMostMediaCache,
   BCMSMostMediaHandler,
@@ -16,14 +17,15 @@ export function createBcmsMostCacheHandler({
   getMediaHandler(): BCMSMostMediaHandler;
 }): BCMSMostCacheHandler {
   const contentChangesFileName = 'content-changes.cache.json';
-  const contentFileName = 'content.cache.json';
-  const mediaFileName = 'media.cache.json';
-  const fnFileName = 'function.cache.json';
+  const contentCacheBase = ['cache', 'content'];
+  const mediaCacheBase = ['cache', 'media.json'];
+  const fnCacheBase = ['cache', 'functions'];
   const templateFileName = 'template.cache.json';
 
   let mediaHandler: BCMSMostMediaHandler | undefined = undefined;
 
   let contentCache: BCMSMostCacheContent = {};
+  const fnCache: BCMSMostCacheFn = {};
   let contentCacheAvailable = false;
   let mediaCache: BCMSMostMediaCache = {
     items: [],
@@ -31,6 +33,29 @@ export function createBcmsMostCacheHandler({
   let mediaCacheAvailable = false;
   let templateCache: BCMSTemplate[] = [];
   let templateCacheAvailable = false;
+
+  async function saveContentCache(groups?: string[]) {
+    if (groups) {
+      for (let i = 0; i < groups.length; i++) {
+        const group = groups[i];
+        const cache = contentCache[group];
+        if (cache) {
+          await rootFs.save(
+            [...contentCacheBase, group + '.json'],
+            JSON.stringify(cache, null, '  '),
+          );
+        }
+      }
+    } else {
+      for (const group in contentCache) {
+        const cache = contentCache[group];
+        await rootFs.save(
+          [...contentCacheBase, group + '.json'],
+          JSON.stringify(cache, null, '  '),
+        );
+      }
+    }
+  }
 
   const self: BCMSMostCacheHandler = {
     template: {
@@ -126,8 +151,14 @@ export function createBcmsMostCacheHandler({
         if (!force && contentCacheAvailable) {
           return contentCache;
         }
-        if (await rootFs.exist(contentFileName, true)) {
-          contentCache = JSON.parse(await rootFs.readString(contentFileName));
+        if (await rootFs.exist(contentCacheBase)) {
+          const files = await rootFs.readdir([...contentCacheBase]);
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            contentCache[file.replace('.json', '')] = JSON.parse(
+              await rootFs.readString([...contentCacheBase, file]),
+            );
+          }
           contentCacheAvailable = true;
         }
         return contentCache;
@@ -189,6 +220,9 @@ export function createBcmsMostCacheHandler({
       async update(items) {
         const input = items instanceof Array ? items : [items];
         const cache = await self.content.get();
+        const groups: {
+          [name: string]: boolean;
+        } = {};
         for (let i = 0; i < input.length; i++) {
           const item = input[i];
           for (const groupName in cache) {
@@ -199,6 +233,7 @@ export function createBcmsMostCacheHandler({
               if (cacheItem._id === item._id) {
                 cache[groupName][j] = item;
                 found = true;
+                groups[groupName] = true;
                 break;
               }
             }
@@ -209,7 +244,7 @@ export function createBcmsMostCacheHandler({
         }
         if (input.length > 0) {
           contentCache = cache;
-          await rootFs.save(contentFileName, JSON.stringify(cache, null, '  '));
+          await saveContentCache(Object.keys(groups));
         }
       },
       async set({ groupName, items }) {
@@ -235,12 +270,15 @@ export function createBcmsMostCacheHandler({
         }
         if (input.length > 0) {
           contentCache = cache;
-          await rootFs.save(contentFileName, JSON.stringify(cache, null, '  '));
+          saveContentCache([groupName]);
         }
       },
       async remove(items) {
         const input = items instanceof Array ? items : [items];
         const cache = await self.content.get();
+        const groups: {
+          [name: string]: boolean;
+        } = {};
         for (let i = 0; i < input.length; i++) {
           const item = input[i];
           for (const groupName in cache) {
@@ -251,6 +289,7 @@ export function createBcmsMostCacheHandler({
               if (cacheItem._id === item._id) {
                 cache[groupName].splice(j, 1);
                 found = true;
+                groups[groupName] = true;
                 break;
               }
             }
@@ -260,7 +299,7 @@ export function createBcmsMostCacheHandler({
           }
         }
         if (input.length > 0) {
-          await rootFs.save(contentFileName, JSON.stringify(cache, null, '  '));
+          await saveContentCache(Object.keys(groups));
         }
       },
     },
@@ -269,8 +308,8 @@ export function createBcmsMostCacheHandler({
         if (!force && mediaCacheAvailable) {
           return mediaCache;
         }
-        if (await rootFs.exist(mediaFileName, true)) {
-          mediaCache = JSON.parse(await rootFs.readString(mediaFileName));
+        if (await rootFs.exist(mediaCacheBase, true)) {
+          mediaCache = JSON.parse(await rootFs.readString(mediaCacheBase));
           mediaCacheAvailable = true;
         }
         return mediaCache;
@@ -327,7 +366,7 @@ export function createBcmsMostCacheHandler({
         }
         if (input.length > 0) {
           mediaCache = cache;
-          await rootFs.save(mediaFileName, JSON.stringify(cache, null, '  '));
+          await rootFs.save(mediaCacheBase, JSON.stringify(cache, null, '  '));
         }
       },
       async remove(items) {
@@ -344,16 +383,22 @@ export function createBcmsMostCacheHandler({
           }
         }
         if (input.length > 0) {
-          await rootFs.save(mediaFileName, JSON.stringify(cache, null, '  '));
+          await rootFs.save(mediaCacheBase, JSON.stringify(cache, null, '  '));
         }
       },
     },
     function: {
       async get() {
-        if (await rootFs.exist(fnFileName, true)) {
-          return JSON.parse(await rootFs.readString(fnFileName));
+        if (await rootFs.exist(fnCacheBase)) {
+          const files = await rootFs.readdir(fnCacheBase);
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            fnCache[file.replace('.json', '')] = JSON.parse(
+              await rootFs.readString([...fnCacheBase, file]),
+            );
+          }
         }
-        return {};
+        return fnCache;
       },
       async findOne(query) {
         const cache = await self.function.get();
@@ -369,7 +414,10 @@ export function createBcmsMostCacheHandler({
       async set(name, data) {
         const cache = await self.function.get();
         cache[name] = data;
-        await rootFs.save(fnFileName, JSON.stringify(cache, null, '  '));
+        await rootFs.save(
+          [...fnCacheBase, name + '.json'],
+          JSON.stringify(cache, null, '  '),
+        );
       },
     },
   };
