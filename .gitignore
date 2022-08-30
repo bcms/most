@@ -8,6 +8,7 @@ bcms.config.js
 /doc
 /gatsby-dist
 /static
+/src/frontend/_output-path.js
 
 # Logs
 logs
@@ -23,6 +24,7 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+/src/test.ts
 
 # IDEs and editors
 .env
