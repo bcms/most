@@ -21,5 +21,6 @@
     "name": "BCMS Most",
     "out": "doc"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/frontend/_output-path.js"]
 }
