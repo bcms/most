@@ -4,10 +4,12 @@ import * as os from 'os';
 import { createWorkerManager } from '@banez/workers';
 import {
   BCMSClient,
+  BCMSEntryParsed,
   BCMSMedia,
   BCMSMediaType,
 } from '@becomes/cms-client/types';
 import type {
+  BCMSMediaExtended,
   BCMSMostCacheHandler,
   BCMSMostConfig,
   BCMSMostConfigMediaSizeMap,
@@ -20,6 +22,7 @@ import { WorkerError } from '@banez/workers/types';
 import { createBcmsMostConsole } from '../util';
 import { ChildProcess } from '@banez/child_process';
 import { createBcmsMostDefaultOnMessage } from '../on-message';
+import { StringUtility } from '@banez/string-utility';
 
 export function createBcmsMostMediaHandler({
   config,
@@ -257,6 +260,76 @@ export function createBcmsMostMediaHandler({
           }
         }
         await workers.wait();
+      }
+      if (!config.media) {
+        config.media = {};
+      }
+      if (!config.media.linkParser) {
+        if (!config.media.origin) {
+          config.media.origin = config.cms.origin;
+        }
+        if (!config.media.publicApiKeyId) {
+          config.media.publicApiKeyId = config.cms.key.id;
+        }
+        const mediaConfig = config.media;
+        config.media.linkParser = async ({ media }) => {
+          return `${mediaConfig.origin}/api/media/pip/${media._id}/bin/${mediaConfig.publicApiKeyId}/${media.name}`;
+        };
+      }
+      if (config.media && config.media.linkParser) {
+        const entries = await cache.content.find(() => true);
+        const updatedEntries: {
+          [templateName: string]: BCMSEntryParsed[];
+        } = {};
+        const templateIdMap = await cache.content.getGroups(true);
+        for (let i = 0; i < entries.length; i++) {
+          const srcEntry = entries[i];
+          let srcEntryJson = JSON.stringify(srcEntry);
+          const templateName = templateIdMap[srcEntry.templateId];
+          const entryLinks = StringUtility.allTextBetween(
+            srcEntryJson,
+            'href=\\"media:',
+            ':media\\"',
+          );
+          let shouldUpdate = false;
+          if (entryLinks.length > 0) {
+            for (let j = 0; j < entryLinks.length; j++) {
+              const link = entryLinks[j];
+              const [mediaId, alt_text, caption] = link.split('@*_');
+              const media = allMedia.find((e) => e._id === mediaId);
+              if (media) {
+                srcEntryJson = srcEntryJson.replace(
+                  new RegExp(
+                    `media:${mediaId}@\\*_${alt_text}@\\*_${caption}@\\*_:media`,
+                    'g',
+                  ),
+                  await config.media.linkParser({
+                    link,
+                    media: media as unknown as BCMSMediaExtended,
+                    templateName,
+                    entry: srcEntry,
+                    cache,
+                  }),
+                );
+                shouldUpdate = true;
+              }
+            }
+          }
+          if (shouldUpdate) {
+            if (!updatedEntries[templateName]) {
+              updatedEntries[templateName] = [];
+            }
+            updatedEntries[templateName].push(JSON.parse(srcEntryJson));
+          }
+        }
+        for (const groupName in updatedEntries) {
+          if (updatedEntries[groupName].length > 0) {
+            await cache.content.set({
+              groupName,
+              items: updatedEntries[groupName],
+            });
+          }
+        }
       }
       onMessage(
         'info',

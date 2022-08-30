@@ -1,5 +1,6 @@
 // import * as Progress from 'progress';
-import type { BCMSClient } from '@becomes/cms-client/types';
+import { StringUtility } from '@banez/string-utility';
+import type { BCMSClient, BCMSEntryParsed } from '@becomes/cms-client/types';
 import { createBcmsMostDefaultOnMessage } from '../on-message';
 import type {
   BCMSMostCacheHandler,
@@ -43,6 +44,9 @@ export function createBcmsMostContentHandler({
       const templateNameMap: {
         [name: string]: string;
       } = {};
+      const templateIdMap: {
+        [id: string]: string;
+      } = {};
       const keyAccess = await client.getKeyAccess();
       for (let i = 0; i < keyAccess.templates.length; i++) {
         const tempAccess = keyAccess.templates[i];
@@ -51,6 +55,7 @@ export function createBcmsMostContentHandler({
           //   template: tempAccess._id,
           // });
           templateNameMap[tempAccess.name] = tempAccess._id;
+          templateIdMap[tempAccess._id] = tempAccess.name;
         }
       }
       if (config.entries) {
@@ -104,6 +109,57 @@ export function createBcmsMostContentHandler({
       }
       // progressBar.terminate();
       await cache.content.changes.set(contentChanges);
+      if (config.entries && config.entries.linkParser) {
+        const entries = await cache.content.find(() => true);
+        const updatedEntries: {
+          [templateName: string]: BCMSEntryParsed[];
+        } = {};
+        for (let i = 0; i < entries.length; i++) {
+          const srcEntry = entries[i];
+          let srcEntryJson = JSON.stringify(srcEntry, null, '  ');
+          const templateName = templateIdMap[srcEntry.templateId];
+          const entryLinks = StringUtility.allTextBetween(
+            srcEntryJson,
+            'href=\\"entry:',
+            ':entry\\"',
+          );
+          let shouldUpdate = false;
+          if (entryLinks.length > 0) {
+            for (let j = 0; j < entryLinks.length; j++) {
+              const link = entryLinks[j];
+              const [eid, tid] = link.split('@*_');
+              const targetEntry = entries.find((e) => e._id === eid);
+              if (targetEntry) {
+                srcEntryJson = srcEntryJson.replace(
+                  new RegExp(`entry:${eid}@\\*_${tid}@\\*_:entry`, 'g'),
+                  await config.entries.linkParser({
+                    link,
+                    targetEntry,
+                    srcEntry,
+                    srcTemplateName: templateName,
+                    cache,
+                  }),
+                );
+                shouldUpdate = true;
+              }
+            }
+          }
+          if (shouldUpdate) {
+            if (!updatedEntries[templateName]) {
+              updatedEntries[templateName] = [];
+            }
+            updatedEntries[templateName].push(JSON.parse(srcEntryJson));
+          }
+        }
+        for (const groupName in updatedEntries) {
+          if (updatedEntries[groupName].length > 0) {
+            await cache.content.set({
+              groupName,
+              items: updatedEntries[groupName],
+            });
+          }
+        }
+      }
       onMessage(
         'info',
         cnsl.info('pull', `Done in: ${(Date.now() - startTime) / 1000}s`),

@@ -48,6 +48,7 @@ export interface BCMSMostCacheHandler {
       get(): Promise<BCMSClientChangesGetInfoData | null>;
       set(data: BCMSClientChangesGetInfoData): Promise<void>;
     };
+    getGroups(reverse?: boolean): Promise<{ [groupName: string]: string }>;
     get(force?: boolean): Promise<BCMSMostCacheContent>;
     findOneInGroup(
       groupName: string,

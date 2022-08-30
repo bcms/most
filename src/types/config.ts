@@ -1,4 +1,7 @@
 import type { ObjectSchema } from '@banez/object-utility/types';
+import type { BCMSEntry, BCMSEntryParsed } from '@becomes/cms-client/types';
+import type { BCMSMediaExtended } from './cache';
+import type { BCMSMostCacheHandler } from './handlers';
 
 export interface BCMSMostConfigCms {
   /**
@@ -43,6 +46,16 @@ export interface BCMSMostConfigEntries {
    * Entries from specified templates will not be pulled.
    */
   excludeFromTemplates?: string[];
+  /**
+   * Provide a custom parser for Entry links in content.
+   */
+  linkParser?(data: {
+    link: string;
+    srcEntry: BCMSEntryParsed | BCMSEntry;
+    targetEntry: BCMSEntryParsed | BCMSEntry;
+    srcTemplateName: string;
+    cache: BCMSMostCacheHandler;
+  }): Promise<string>;
 }
 export const BCMSMostConfigEntriesSchema: ObjectSchema = {
   includeFromTemplates: {
@@ -58,6 +71,10 @@ export const BCMSMostConfigEntriesSchema: ObjectSchema = {
     __child: {
       __type: 'string',
     },
+  },
+  linkParser: {
+    __type: 'function',
+    __required: false,
   },
 };
 
@@ -150,6 +167,17 @@ export const BCMSMostConfigMediaImagesSchema: ObjectSchema = {
 };
 export interface BCMSMostConfigMedia {
   /**
+   * Provide a different domain for BCMS Media fetching.
+   * If not provided, root BCMS origin will be used.
+   */
+  origin?: string;
+  /**
+   * Provide a different Key ID for BCMS Media fetching.
+   * It is recommended to do this. If not provided, root
+   * BCMS Key ID will be used.
+   */
+  publicApiKeyId?: string;
+  /**
    * Where will downloaded media be saved.
    * Default is `static/media`.
    */
@@ -171,6 +199,16 @@ export interface BCMSMostConfigMedia {
    * throw an error and brake the process.
    */
   failOnError?: boolean;
+  /**
+   * Provide a custom parser for Media links in content.
+   */
+  linkParser?(data: {
+    link: string;
+    media: BCMSMediaExtended;
+    entry: BCMSEntryParsed | BCMSEntry;
+    templateName: string;
+    cache: BCMSMostCacheHandler;
+  }): Promise<string>;
 }
 export const BCMSMostConfigMediaSchema: ObjectSchema = {
   output: {
@@ -192,6 +230,10 @@ export const BCMSMostConfigMediaSchema: ObjectSchema = {
   },
   failOnError: {
     __type: 'boolean',
+    __required: false,
+  },
+  linkParser: {
+    __type: 'function',
     __required: false,
   },
 };

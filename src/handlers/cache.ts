@@ -16,7 +16,7 @@ export function createBcmsMostCacheHandler({
   rootFs: FS;
   getMediaHandler(): BCMSMostMediaHandler;
 }): BCMSMostCacheHandler {
-  const contentChangesFileName = 'content-changes.cache.json';
+  const contentChangesCacheBase = ['cache', 'content-changes.json'];
   const contentCacheBase = ['cache', 'content'];
   const mediaCacheBase = ['cache', 'media.json'];
   const fnCacheBase = ['cache', 'functions'];
@@ -135,17 +135,33 @@ export function createBcmsMostCacheHandler({
     content: {
       changes: {
         async get() {
-          if (await rootFs.exist(contentChangesFileName, true)) {
-            return JSON.parse(await rootFs.readString(contentChangesFileName));
+          if (await rootFs.exist(contentChangesCacheBase, true)) {
+            return JSON.parse(await rootFs.readString(contentChangesCacheBase));
           }
           return null;
         },
         async set(data) {
           await rootFs.save(
-            contentChangesFileName,
+            contentChangesCacheBase,
             JSON.stringify(data, null, '  '),
           );
         },
+      },
+      async getGroups(reverse) {
+        const output: {
+          [groupName: string]: string;
+        } = {};
+        const cache = await self.content.get();
+        for (const groupName in cache) {
+          if (cache[groupName].length > 0) {
+            if (reverse) {
+              output[cache[groupName][0].templateId] = groupName;
+            } else {
+              output[groupName] = cache[groupName][0].templateId;
+            }
+          }
+        }
+        return output;
       },
       async get(force) {
         if (!force && contentCacheAvailable) {
