@@ -1,6 +1,6 @@
 {
   "name": "@becomes/cms-most",
-  "version": "2.5.2",
+  "version": "2.6.0",
   "description": "Utility for Becomes CMS used for client framework applications like Nuxt and Gatsby.",
   "author": "becomes.co",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
     "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
     "lint": "eslint src/**/*",
-    "t": "node dist/test.js"
+    "t": "ts-node src/test.ts"
   },
   "peerDependencies": {
     "@becomes/cms-client": ">=3.3.0"
