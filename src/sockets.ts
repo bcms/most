@@ -16,7 +16,7 @@ import type {
 } from './types';
 import { WorkerError } from '@banez/workers/types';
 import { createBcmsMostDefaultOnMessage } from './on-message';
-import { createBcmsMostConsole } from './util';
+import { bcmsMostEntryLinkParser, createBcmsMostConsole } from './util';
 
 export async function bcmsMostSocketInit({
   client,
@@ -64,6 +64,7 @@ export async function bcmsMostSocketInit({
           const groupedEntries: {
             [templateName: string]: BCMSEntryParsed[];
           } = {};
+          const allEntries = await cache.content.find(() => true);
           for (let i = 0; i < entries.length; i++) {
             const entry = entries[i];
             const access = keyAccess.templates.find(
@@ -73,13 +74,18 @@ export async function bcmsMostSocketInit({
               if (!groupedEntries[access.name]) {
                 groupedEntries[access.name] = [];
               }
-              groupedEntries[access.name].push(
-                await client.entry.get({
-                  template: entry.templateId,
-                  entry: entry._id,
-                  skipCache: true,
-                }),
+              const srcEntry = await client.entry.get({
+                template: entry.templateId,
+                entry: entry._id,
+                skipCache: true,
+              });
+              const res = await bcmsMostEntryLinkParser(
+                srcEntry,
+                allEntries,
+                config,
+                cache,
               );
+              groupedEntries[access.name].push(res.entry);
             }
           }
           for (const groupName in groupedEntries) {

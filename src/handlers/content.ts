@@ -1,5 +1,4 @@
 // import * as Progress from 'progress';
-import { StringUtility } from '@banez/string-utility';
 import type { BCMSClient, BCMSEntryParsed } from '@becomes/cms-client/types';
 import { createBcmsMostDefaultOnMessage } from '../on-message';
 import type {
@@ -7,7 +6,7 @@ import type {
   BCMSMostConfig,
   BCMSMostContentHandler,
 } from '../types';
-import { createBcmsMostConsole } from '../util';
+import { bcmsMostEntryLinkParser, createBcmsMostConsole } from '../util';
 
 export function createBcmsMostContentHandler({
   cache,
@@ -116,39 +115,45 @@ export function createBcmsMostContentHandler({
         } = {};
         for (let i = 0; i < entries.length; i++) {
           const srcEntry = entries[i];
-          let srcEntryJson = JSON.stringify(srcEntry, null, '  ');
           const templateName = templateIdMap[srcEntry.templateId];
-          const entryLinks = StringUtility.allTextBetween(
-            srcEntryJson,
-            'href=\\"entry:',
-            ':entry\\"',
+          const { entry, shouldUpdate } = await bcmsMostEntryLinkParser(
+            srcEntry,
+            entries,
+            config,
+            cache,
           );
-          let shouldUpdate = false;
-          if (entryLinks.length > 0) {
-            for (let j = 0; j < entryLinks.length; j++) {
-              const link = entryLinks[j];
-              const [eid, tid] = link.split('@*_');
-              const targetEntry = entries.find((e) => e._id === eid);
-              if (targetEntry) {
-                srcEntryJson = srcEntryJson.replace(
-                  new RegExp(`entry:${eid}@\\*_${tid}@\\*_:entry`, 'g'),
-                  await config.entries.linkParser({
-                    link,
-                    targetEntry,
-                    srcEntry,
-                    srcTemplateName: templateName,
-                    cache,
-                  }),
-                );
-                shouldUpdate = true;
-              }
-            }
-          }
+          // let srcEntryJson = JSON.stringify(srcEntry, null, '  ');
+          // const entryLinks = StringUtility.allTextBetween(
+          //   srcEntryJson,
+          //   'href=\\"entry:',
+          //   ':entry\\"',
+          // );
+          // let shouldUpdate = false;
+          // if (entryLinks.length > 0) {
+          //   for (let j = 0; j < entryLinks.length; j++) {
+          //     const link = entryLinks[j];
+          //     const [eid, tid] = link.split('@*_');
+          //     const targetEntry = entries.find((e) => e._id === eid);
+          //     if (targetEntry) {
+          //       srcEntryJson = srcEntryJson.replace(
+          //         new RegExp(`entry:${eid}@\\*_${tid}@\\*_:entry`, 'g'),
+          //         await config.entries.linkParser({
+          //           link,
+          //           targetEntry,
+          //           srcEntry,
+          //           srcTemplateName: templateName,
+          //           cache,
+          //         }),
+          //       );
+          //       shouldUpdate = true;
+          //     }
+          //   }
+          // }
           if (shouldUpdate) {
             if (!updatedEntries[templateName]) {
               updatedEntries[templateName] = [];
             }
-            updatedEntries[templateName].push(JSON.parse(srcEntryJson));
+            updatedEntries[templateName].push(entry);
           }
         }
         for (const groupName in updatedEntries) {
