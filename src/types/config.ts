@@ -261,6 +261,13 @@ export interface BCMSMostConfig {
   media?: BCMSMostConfigMedia;
   server?: BCMSMostConfigServer;
   enableClientCache?: boolean;
+  client?: {
+    userAgent?: {
+      random?: boolean;
+      exec?: string;
+      randomPrefix?: string;
+    }
+  }
   debug?: boolean;
 }
 export const BCMSMostConfigSchema: ObjectSchema = {

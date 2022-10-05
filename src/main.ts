@@ -50,6 +50,7 @@ export function createBcmsMost(data?: {
         },
         enableCache: config.enableClientCache,
         debug: config.debug,
+        userAgent: config.client ? (config.client.userAgent as any) : undefined,
       });
     } else if (data && data.client) {
       client = data.client;
