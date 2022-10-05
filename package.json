@@ -24,7 +24,7 @@
     "t": "ts-node src/test.ts"
   },
   "peerDependencies": {
-    "@becomes/cms-client": ">=3.3.0"
+    "@becomes/cms-client": ">=3.3.3"
   },
   "dependencies": {
     "@banez/child_process": "^1.0.3",
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@banez/npm-tool": "^1.0.1",
-    "@becomes/cms-client": "^3.3.2",
+    "@becomes/cms-client": "^3.3.3",
     "@types/chai": "^4.2.18",
     "@types/express": "^4.17.13",
     "@types/mocha": "^9.0.0",
