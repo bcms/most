@@ -89,6 +89,7 @@ export function createBcmsMostContentHandler({
         // progressBar.interrupt(cnsl.info(templateName, 'getting entries ...'));
         const entries = await client.entry.getAll({
           template: templateId,
+          skipStatusCheck: true,
         });
 
         // if (
@@ -119,7 +120,7 @@ export function createBcmsMostContentHandler({
       // progressBar.terminate();
       await cache.content.changes.set(contentChanges);
       if (config.entries && config.entries.linkParser) {
-        const entries = await cache.content.find(() => true);
+        const entries = await cache.content.find(() => true, true);
         const updatedEntries: {
           [templateName: string]: BCMSEntryParsed[];
         } = {};
@@ -181,8 +182,8 @@ export function createBcmsMostContentHandler({
       );
     },
     entry: {
-      async find(template, query) {
-        const contentCache = await cache.content.get();
+      async find(template, query, skipStatusCheck) {
+        const contentCache = await cache.content.get(false, skipStatusCheck);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const output: any[] = [];
         if (contentCache[template]) {
@@ -199,8 +200,8 @@ export function createBcmsMostContentHandler({
 
         return output;
       },
-      async findOne(template, query) {
-        const contentCache = await cache.content.get();
+      async findOne(template, query, skipStatusCheck) {
+        const contentCache = await cache.content.get(false, skipStatusCheck);
         if (contentCache[template]) {
           for (let i = 0; i < contentCache[template].length; i++) {
             const item = contentCache[template][i];

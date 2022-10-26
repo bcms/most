@@ -154,7 +154,7 @@ export function createBcmsMostCacheHandler({
         const output: {
           [groupName: string]: string;
         } = {};
-        const cache = await self.content.get();
+        const cache = await self.content.get(false, true);
         for (const groupName in cache) {
           if (cache[groupName].length > 0) {
             if (reverse) {
@@ -194,24 +194,25 @@ export function createBcmsMostCacheHandler({
             contentCache[key] = JSON.parse(
               await rootFs.readString([...contentCacheBase, file]),
             );
-            if (
-              !skipStatusCheck &&
-              config.entries &&
-              config.entries.pullOnlyStatus &&
-              config.entries.pullOnlyStatus.length > 0
-            ) {
-              const statuses = config.entries.pullOnlyStatus;
-              contentCache[key] = contentCache[key].filter((e) =>
-                statuses.includes(e.status),
-              );
-            }
+            // if (
+            //   !skipStatusCheck &&
+            //   config.entries &&
+            //   config.entries.pullOnlyStatus &&
+            //   config.entries.pullOnlyStatus.length > 0
+            // ) {
+            //   console.log('y')
+            //   const statuses = config.entries.pullOnlyStatus;
+            //   contentCache[key] = contentCache[key].filter((e) =>
+            //     statuses.includes(e.status),
+            //   );
+            // }
           }
           contentCacheAvailable = true;
         }
         return contentCache;
       },
       async find(query, skipStatusCheck) {
-        const cache = await self.content.get();
+        const cache = await self.content.get(undefined, skipStatusCheck);
         const output: BCMSEntryParsed[] = [];
         for (const key in cache) {
           const items = cache[key];
@@ -236,7 +237,7 @@ export function createBcmsMostCacheHandler({
         return output;
       },
       async findInGroup(groupName, query, skipStatusCheck) {
-        const cache = await self.content.get();
+        const cache = await self.content.get(undefined, skipStatusCheck);
         const output: BCMSEntryParsed[] = [];
         if (cache[groupName]) {
           const items = cache[groupName];
@@ -261,13 +262,13 @@ export function createBcmsMostCacheHandler({
         return output;
       },
       async findOne(query, skipStatusCheck) {
-        const cache = await self.content.get();
+        const cache = await self.content.get(false, skipStatusCheck);
         for (const key in cache) {
           const items = cache[key];
           for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (query(item)) {
-              if (!skipStatusCheck) {
+              if (skipStatusCheck) {
                 return item;
               }
               if (
@@ -287,13 +288,13 @@ export function createBcmsMostCacheHandler({
         return null;
       },
       async findOneInGroup(groupName, query, skipStatusCheck) {
-        const cache = await self.content.get();
+        const cache = await self.content.get(undefined, skipStatusCheck);
         if (cache[groupName]) {
           const items = cache[groupName];
           for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (query(item)) {
-              if (!skipStatusCheck) {
+              if (skipStatusCheck) {
                 return item;
               }
               if (
@@ -314,7 +315,7 @@ export function createBcmsMostCacheHandler({
       },
       async update(items) {
         const input = items instanceof Array ? items : [items];
-        const cache = await self.content.get();
+        const cache = await self.content.get(false, true);
         const groups: {
           [name: string]: boolean;
         } = {};
@@ -344,7 +345,7 @@ export function createBcmsMostCacheHandler({
       },
       async set({ groupName, items }) {
         const input = items instanceof Array ? items : [items];
-        const cache = await self.content.get();
+        const cache = await self.content.get(false, true);
         if (!cache[groupName]) {
           cache[groupName] = [];
         }
@@ -370,7 +371,7 @@ export function createBcmsMostCacheHandler({
       },
       async remove(items) {
         const input = items instanceof Array ? items : [items];
-        const cache = await self.content.get();
+        const cache = await self.content.get(false, true);
         const groups: {
           [name: string]: boolean;
         } = {};

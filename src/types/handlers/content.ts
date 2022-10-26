@@ -13,10 +13,12 @@ export interface BCMSMostContentHandler {
     findOne<EntryType extends BCMSEntryParsed = BCMSEntryParsed>(
       template: string,
       query: BCMSMostContentEntryQueryFunction<unknown>,
+      skipStatusCheck?: boolean,
     ): Promise<EntryType | null>;
     find<EntryType extends BCMSEntryParsed = BCMSEntryParsed>(
       template: string,
       query: BCMSMostContentEntryQueryFunction<unknown>,
+      skipStatusCheck?: boolean,
     ): Promise<EntryType[]>;
   };
 }
