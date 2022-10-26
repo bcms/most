@@ -57,6 +57,7 @@ export interface BCMSMostConfigEntries {
     cache: BCMSMostCacheHandler;
     lngCode: string;
   }): Promise<string>;
+  pullOnlyStatus?: string[];
 }
 export const BCMSMostConfigEntriesSchema: ObjectSchema = {
   includeFromTemplates: {
@@ -76,6 +77,13 @@ export const BCMSMostConfigEntriesSchema: ObjectSchema = {
   linkParser: {
     __type: 'function',
     __required: false,
+  },
+  pullOnlyStatus: {
+    __type: 'array',
+    __required: false,
+    __child: {
+      __type: 'string',
+    },
   },
 };
 
@@ -267,8 +275,8 @@ export interface BCMSMostConfig {
       random?: boolean;
       exec?: string;
       randomPrefix?: string;
-    }
-  }
+    };
+  };
   debug?: boolean;
 }
 export const BCMSMostConfigSchema: ObjectSchema = {
