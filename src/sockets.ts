@@ -80,6 +80,7 @@ export async function bcmsMostSocketInit({
                 template: entry.templateId,
                 entry: entry._id,
                 skipCache: true,
+                skipStatusCheck: true,
               });
               const res = await bcmsMostEntryLinkParser(
                 srcEntry,
