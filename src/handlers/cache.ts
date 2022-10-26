@@ -166,9 +166,25 @@ export function createBcmsMostCacheHandler({
         }
         return output;
       },
-      async get(force) {
+      async get(force, skipStatusCheck) {
         if (!force && contentCacheAvailable) {
-          return contentCache;
+          const output: BCMSMostCacheContent = {};
+          for (const groupName in contentCache) {
+            if (
+              !skipStatusCheck &&
+              config.entries &&
+              config.entries.pullOnlyStatus &&
+              config.entries.pullOnlyStatus.length > 0
+            ) {
+              const statuses = config.entries.pullOnlyStatus;
+              output[groupName] = contentCache[groupName].filter((e) =>
+                statuses.includes(e.status),
+              );
+            } else {
+              output[groupName] = contentCache[groupName];
+            }
+          }
+          return output;
         }
         if (await rootFs.exist(contentCacheBase)) {
           const files = await rootFs.readdir([...contentCacheBase]);
@@ -179,6 +195,7 @@ export function createBcmsMostCacheHandler({
               await rootFs.readString([...contentCacheBase, file]),
             );
             if (
+              !skipStatusCheck &&
               config.entries &&
               config.entries.pullOnlyStatus &&
               config.entries.pullOnlyStatus.length > 0
@@ -193,7 +210,7 @@ export function createBcmsMostCacheHandler({
         }
         return contentCache;
       },
-      async find(query) {
+      async find(query, skipStatusCheck) {
         const cache = await self.content.get();
         const output: BCMSEntryParsed[] = [];
         for (const key in cache) {
@@ -202,6 +219,7 @@ export function createBcmsMostCacheHandler({
             const item = items[i];
             if (query(item)) {
               if (
+                !skipStatusCheck &&
                 config.entries &&
                 config.entries.pullOnlyStatus &&
                 config.entries.pullOnlyStatus.length > 0
@@ -217,7 +235,7 @@ export function createBcmsMostCacheHandler({
         }
         return output;
       },
-      async findInGroup(groupName, query) {
+      async findInGroup(groupName, query, skipStatusCheck) {
         const cache = await self.content.get();
         const output: BCMSEntryParsed[] = [];
         if (cache[groupName]) {
@@ -226,6 +244,7 @@ export function createBcmsMostCacheHandler({
             const item = items[i];
             if (query(item)) {
               if (
+                !skipStatusCheck &&
                 config.entries &&
                 config.entries.pullOnlyStatus &&
                 config.entries.pullOnlyStatus.length > 0
@@ -241,7 +260,7 @@ export function createBcmsMostCacheHandler({
         }
         return output;
       },
-      async findOne(query) {
+      async findOne(query, skipStatusCheck) {
         const cache = await self.content.get();
         for (const key in cache) {
           const items = cache[key];
@@ -249,6 +268,7 @@ export function createBcmsMostCacheHandler({
             const item = items[i];
             if (query(item)) {
               if (
+                !skipStatusCheck &&
                 config.entries &&
                 config.entries.pullOnlyStatus &&
                 config.entries.pullOnlyStatus.length > 0
@@ -264,7 +284,7 @@ export function createBcmsMostCacheHandler({
         }
         return null;
       },
-      async findOneInGroup(groupName, query) {
+      async findOneInGroup(groupName, query, skipStatusCheck) {
         const cache = await self.content.get();
         if (cache[groupName]) {
           const items = cache[groupName];
@@ -272,6 +292,7 @@ export function createBcmsMostCacheHandler({
             const item = items[i];
             if (query(item)) {
               if (
+                !skipStatusCheck &&
                 config.entries &&
                 config.entries.pullOnlyStatus &&
                 config.entries.pullOnlyStatus.length > 0

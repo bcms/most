@@ -49,6 +49,7 @@ export async function bcmsMostSocketInit({
           const entries = [
             (await cache.content.findOne(
               (e) => e._id === data.e,
+              true,
             )) as BCMSEntryParsed,
           ];
           if (!entries[0]) {
@@ -59,12 +60,13 @@ export async function bcmsMostSocketInit({
               (e) =>
                 e._id !== entries[0]._id &&
                 JSON.stringify(e).includes(entries[0]._id),
+              true,
             )),
           );
           const groupedEntries: {
             [templateName: string]: BCMSEntryParsed[];
           } = {};
-          const allEntries = await cache.content.find(() => true);
+          const allEntries = await cache.content.find(() => true, true);
           for (let i = 0; i < entries.length; i++) {
             const entry = entries[i];
             const access = keyAccess.templates.find(

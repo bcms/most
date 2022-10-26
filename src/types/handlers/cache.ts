@@ -48,18 +48,32 @@ export interface BCMSMostCacheHandler {
       get(): Promise<BCMSClientChangesGetInfoData | null>;
       set(data: BCMSClientChangesGetInfoData): Promise<void>;
     };
-    getGroups(reverse?: boolean): Promise<{ [groupName: string]: string }>;
-    get(force?: boolean): Promise<BCMSMostCacheContent>;
+    getGroups(
+      reverse?: boolean,
+      skipStatusCheck?: boolean,
+    ): Promise<{ [groupName: string]: string }>;
+    get(
+      force?: boolean,
+      skipStatusCheck?: boolean,
+    ): Promise<BCMSMostCacheContent>;
     findOneInGroup(
       groupName: string,
       query: Query<BCMSEntryParsed>,
+      skipStatusCheck?: boolean,
     ): Promise<BCMSEntryParsed | null>;
-    findOne(query: Query<BCMSEntryParsed>): Promise<BCMSEntryParsed | null>;
+    findOne(
+      query: Query<BCMSEntryParsed>,
+      skipStatusCheck?: boolean,
+    ): Promise<BCMSEntryParsed | null>;
     findInGroup(
       groupName: string,
       query: Query<BCMSEntryParsed>,
+      skipStatusCheck?: boolean,
     ): Promise<BCMSEntryParsed[]>;
-    find(query: Query<BCMSEntryParsed>): Promise<BCMSEntryParsed[]>;
+    find(
+      query: Query<BCMSEntryParsed>,
+      skipStatusCheck?: boolean,
+    ): Promise<BCMSEntryParsed[]>;
     set(data: {
       groupName: string;
       items: BCMSEntryParsed | BCMSEntryParsed[];
