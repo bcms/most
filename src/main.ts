@@ -86,6 +86,7 @@ export function createBcmsMost(data?: {
     getMediaHandler() {
       return media;
     },
+    config,
   });
   const content = createBcmsMostContentHandler({ cache, client, config });
   const fn = createBcmsMostFunctionHandler({ cache, client, config });

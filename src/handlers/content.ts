@@ -87,18 +87,18 @@ export function createBcmsMostContentHandler({
         const templateId = templateNameMap[templateName];
         onMessage('info', cnsl.info(templateName, 'getting entries ...'));
         // progressBar.interrupt(cnsl.info(templateName, 'getting entries ...'));
-        let entries = await client.entry.getAll({
+        const entries = await client.entry.getAll({
           template: templateId,
         });
 
-        if (
-          config.entries &&
-          config.entries.pullOnlyStatus &&
-          config.entries.pullOnlyStatus.length > 0
-        ) {
-          const statuses = config.entries.pullOnlyStatus;
-          entries = entries.filter((e) => statuses.includes(e.status));
-        }
+        // if (
+        //   config.entries &&
+        //   config.entries.pullOnlyStatus &&
+        //   config.entries.pullOnlyStatus.length > 0
+        // ) {
+        //   const statuses = config.entries.pullOnlyStatus;
+        //   entries = entries.filter((e) => statuses.includes(e.status));
+        // }
 
         await cache.content.set({ groupName: templateName, items: entries });
         onMessage(

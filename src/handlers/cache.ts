@@ -5,6 +5,7 @@ import type {
   BCMSMostCacheContent,
   BCMSMostCacheFn,
   BCMSMostCacheHandler,
+  BCMSMostConfig,
   BCMSMostMediaCache,
   BCMSMostMediaHandler,
 } from '../types';
@@ -12,9 +13,11 @@ import type {
 export function createBcmsMostCacheHandler({
   rootFs,
   getMediaHandler,
+  config,
 }: {
   rootFs: FS;
   getMediaHandler(): BCMSMostMediaHandler;
+  config: BCMSMostConfig;
 }): BCMSMostCacheHandler {
   const contentChangesCacheBase = ['cache', 'content-changes.json'];
   const contentCacheBase = ['cache', 'content'];
@@ -171,9 +174,20 @@ export function createBcmsMostCacheHandler({
           const files = await rootFs.readdir([...contentCacheBase]);
           for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            contentCache[file.replace('.json', '')] = JSON.parse(
+            const key = file.replace('.json', '');
+            contentCache[key] = JSON.parse(
               await rootFs.readString([...contentCacheBase, file]),
             );
+            if (
+              config.entries &&
+              config.entries.pullOnlyStatus &&
+              config.entries.pullOnlyStatus.length > 0
+            ) {
+              const statuses = config.entries.pullOnlyStatus;
+              contentCache[key] = contentCache[key].filter((e) =>
+                statuses.includes(e.status),
+              );
+            }
           }
           contentCacheAvailable = true;
         }
@@ -187,7 +201,17 @@ export function createBcmsMostCacheHandler({
           for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (query(item)) {
-              output.push(item);
+              if (
+                config.entries &&
+                config.entries.pullOnlyStatus &&
+                config.entries.pullOnlyStatus.length > 0
+              ) {
+                if (config.entries.pullOnlyStatus.includes(item.status)) {
+                  output.push(item);
+                }
+              } else {
+                output.push(item);
+              }
             }
           }
         }
@@ -201,7 +225,17 @@ export function createBcmsMostCacheHandler({
           for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (query(item)) {
-              output.push(item);
+              if (
+                config.entries &&
+                config.entries.pullOnlyStatus &&
+                config.entries.pullOnlyStatus.length > 0
+              ) {
+                if (config.entries.pullOnlyStatus.includes(item.status)) {
+                  output.push(item);
+                }
+              } else {
+                output.push(item);
+              }
             }
           }
         }
@@ -214,7 +248,17 @@ export function createBcmsMostCacheHandler({
           for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (query(item)) {
-              return item;
+              if (
+                config.entries &&
+                config.entries.pullOnlyStatus &&
+                config.entries.pullOnlyStatus.length > 0
+              ) {
+                if (config.entries.pullOnlyStatus.includes(item.status)) {
+                  return item;
+                }
+              } else {
+                return null;
+              }
             }
           }
         }
@@ -227,7 +271,17 @@ export function createBcmsMostCacheHandler({
           for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (query(item)) {
-              return item;
+              if (
+                config.entries &&
+                config.entries.pullOnlyStatus &&
+                config.entries.pullOnlyStatus.length > 0
+              ) {
+                if (config.entries.pullOnlyStatus.includes(item.status)) {
+                  return item;
+                }
+              } else {
+                return null;
+              }
             }
           }
         }
