@@ -55,6 +55,7 @@ export interface BCMSMostConfigEntries {
     targetEntry: BCMSEntryParsed | BCMSEntry;
     srcTemplateName: string;
     cache: BCMSMostCacheHandler;
+    lngCode: string;
   }): Promise<string>;
 }
 export const BCMSMostConfigEntriesSchema: ObjectSchema = {
