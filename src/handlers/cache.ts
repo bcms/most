@@ -267,8 +267,10 @@ export function createBcmsMostCacheHandler({
           for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (query(item)) {
+              if (!skipStatusCheck) {
+                return item;
+              }
               if (
-                !skipStatusCheck &&
                 config.entries &&
                 config.entries.pullOnlyStatus &&
                 config.entries.pullOnlyStatus.length > 0
@@ -291,8 +293,10 @@ export function createBcmsMostCacheHandler({
           for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (query(item)) {
+              if (!skipStatusCheck) {
+                return item;
+              }
               if (
-                !skipStatusCheck &&
                 config.entries &&
                 config.entries.pullOnlyStatus &&
                 config.entries.pullOnlyStatus.length > 0
