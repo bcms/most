@@ -130,17 +130,20 @@ export function createBcmsImageHandler(
           index,
         ];
       } else {
+        const fileNameParts = media.name.split('.');
         return [
           `${BCMSImageConfig.cmsOrigin}/api/media/pip/${media._id}/bin/${
             BCMSImageConfig.publicApiKeyId
           }/${Buffer.from(
             `ops=${optionString}&idx=${index}&webp=true`,
-          ).toString('hex')}.webp`,
+          ).toString('hex')}/${fileNameParts
+            .slice(0, fileNameParts.length - 1)
+            .join('.')}.webp`,
           `${BCMSImageConfig.cmsOrigin}/api/media/pip/${media._id}/bin/${
             BCMSImageConfig.publicApiKeyId
           }/${Buffer.from(`ops=${optionString}&idx=${index}`).toString(
             'hex',
-          )}.${srcExt}`,
+          )}/${media.name}`,
           wid,
           hei,
           index,
