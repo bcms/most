@@ -53,7 +53,12 @@ export async function bcmsMostSocketInit({
             )) as BCMSEntryParsed,
           ];
           if (!entries[0]) {
-            return;
+            entries[0] = await client.entry.get({
+              template: data.tm,
+              entry: data.e,
+              skipCache: true,
+              skipStatusCheck: true,
+            });
           }
           entries.push(
             ...(await cache.content.find(
