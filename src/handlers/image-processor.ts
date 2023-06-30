@@ -482,7 +482,7 @@ export function createBcmsMostImageProcessor({
         const html = await outputFs.readString(filePath.path.rel);
         const rawData = StringUtility.allTextBetween(
           html,
-          '<div data-bcms',
+          'data-bcms-',
           '>',
         );
         if (rawData.length > 0) {
