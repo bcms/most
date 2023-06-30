@@ -36,7 +36,7 @@ export function createBcmsImageHandler(
   basePath?: string,
 ): BCMSImageHandler {
   if (!basePath) {
-    basePath = '/api/bcms-images';
+    basePath = '/bcms-media';
   }
   let parsable = true;
   if (!options) {
@@ -90,7 +90,7 @@ export function createBcmsImageHandler(
         heis = wids.map((e) => e / aspectRatio);
       } else if (ops.sizes.steps) {
         const widthStep = media.width / ops.sizes.steps;
-        for (let i = 0; i <= ops.sizes; i++) {
+        for (let i = 0; i <= ops.sizes.steps; i++) {
           wids.push(widthStep + widthStep * i);
         }
       }
