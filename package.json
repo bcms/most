@@ -1,6 +1,6 @@
 {
   "name": "@becomes/cms-most",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "description": "Utility for Becomes CMS used for client framework applications like Nuxt and Gatsby.",
   "author": "becomes.co",
   "license": "MIT",
