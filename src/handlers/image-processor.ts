@@ -480,11 +480,7 @@ export function createBcmsMostImageProcessor({
       for (let i = 0; i < fileTree.length; i++) {
         const filePath = fileTree[i];
         const html = await outputFs.readString(filePath.path.rel);
-        const rawData = StringUtility.allTextBetween(
-          html,
-          'data-bcms-',
-          '>',
-        );
+        const rawData = StringUtility.allTextBetween(html, 'data-bcms-', '>');
         if (rawData.length > 0) {
           for (let j = 0; j < rawData.length; j++) {
             const raw = rawData[j];
@@ -493,18 +489,22 @@ export function createBcmsMostImageProcessor({
               'data-bcms-img-src="',
               '"',
             );
-            const ops = StringUtility.textBetween(
-              raw,
-              'data-bcms-img-ops="',
-              '"',
-            );
-            const media = await cache.media.findOne((e) => e.fullPath === src);
-            if (media) {
-              toProcess.push({
-                media,
-                options: self.stringToOptions(ops),
-                rawOps: ops,
-              });
+            if (!src.endsWith('.svg')) {
+              const ops = StringUtility.textBetween(
+                raw,
+                'data-bcms-img-ops="',
+                '"',
+              );
+              const media = await cache.media.findOne(
+                (e) => e.fullPath === src,
+              );
+              if (media) {
+                toProcess.push({
+                  media,
+                  options: self.stringToOptions(ops),
+                  rawOps: ops,
+                });
+              }
             }
           }
         }
