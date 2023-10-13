@@ -1,5 +1,10 @@
 // import * as Progress from 'progress';
-import type { BCMSClient, BCMSEntryParsed } from '@becomes/cms-client/types';
+import type {
+  BCMSClient,
+  BCMSEntryParsed,
+  BCMSEntryParsedMeta,
+  BCMSPropEntryPointerDataParsed,
+} from '@becomes/cms-client/types';
 import { createBcmsMostDefaultOnMessage } from '../on-message';
 import type {
   BCMSMostCacheHandler,
@@ -7,6 +12,54 @@ import type {
   BCMSMostContentHandler,
 } from '../types';
 import { bcmsMostEntryLinkParser, createBcmsMostConsole } from '../util';
+
+async function resolveEntryStatuses(
+  entry: BCMSEntryParsed | BCMSPropEntryPointerDataParsed,
+  statuses: string[],
+): Promise<void> {
+  for (const lng in entry.meta) {
+    const meta = entry.meta[lng] as BCMSEntryParsedMeta;
+
+    for (const propKey in meta) {
+      const prop = meta[propKey];
+
+      if (typeof prop === 'object') {
+        if (prop instanceof Array) {
+          if (
+            prop.length > 0 &&
+            typeof prop[0] === 'object' &&
+            (prop[0] as BCMSPropEntryPointerDataParsed).meta
+          ) {
+            const items = prop as BCMSPropEntryPointerDataParsed[];
+            const itemCopy: BCMSPropEntryPointerDataParsed[] = [];
+
+            for (let i = 0; i < items.length; i++) {
+              const item = items[i];
+              if (!item.status || statuses.includes(item.status)) {
+                itemCopy.push(item);
+
+                await resolveEntryStatuses(item, statuses);
+              }
+            }
+
+            meta[propKey] = itemCopy as any;
+          }
+        } else {
+          const propEntry = prop as any;
+
+          if (
+            propEntry.meta &&
+            !(propEntry.status || statuses.includes(propEntry.status))
+          ) {
+            meta[propKey] = null as never;
+          } else {
+            await resolveEntryStatuses(meta[propKey] as any, statuses);
+          }
+        }
+      }
+    }
+  }
+}
 
 export function createBcmsMostContentHandler({
   cache,
@@ -99,6 +152,10 @@ export function createBcmsMostContentHandler({
         ) {
           const statuses = config.entries.pullOnlyStatus;
           entries = entries.filter((e) => statuses.includes(e.status));
+
+          entries.forEach((e) => {
+            resolveEntryStatuses(e, statuses);
+          });
         }
 
         await cache.content.set({ groupName: templateName, items: entries });
