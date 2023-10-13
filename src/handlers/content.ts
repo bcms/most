@@ -13,10 +13,10 @@ import type {
 } from '../types';
 import { bcmsMostEntryLinkParser, createBcmsMostConsole } from '../util';
 
-async function resolveEntryStatuses(
+function resolveEntryStatuses(
   entry: BCMSEntryParsed | BCMSPropEntryPointerDataParsed,
   statuses: string[],
-): Promise<void> {
+): void {
   for (const lng in entry.meta) {
     const meta = entry.meta[lng] as BCMSEntryParsedMeta;
 
@@ -38,7 +38,7 @@ async function resolveEntryStatuses(
               if (!item.status || statuses.includes(item.status)) {
                 itemCopy.push(item);
 
-                await resolveEntryStatuses(item, statuses);
+                resolveEntryStatuses(item, statuses);
               }
             }
 
@@ -53,7 +53,7 @@ async function resolveEntryStatuses(
           ) {
             meta[propKey] = null as never;
           } else {
-            await resolveEntryStatuses(meta[propKey] as any, statuses);
+            resolveEntryStatuses(meta[propKey] as any, statuses);
           }
         }
       }
