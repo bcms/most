@@ -272,6 +272,44 @@ export function createBcmsMostContentHandler({
         }
         return null;
       },
+      fuzzy: {
+        async find(query, skipStatusCheck) {
+          const contentCache = await cache.content.get(false, skipStatusCheck);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const output: any[] = [];
+          for (const template in contentCache) {
+            if (contentCache[template]) {
+              for (let i = 0; i < contentCache[template].length; i++) {
+                const item = contentCache[template][i];
+                if (await query(item, contentCache)) {
+                  output.push(item);
+                }
+              }
+            } else {
+              // eslint-disable-next-line no-console
+              console.warn(`Template "${template}" does not exist.`);
+            }
+          }
+          return output;
+        },
+        async findOne(query, skipStatusCheck) {
+          const contentCache = await cache.content.get(false, skipStatusCheck);
+          for (const template in contentCache) {
+            if (contentCache[template]) {
+              for (let i = 0; i < contentCache[template].length; i++) {
+                const item = contentCache[template][i];
+                if (await query(item, contentCache)) {
+                  return item as never;
+                }
+              }
+            } else {
+              // eslint-disable-next-line no-console
+              console.warn(`Template "${template}" does not exist.`);
+            }
+          }
+          return null;
+        },
+      },
     },
   };
 }

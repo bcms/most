@@ -20,5 +20,15 @@ export interface BCMSMostContentHandler {
       query: BCMSMostContentEntryQueryFunction<unknown>,
       skipStatusCheck?: boolean,
     ): Promise<EntryType[]>;
+    fuzzy: {
+      findOne<EntryType extends BCMSEntryParsed = BCMSEntryParsed>(
+        query: BCMSMostContentEntryQueryFunction<unknown>,
+        skipStatusCheck?: boolean,
+      ): Promise<EntryType | null>;
+      find<EntryType extends BCMSEntryParsed = BCMSEntryParsed>(
+        query: BCMSMostContentEntryQueryFunction<unknown>,
+        skipStatusCheck?: boolean,
+      ): Promise<EntryType[]>;
+    }
   };
 }
