@@ -41,11 +41,12 @@ function resolveEntryStatuses(
                 resolveEntryStatuses(item, statuses);
               }
             }
-
+            // eslint-disable-next-line
             meta[propKey] = itemCopy as any;
           }
         } else {
-          const propEntry = prop as any;
+          // eslint-disable-next-line
+          const propEntry: any = prop;
 
           if (
             propEntry.meta &&
@@ -53,6 +54,7 @@ function resolveEntryStatuses(
           ) {
             meta[propKey] = null as never;
           } else {
+            // eslint-disable-next-line
             resolveEntryStatuses(meta[propKey] as any, statuses);
           }
         }

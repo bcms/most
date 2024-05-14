@@ -216,7 +216,7 @@ export function createBcmsMostImageProcessor({
         } else if (ops.sizes.steps) {
           const widthStep = media.width / ops.sizes.steps;
           const heightStep = media.height / ops.sizes.steps;
-          for (let i = 0; i <= ops.sizes; i++) {
+          for (let i = 0; i <= ops.sizes.steps; i++) {
             sizes.push({
               width: widthStep + widthStep * i,
               height: heightStep + heightStep * i,
@@ -325,7 +325,7 @@ export function createBcmsMostImageProcessor({
         } else if (options.sizes.steps) {
           const widthStep = media.width / options.sizes.steps;
           const heightStep = media.height / options.sizes.steps;
-          for (let i = 0; i <= options.sizes; i++) {
+          for (let i = 0; i <= options.sizes.steps; i++) {
             sizes.push({
               width: widthStep + widthStep * i,
               height: heightStep + heightStep * i,

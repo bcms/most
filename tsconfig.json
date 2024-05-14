@@ -5,6 +5,7 @@
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "skipLibCheck": true,
     "target": "es5",
     "jsx": "react",
     "sourceMap": false,
@@ -12,9 +13,9 @@
     "rootDir": "./src",
     "incremental": false,
     "strict": true,
+    "noImplicitAny": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "importsNotUsedAsValues": "error"
+    "noUnusedParameters": true
   },
   "typedocOptions": {
     "entryPoints": ["src", "src/types"],
