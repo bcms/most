@@ -1,4 +1,4 @@
-import type { BCMSMostOnMessage } from '../on-message';
+import type { BCMSMostOnMessage } from '@becomes/cms-most/types/on-message';
 
 export interface BCMSMostFunctionHandler {
   call<Payload>(data?: {

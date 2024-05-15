@@ -1,4 +1,4 @@
-import * as path from 'path';
+import path from 'path';
 import { createWorkerManager } from '@banez/workers';
 import {
   createBodyParserMiddleware,
@@ -22,7 +22,7 @@ import type {
   BCMSMostServerHandler,
   BCMSMostServerRoute,
   BCMSMostServerRoutes,
-} from '../types';
+} from '@becomes/cms-most/types';
 
 export function createBcmsMostServerRoute<Result = unknown, Body = unknown>(
   config: BCMSMostServerRoute<Result, Body>,

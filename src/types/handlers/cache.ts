@@ -4,12 +4,12 @@ import type {
   BCMSMedia,
   BCMSTemplate,
 } from '@becomes/cms-client/types';
-import type { BCMSMediaExtended } from '..';
 import type {
+  BCMSMediaExtended,
   BCMSMostFnCache,
   BCMSMostMediaCache,
   BCMSMostCacheContent,
-} from '../cache';
+} from '@becomes/cms-most/types/cache';
 
 interface Query<Item> {
   (item: Item): unknown;

@@ -1,7 +1,7 @@
 import type { ObjectSchema } from '@banez/object-utility/types';
 import type { BCMSEntry, BCMSEntryParsed } from '@becomes/cms-client/types';
-import type { BCMSMediaExtended } from './cache';
-import type { BCMSMostCacheHandler } from './handlers';
+import type { BCMSMediaExtended } from '@becomes/cms-most/types/cache';
+import type { BCMSMostCacheHandler } from '@becomes/cms-most/types/handlers';
 
 export interface BCMSMostConfigCms {
   /**

@@ -8,7 +8,7 @@ import type {
   BCMSMostConfig,
   BCMSMostMediaCache,
   BCMSMostMediaHandler,
-} from '../types';
+} from '@becomes/cms-most/types';
 
 export function createBcmsMostCacheHandler({
   rootFs,

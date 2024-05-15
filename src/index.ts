@@ -1,6 +1,6 @@
-export * from './handlers';
-export * from './util';
+export * from '@becomes/cms-most/handlers';
+export * from '@becomes/cms-most/util';
 
-export * from './config';
-export * from './main';
-export * from './on-message';
+export * from '@becomes/cms-most/config';
+export * from '@becomes/cms-most/main';
+export * from '@becomes/cms-most/on-message';

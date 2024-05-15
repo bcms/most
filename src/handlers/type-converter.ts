@@ -1,6 +1,6 @@
 import type { FS } from '@banez/fs/types';
 import type { BCMSClient } from '@becomes/cms-client/types';
-import type { BCMSMostTypeConverterHandler } from '../types';
+import type { BCMSMostTypeConverterHandler } from '@becomes/cms-most/types';
 
 export function createBcmsMostTypeConverterHandler({
   rootFs,

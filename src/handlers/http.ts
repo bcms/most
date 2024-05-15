@@ -1,5 +1,5 @@
-import * as path from 'path';
-import * as os from 'os';
+import path from 'path';
+import os from 'os';
 import { createWorkerManager } from '@banez/workers';
 import type {
   BCMSMostCacheHandler,
@@ -7,7 +7,7 @@ import type {
   BCMSMostHttpHandler,
   BCMSMostImageProcessorHandler,
   BCMSMostMediaHandler,
-} from '../types';
+} from '@becomes/cms-most/types';
 import { WorkerError } from '@banez/workers/types';
 import { createFS } from '@banez/fs';
 

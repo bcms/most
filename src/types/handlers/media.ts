@@ -3,8 +3,8 @@ import type { BCMSMedia } from '@becomes/cms-client/types';
 import type {
   BCMSMostImageProcessorHandler,
   BCMSMostImageProcessorProcessOptions,
-} from '.';
-import type { BCMSMediaExtended } from '..';
+} from '@becomes/cms-most/types/handlers/image-processor';
+import type { BCMSMediaExtended } from '@becomes/cms-most/types/cache';
 
 export interface BCMSMostMediaHandler {
   output: string[];

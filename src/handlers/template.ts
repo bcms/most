@@ -1,7 +1,10 @@
 import type { BCMSClient, BCMSTemplate } from '@becomes/cms-client/types';
-import { createBcmsMostDefaultOnMessage } from '../on-message';
-import type { BCMSMostCacheHandler, BCMSMostTemplateHandler } from '../types';
-import { createBcmsMostConsole } from '../util';
+import { createBcmsMostDefaultOnMessage } from '@becomes/cms-most/on-message';
+import type {
+  BCMSMostCacheHandler,
+  BCMSMostTemplateHandler,
+} from '@becomes/cms-most/types';
+import { createBcmsMostConsole } from '@becomes/cms-most/util';
 
 export function createBcmsMostTemplateHandler({
   cache,
@@ -16,7 +19,7 @@ export function createBcmsMostTemplateHandler({
     async pull() {
       const startTime = Date.now();
       const onMessage = createBcmsMostDefaultOnMessage();
-      
+
       onMessage('info', cnsl.info('pull', 'Started ...'));
       const templates = await client.template.getAll();
       onMessage(

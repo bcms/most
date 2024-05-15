@@ -1,33 +1,31 @@
 {
   "compilerOptions": {
-    "module": "ES2020",
+    "module": "commonjs",
     "declaration": true,
-    "removeComments": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "removeComments": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "target": "ESNext",
-    "jsx": "react",
-    "sourceMap": false,
-    "outDir": "./dist/mjs",
-    "rootDir": "./src",
-    "incremental": false,
+    "esModuleInterop": true,
     "strict": true,
-    "noImplicitAny": true,
+    "target": "ES2020",
+    "outDir": "./dist/cjs",
+    "baseUrl": "./",
+    "rootDir": "./src",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "moduleResolution": "Node",
-    "esModuleInterop": true,
     "paths": {
       "@becomes/cms-most": ["./src"],
       "@becomes/cms-most/*": ["./src/*"]
     }
   },
   "typedocOptions": {
-    "entryPoints": ["src", "src/types"],
-    "name": "BCMS Most",
+    "entryPoints": ["src/main.ts", "src/types/index.ts"],
+    "name": "BCMS | Client",
     "out": "doc"
   },
-  "include": ["src"],
-  "exclude": ["src/frontend/_output-path.js"]
+  "include": ["src"]
 }

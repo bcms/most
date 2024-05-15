@@ -1,4 +1,4 @@
-import { BCMSMostConsole, ConsoleColors } from '../types';
+import { BCMSMostConsole, ConsoleColors } from '@becomes/cms-most/types';
 
 export function createBcmsMostConsole(component: string): BCMSMostConsole {
   return {

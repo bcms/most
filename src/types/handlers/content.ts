@@ -1,6 +1,6 @@
 import type { BCMSEntryParsed } from '@becomes/cms-client/types';
-import type { BCMSMostCacheContent } from '../cache';
-import type { BCMSMostOnMessage } from '../on-message';
+import type { BCMSMostCacheContent } from '@becomes/cms-most/types/cache';
+import type { BCMSMostOnMessage } from '@becomes/cms-most/types/on-message';
 
 export type BCMSMostContentEntryQueryFunction<QueryResult> = (
   item: BCMSEntryParsed,
@@ -29,6 +29,6 @@ export interface BCMSMostContentHandler {
         query: BCMSMostContentEntryQueryFunction<unknown>,
         skipStatusCheck?: boolean,
       ): Promise<EntryType[]>;
-    }
+    };
   };
 }

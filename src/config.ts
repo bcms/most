@@ -1,4 +1,4 @@
-import type { BCMSMostConfig } from './types';
+import type { BCMSMostConfig } from '@becomes/cms-most/types';
 
 /**
  * Create BCMS Most configuration object.

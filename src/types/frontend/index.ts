@@ -1,1 +1,1 @@
-export * from './image';
+export * from '@becomes/cms-most/types/frontend/image';

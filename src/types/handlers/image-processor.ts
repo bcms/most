@@ -1,5 +1,5 @@
 import type { BCMSMedia } from '@becomes/cms-client/types';
-import type { BCMSMediaExtended } from '..';
+import type { BCMSMediaExtended } from '@becomes/cms-most/types/cache';
 
 /**
  * Options for image processor. Can be represented as a string:

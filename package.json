@@ -4,10 +4,12 @@
   "description": "Utility for Becomes CMS used for client framework applications like Nuxt and Gatsby.",
   "author": "becomes.co",
   "license": "MIT",
-  "main": "index.js",
+  "main": "./index.cjs",
+  "types": "./index.d.ts",
+  "module": "./index.mjs",
   "scripts": {
-    "build:ts": "npm run lint && tsc -p .",
-    "build:gatsby": "tsc -p tsconfig.gatsby.json",
+    "build:ts:mjs": "npm run lint && tsc -p .",
+    "build:ts:cjs": "npm run lint && tsc -p ./tsconfig.commonjs.json",
     "bundle": "npm-tool --bundle",
     "build": "npm-tool --build",
     "publish": "npm-tool --publish",
@@ -20,16 +22,15 @@
     "test:active": "mocha -r ts-node/register test/integration/*.active.test.ts --recursive --exit",
     "test:unit": "mocha -r ts-node/register test/unit/*.test.ts --recursive --exit",
     "test:active:unit": "mocha -r ts-node/register test/unit/*.active.test.ts --recursive --exit",
-    "lint": "eslint src/**/*",
-    "t": "ts-node src/test.ts"
+    "lint": "eslint src/**/*"
   },
   "peerDependencies": {
-    "@becomes/cms-client": ">=3.3.5"
+    "@becomes/cms-client": ">=3.4.0"
   },
   "dependencies": {
     "@banez/child_process": "^1.0.3",
     "@banez/fs": "^1.0.2",
-    "@banez/object-utility": "^1.0.0",
+    "@banez/object-utility": "^1.0.1",
     "@banez/queue": "^1.0.0",
     "@banez/string-utility": "^1.0.1",
     "@banez/workers": "^1.1.1",
@@ -43,7 +44,7 @@
   },
   "devDependencies": {
     "@banez/npm-tool": "^1.1.1",
-    "@becomes/cms-client": "file:client.tgz",
+    "@becomes/cms-client": "^3.4.0",
     "@types/chai": "^4.3.16",
     "@types/express": "^4.17.13",
     "@types/mocha": "^10.0.6",

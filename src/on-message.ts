@@ -1,4 +1,4 @@
-import type { BCMSMostOnMessage } from './types';
+import type { BCMSMostOnMessage } from '@becomes/cms-most/types';
 
 export function createBcmsMostDefaultOnMessage(): BCMSMostOnMessage {
   return (level, message) => {

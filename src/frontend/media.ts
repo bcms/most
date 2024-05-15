@@ -1,5 +1,5 @@
 import type { BCMSMediaParsed } from '@becomes/cms-client/types';
-import { BCMSImageConfig } from './image-config';
+import { BCMSImageConfig } from '@becomes/cms-most/frontend/image-config';
 
 export function bcmsMediaToUrl(media: BCMSMediaParsed): string {
   if (BCMSImageConfig.localeImageProcessing) {

@@ -1,8 +1,12 @@
-import * as path from 'path';
-import * as dotenv from 'dotenv';
+import path from 'path';
+import dotenv from 'dotenv';
 import { createBcmsClient } from '@becomes/cms-client';
 import type { BCMSClient } from '@becomes/cms-client/types';
-import { BCMSMost, BCMSMostConfig, BCMSMostConfigSchema } from './types';
+import {
+  BCMSMost,
+  BCMSMostConfig,
+  BCMSMostConfigSchema,
+} from '@becomes/cms-most/types';
 import { ObjectUtility } from '@banez/object-utility';
 import { ObjectUtilityError } from '@banez/object-utility/types';
 import {
@@ -15,9 +19,9 @@ import {
   createBcmsMostTypeConverterHandler,
   createBcmsMostServerHandler,
   createBcmsMostTemplateHandler,
-} from './handlers';
+} from '@becomes/cms-most/handlers';
 import { createFS } from '@banez/fs';
-import { bcmsMostSocketInit } from './sockets';
+import { bcmsMostSocketInit } from '@becomes/cms-most/sockets';
 
 dotenv.config();
 
@@ -35,7 +39,11 @@ export function createBcmsMost(data?: {
     try {
       config = require(`${path.join(process.cwd(), 'bcms.config.js')}`);
     } catch (error) {
-      config = require(`${path.join(process.cwd(), 'bcms.config.cjs')}`);
+      try {
+        config = require(`${path.join(process.cwd(), 'bcms.config.cjs')}`);
+      } catch (err) {
+        config = require(`${path.join(process.cwd(), 'bcms.config.mjs')}`);
+      }
     }
   } else if (data && data.config) {
     config = data.config;
@@ -50,7 +58,7 @@ export function createBcmsMost(data?: {
         },
         enableCache: config.enableClientCache,
         debug: config.debug,
-        userAgent: config.client ? (config.client.userAgent as any) : undefined,
+        userAgent: config.client ? config.client.userAgent : undefined,
       });
     } else if (data && data.client) {
       client = data.client;

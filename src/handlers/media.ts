@@ -1,6 +1,5 @@
-// import * as ProgressBar from 'progress';
-import * as path from 'path';
-import * as os from 'os';
+import path from 'path';
+import os from 'os';
 import { createWorkerManager } from '@banez/workers';
 import {
   BCMSClient,
@@ -16,12 +15,12 @@ import type {
   BCMSMostImageProcessorHandler,
   BCMSMostImageProcessorProcessOptions,
   BCMSMostMediaHandler,
-} from '../types';
+} from '@becomes/cms-most/types';
 import { createFS } from '@banez/fs';
 import { WorkerError } from '@banez/workers/types';
-import { createBcmsMostConsole } from '../util';
+import { createBcmsMostConsole } from '@becomes/cms-most/util';
 import { ChildProcess } from '@banez/child_process';
-import { createBcmsMostDefaultOnMessage } from '../on-message';
+import { createBcmsMostDefaultOnMessage } from '@becomes/cms-most/on-message';
 import { StringUtility } from '@banez/string-utility';
 
 export function createBcmsMostMediaHandler({

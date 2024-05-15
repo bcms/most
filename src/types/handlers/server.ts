@@ -1,5 +1,5 @@
 import type { ControllerMethodType } from '@becomes/purple-cheetah/types';
-import type { BCMSMost } from '../main';
+import type { BCMSMost } from '@becomes/cms-most/types/main';
 
 export interface BCMSMostServerRoute<Result = unknown, Body = unknown> {
   method: ControllerMethodType;

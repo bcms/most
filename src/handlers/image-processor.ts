@@ -1,6 +1,5 @@
-// import * as ProgressBar from 'progress';
-import * as sharp from 'sharp';
-import * as path from 'path';
+import sharp from 'sharp';
+import path from 'path';
 import { BCMSMediaType } from '@becomes/cms-client/types';
 import type {
   BCMSMediaExtended,
@@ -10,13 +9,13 @@ import type {
   BCMSMostImageProcessorProcessConfig,
   BCMSMostImageProcessorProcessOptions,
   BCMSMostMediaHandler,
-} from '../types';
-import { createBcmsMostConsole } from '../util';
+} from '@becomes/cms-most/types';
+import { createBcmsMostConsole } from '@becomes/cms-most/util';
 import { createFS } from '@banez/fs';
 import { createWorkerManager } from '@banez/workers';
 import Axios from 'axios';
 import { StringUtility } from '@becomes/purple-cheetah';
-import { createBcmsMostDefaultOnMessage } from '../on-message';
+import { createBcmsMostDefaultOnMessage } from '@becomes/cms-most/on-message';
 
 export function createBcmsMostImageProcessor({
   config,

@@ -1,6 +1,9 @@
 import { StringUtility } from '@banez/string-utility';
 import type { BCMSEntryParsed } from '@becomes/cms-client/types';
-import type { BCMSMostCacheHandler, BCMSMostConfig } from '../types';
+import type {
+  BCMSMostCacheHandler,
+  BCMSMostConfig,
+} from '@becomes/cms-most/types';
 
 export async function bcmsMostEntryLinkParser(
   srcEntry: BCMSEntryParsed,

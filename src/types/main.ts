@@ -9,7 +9,7 @@ import type {
   BCMSMostTypeConverterHandler,
   BCMSMostServerHandler,
   BCMSMostTemplateHandler,
-} from './handlers';
+} from '@becomes/cms-most/types/handlers';
 
 export interface BCMSMost {
   /**

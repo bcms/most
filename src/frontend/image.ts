@@ -2,8 +2,8 @@ import type { BCMSMediaParsed } from '@becomes/cms-client/types';
 import type {
   BCMSImageHandler,
   BCMSMostImageProcessorProcessOptions,
-} from '../types';
-import { BCMSImageConfig } from './image-config';
+} from '@becomes/cms-most/types';
+import { BCMSImageConfig } from '@becomes/cms-most/frontend/image-config';
 import { Buffer } from 'buffer';
 
 function optionsToString(options: BCMSMostImageProcessorProcessOptions) {

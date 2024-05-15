@@ -1,17 +1,19 @@
-// import * as Progress from 'progress';
 import type {
   BCMSClient,
   BCMSEntryParsed,
   BCMSEntryParsedMeta,
   BCMSPropEntryPointerDataParsed,
 } from '@becomes/cms-client/types';
-import { createBcmsMostDefaultOnMessage } from '../on-message';
+import { createBcmsMostDefaultOnMessage } from '@becomes/cms-most/on-message';
 import type {
   BCMSMostCacheHandler,
   BCMSMostConfig,
   BCMSMostContentHandler,
-} from '../types';
-import { bcmsMostEntryLinkParser, createBcmsMostConsole } from '../util';
+} from '@becomes/cms-most/types';
+import {
+  bcmsMostEntryLinkParser,
+  createBcmsMostConsole,
+} from '@becomes/cms-most/util';
 
 function resolveEntryStatuses(
   entry: BCMSEntryParsed | BCMSPropEntryPointerDataParsed,

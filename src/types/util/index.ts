@@ -1,1 +1,1 @@
-export * from './console';
+export * from '@becomes/cms-most/types/util/console';

@@ -1,6 +1,6 @@
 import { ObjectUtility } from '@banez/object-utility';
 import { ObjectUtilityError } from '@banez/object-utility/types';
-import { createBcmsMost } from './main';
+import { createBcmsMost } from '@becomes/cms-most/main';
 
 interface Args {
   mediaId?: string;

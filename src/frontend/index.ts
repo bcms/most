@@ -1,3 +1,3 @@
-export * from './image-config';
-export * from './image';
-export * from './media';
+export * from '@becomes/cms-most/frontend/image-config';
+export * from '@becomes/cms-most/frontend/image';
+export * from '@becomes/cms-most/frontend/media';

@@ -1,4 +1,4 @@
-import * as os from 'os';
+import os from 'os';
 import { createWorkerManager } from '@banez/workers';
 import {
   BCMSClient,
@@ -13,10 +13,13 @@ import type {
   BCMSMostConfig,
   BCMSMostMediaHandler,
   BCMSMostTypeConverterHandler,
-} from './types';
+} from '@becomes/cms-most/types';
 import { WorkerError } from '@banez/workers/types';
-import { createBcmsMostDefaultOnMessage } from './on-message';
-import { bcmsMostEntryLinkParser, createBcmsMostConsole } from './util';
+import { createBcmsMostDefaultOnMessage } from '@becomes/cms-most/on-message';
+import {
+  bcmsMostEntryLinkParser,
+  createBcmsMostConsole,
+} from '@becomes/cms-most/util';
 
 export async function bcmsMostSocketInit({
   client,
@@ -42,14 +45,14 @@ export async function bcmsMostSocketInit({
       const data = event.data as BCMSSocketEntryEvent;
       const keyAccess = await client.getKeyAccess();
       const tempAccess = keyAccess.templates.find(
-        (e) => e._id === data.tm || e.name === data.tm
+        (e) => e._id === data.tm || e.name === data.tm,
       );
       if (tempAccess && tempAccess.get) {
         if (data.t === BCMSSocketEventType.UPDATE) {
           const entries = [
             (await cache.content.findOne(
               (e) => e._id === data.e,
-              true
+              true,
             )) as BCMSEntryParsed,
           ];
           if (!entries[0]) {
@@ -65,8 +68,8 @@ export async function bcmsMostSocketInit({
               (e) =>
                 e._id !== entries[0]._id &&
                 JSON.stringify(e).includes(entries[0]._id),
-              true
-            ))
+              true,
+            )),
           );
           const groupedEntries: {
             [templateName: string]: BCMSEntryParsed[];
@@ -75,7 +78,7 @@ export async function bcmsMostSocketInit({
           for (let i = 0; i < entries.length; i++) {
             const entry = entries[i];
             const access = keyAccess.templates.find(
-              (e) => e._id === entry.templateId
+              (e) => e._id === entry.templateId,
             );
             if (access && access.get) {
               if (!groupedEntries[access.name]) {
@@ -91,7 +94,7 @@ export async function bcmsMostSocketInit({
                 srcEntry,
                 allEntries,
                 config,
-                cache
+                cache,
               );
               groupedEntries[access.name].push(res.entry);
             }
@@ -107,8 +110,8 @@ export async function bcmsMostSocketInit({
             'info',
             cnsl.info(
               'entry',
-              `Successfully updated "${entries[0].meta.en.slug}" in "${tempAccess.name}"`
-            )
+              `Successfully updated "${entries[0].meta.en.slug}" in "${tempAccess.name}"`,
+            ),
           );
         } else {
           await cache.content.remove({ _id: data.e });
@@ -116,8 +119,8 @@ export async function bcmsMostSocketInit({
             'info',
             cnsl.info(
               'entry',
-              `Successfully updated "${data.e}" in "${tempAccess.name}"`
-            )
+              `Successfully updated "${data.e}" in "${tempAccess.name}"`,
+            ),
           );
         }
       }
