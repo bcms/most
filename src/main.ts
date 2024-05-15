@@ -39,11 +39,16 @@ export function createBcmsMost(data?: {
     try {
       config = require(`${path.join(process.cwd(), 'bcms.config.js')}`);
     } catch (error) {
-      try {
-        config = require(`${path.join(process.cwd(), 'bcms.config.cjs')}`);
-      } catch (err) {
-        config = require(`${path.join(process.cwd(), 'bcms.config.mjs')}`);
-      }
+      config = require(`${path.join(process.cwd(), 'bcms.config.cjs')}`);
+      // try {
+      //   config = require(`${path.join(process.cwd(), 'bcms.config.cjs')}`);
+      // } catch (err) {
+      //   try {
+      //     config = require(`${path.join(process.cwd(), 'bcms.config.mjs')}`);
+      //   } catch (e) {
+      //     console.error(e);
+      //   }
+      // }
     }
   } else if (data && data.config) {
     config = data.config;
